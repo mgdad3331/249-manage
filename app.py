@@ -111,13 +111,14 @@ def save():
 # =========================
 @app.route('/add_client', methods=['POST'])
 def add_client():
+    
     data = request.get_json()
     password = data.get("password")
 
     if password != ADMIN_PASSWORD:
         return jsonify({"status": "failed"})
         new_row = ["NEW_"+datetime.datetime.now().isoformat()] + [" "] * (len(ALL_COLUMNS)-1)
-sheet.append_row(new_row)
+    sheet.append_row(new_row)
     sheet.append_row(new_row)
 
     return jsonify({"status": "success"})
