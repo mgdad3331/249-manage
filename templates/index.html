@@ -8,37 +8,37 @@
         body {
             font-family: Arial, sans-serif;
             background: #f4f6f8;
-            margin: 0;
             padding: 20px;
         }
 
         h1 {
             text-align: center;
-            color: #333;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            background: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background: white;
         }
 
         th, td {
-            padding: 10px;
             border: 1px solid #ddd;
+            padding: 8px;
             text-align: center;
         }
 
         th {
-            background-color: #2a9df4;
+            background: #2a9df4;
             color: white;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background: #f9f9f9;
+        }
+
+        td[contenteditable] {
+            background: #fffde7;
         }
 
         input[type="checkbox"] {
@@ -46,32 +46,25 @@
             cursor: pointer;
         }
 
-        .controls {
-            margin-top: 20px;
-            text-align: center;
+        .add-row td {
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        .btn {
-            padding: 10px 18px;
+        .add-row:hover td {
+            background: #f1f1f1;
+        }
+
+        .save-btn {
+            margin-top: 15px;
+            padding: 10px 25px;
             font-size: 14px;
+            background: #4caf50;
+            color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin: 5px;
-        }
-
-        .btn-save {
-            background-color: #4caf50;
-            color: white;
-        }
-
-        .btn-add {
-            background-color: #ff9800;
-            color: white;
-        }
-
-        .btn:hover {
-            opacity: 0.85;
         }
     </style>
 </head>
@@ -109,18 +102,24 @@
             {% endfor %}
         </tr>
         {% endfor %}
+
+        <!-- ADD CLIENT ROW -->
+        <tr class="add-row" onclick="addClient()">
+            <td colspan="{{ clients[0]|length }}">
+                ➕ إضافة عميل جديد
+            </td>
+        </tr>
     </tbody>
 </table>
 
-<div class="controls">
-    <button class="btn btn-save" onclick="saveChanges()">💾 حفظ التغييرات</button>
-    <button class="btn btn-add" onclick="addClient()">➕ إضافة عميل جديد</button>
+<div style="text-align:center">
+    <button class="save-btn" onclick="saveChanges()">💾 حفظ التغييرات</button>
 </div>
 
 <script>
 let adminPassword = null;
 
-function askPassword() {
+function getPassword() {
     if (!adminPassword) {
         adminPassword = prompt("أدخل كلمة سر الأدمن:");
     }
@@ -128,23 +127,22 @@ function askPassword() {
 }
 
 function saveChanges() {
-    let password = askPassword();
+    let password = getPassword();
     if (!password) return;
 
-    let updatesByRow = {};
+    let updates = {};
 
-    document.querySelectorAll("input[type=checkbox]").forEach(cb => {
-        let row = cb.dataset.row;
-        let col = cb.dataset.col;
-        if (!updatesByRow[row]) updatesByRow[row] = {};
-        updatesByRow[row][col] = cb.checked ? "TRUE" : "FALSE";
-    });
+    document.querySelectorAll("tr[data-row]").forEach(row => {
+        let rowIndex = row.dataset.row;
+        updates[rowIndex] = {};
 
-    document.querySelectorAll("td[contenteditable]").forEach(td => {
-        let row = td.dataset.row;
-        let col = td.dataset.col;
-        if (!updatesByRow[row]) updatesByRow[row] = {};
-        updatesByRow[row][col] = td.innerText.trim();
+        row.querySelectorAll("input[type=checkbox]").forEach(cb => {
+            updates[rowIndex][cb.dataset.col] = cb.checked ? "TRUE" : "FALSE";
+        });
+
+        row.querySelectorAll("td[contenteditable]").forEach(td => {
+            updates[rowIndex][td.dataset.col] = td.innerText.trim();
+        });
     });
 
     fetch("/save", {
@@ -152,22 +150,22 @@ function saveChanges() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             password: password,
-            updates: updatesByRow
+            updates: updates
         })
     })
     .then(res => res.json())
-    .then(data => {
-        if (data.status === "success") {
-            alert("تم حفظ التغييرات بنجاح ✅");
+    .then(d => {
+        if (d.status === "success") {
+            alert("تم حفظ التغييرات ✅");
             location.reload();
         } else {
-            alert("فشل الحفظ ❌");
+            alert("كلمة السر خطأ ❌");
         }
     });
 }
 
 function addClient() {
-    let password = askPassword();
+    let password = getPassword();
     if (!password) return;
 
     fetch("/add_client", {
@@ -176,12 +174,11 @@ function addClient() {
         body: JSON.stringify({password: password})
     })
     .then(res => res.json())
-    .then(data => {
-        if (data.status === "success") {
-            alert("تمت إضافة عميل جديد ✅");
+    .then(d => {
+        if (d.status === "success") {
             location.reload();
         } else {
-            alert("كلمة السر غير صحيحة ❌");
+            alert("كلمة السر خطأ ❌");
         }
     });
 }
