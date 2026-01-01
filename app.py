@@ -3,6 +3,8 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import json
 import os
+import datetime
+
 
 # =========================
 # Flask App
@@ -114,8 +116,8 @@ def add_client():
 
     if password != ADMIN_PASSWORD:
         return jsonify({"status": "failed"})
-
-    new_row = [" "] * len(ALL_COLUMNS)
+        new_row = ["NEW_"+datetime.datetime.now().isoformat()] + [" "] * (len(ALL_COLUMNS)-1)
+sheet.append_row(new_row)
     sheet.append_row(new_row)
 
     return jsonify({"status": "success"})
