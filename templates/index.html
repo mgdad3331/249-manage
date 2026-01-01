@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <title>Client Management</title>
@@ -9,6 +9,10 @@ body {
     font-family: Arial, sans-serif;
     background: #f4f6f8;
     padding: 20px;
+}
+h2 {
+    text-align:center;
+    color:#333;
 }
 table {
     width: 100%;
@@ -27,86 +31,69 @@ th {
 tr:nth-child(even) {
     background: #f9f9f9;
 }
-input[type=checkbox] {
-    transform: scale(1.3);
+.tick {
+    font-size: 18px;
 }
 .readonly {
     pointer-events: none;
-    opacity: 0.6;
+    opacity: 0.8;
 }
-.add-row td {
-    background: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-.add-row:hover td {
-    background: #eee;
-}
-button {
-    padding: 8px 20px;
-    margin-top: 15px;
-}
-    .add-client-inline {
+.add-client-inline {
     width: 100%;
-    padding: 10px;
+    padding: 8px 10px;
     background: #fff;
     border: 1px dashed #ccc;
     color: #555;
-    text-align: left;
+    text-align: center;
     cursor: pointer;
+    font-size: 14px;
 }
-
 .add-client-inline:hover {
     background: #f4f6f8;
 }
-
 </style>
 </head>
 
 <body>
 
-<h2 style="text-align:center">Client Management System</h2>
+<h2>Client Management System</h2>
 
 <table id="table">
 <thead>
 <tr>
     {% for col in clients[0].keys() %}
-    {% if col == 'Name' %}
-        <th style="width:300px;">{{ col }}</th>
-    {% else %}
-        <th>{{ col }}</th>
-    {% endif %}
-{% endfor %}
-
+        {% if col == 'Name' %}
+            <th style="min-width: 300px;">{{ col }}</th>
+        {% else %}
+            <th>{{ col }}</th>
+        {% endif %}
+    {% endfor %}
 </tr>
 </thead>
 
 <tbody>
 {% for client in clients %}
 <tr data-row="{{ loop.index0 }}">
-{% for col, val in client.items() %}
-    {% if col in tick_columns %}
-        <td>
-            <input type="checkbox"
-                   class="tick readonly"
-                   data-col="{{ col }}"
-                   {% if val=="TRUE" %}checked{% endif %}>
-        </td>
-    {% else %}
-        <td contenteditable="false"
-            class="text readonly"
-            data-col="{{ col }}">
-            {{ val }}
-        </td>
-    {% endif %}
-{% endfor %}
+    {% for col, val in client.items() %}
+        {% if col in tick_columns %}
+            <td class="tick readonly" data-col="{{ col }}">
+                {{ '✔' if val=='TRUE' else '⬜' }}
+            </td>
+        {% else %}
+            <td class="text readonly" data-col="{{ col }}">
+                {{ val }}
+            </td>
+        {% endif %}
+    {% endfor %}
 </tr>
 {% endfor %}
-    <tr>
+
+<!-- زر إضافة عميل جديد تحت آخر عميل -->
+<tr>
     {% for col in clients[0].keys() %}
         {% if col == 'Name' %}
             <td>
-                <button class="add-client-inline">
+                <button class="add-client-inline" onclick="addClient()">
                     إضافة عميل جديد
                 </button>
             </td>
@@ -116,72 +103,13 @@ button {
     {% endfor %}
 </tr>
 
-
-
 </tbody>
 </table>
 
-<div style="text-align:center">
-<button onclick="save()" id="saveBtn" style="display:none">💾 حفظ التغييرات</button>
-</div>
-
 <script>
-let admin = false;
-let password = "";
-
-function enableEdit(){
-    password = prompt("أدخل كلمة سر الأدمن:");
-    if(!password) return;
-
-    admin = true;
-    document.querySelectorAll(".readonly").forEach(e=>{
-        e.classList.remove("readonly");
-        if(e.classList.contains("text")){
-            e.contentEditable = true;
-        }
-    });
-    document.getElementById("saveBtn").style.display="inline";
-}
-
-function save(){
-    let updates = {};
-    document.querySelectorAll("tr[data-row]").forEach(row=>{
-        let r = row.dataset.row;
-        updates[r]={};
-
-        row.querySelectorAll(".tick").forEach(cb=>{
-            updates[r][cb.dataset.col] = cb.checked ? "TRUE":"FALSE";
-        });
-
-        row.querySelectorAll(".text").forEach(td=>{
-            updates[r][td.dataset.col] = td.innerText.trim();
-        });
-    });
-
-    fetch("/save",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({password,updates})
-    }).then(r=>r.json()).then(d=>{
-        if(d.status=="success"){
-            alert("تم الحفظ ✅");
-            location.reload();
-        } else {
-            alert("فشل ❌");
-        }
-    });
-}
-
+// الزر حاليا لا ينفذ أي إضافة، مجرد واجهة
 function addClient(){
-    if(!admin){
-        alert("فقط الأدمن يمكنه الإضافة");
-        return;
-    }
-    fetch("/add_client",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({password})
-    }).then(()=>location.reload());
+    alert("فقط الأدمن يمكنه إضافة عميل جديد لاحقًا بعد إدخال كلمة السر.");
 }
 </script>
 
