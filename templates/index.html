@@ -1,186 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Client Management</title>
+<meta charset="UTF-8">
+<title>Client Management</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-
-        th {
-            background: #2a9df4;
-            color: white;
-            font-size: 13px;
-        }
-
-        tr:nth-child(even) {
-            background: #f9f9f9;
-        }
-
-        td[contenteditable] {
-            background: #fffde7;
-        }
-
-        input[type="checkbox"] {
-            transform: scale(1.3);
-            cursor: pointer;
-        }
-
-        .add-row td {
-            background: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .add-row:hover td {
-            background: #f1f1f1;
-        }
-
-        .save-btn {
-            margin-top: 15px;
-            padding: 10px 25px;
-            font-size: 14px;
-            background: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 20px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+th {
+    background: #2a9df4;
+    color: white;
+}
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+input[type=checkbox] {
+    transform: scale(1.3);
+}
+.readonly {
+    pointer-events: none;
+    opacity: 0.6;
+}
+.add-row td {
+    background: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+.add-row:hover td {
+    background: #eee;
+}
+button {
+    padding: 8px 20px;
+    margin-top: 15px;
+}
+</style>
 </head>
+
 <body>
 
-<h1>Client Management System</h1>
+<h2 style="text-align:center">Client Management System</h2>
 
-<table>
-    <thead>
-        <tr>
-            {% for col in clients[0].keys() %}
-                <th>{{ col }}</th>
-            {% endfor %}
-        </tr>
-    </thead>
+<table id="table">
+<thead>
+<tr>
+{% for col in clients[0].keys() %}
+    <th>{{ col }}</th>
+{% endfor %}
+</tr>
+</thead>
 
-    <tbody>
-        {% for client in clients %}
-        <tr data-row="{{ loop.index0 }}">
-            {% for col, val in client.items() %}
-                {% if col in tick_columns %}
-                    <td>
-                        <input type="checkbox"
-                               data-row="{{ loop.index0 }}"
-                               data-col="{{ col }}"
-                               {% if val == "TRUE" %}checked{% endif %}>
-                    </td>
-                {% else %}
-                    <td contenteditable="true"
-                        data-row="{{ loop.index0 }}"
-                        data-col="{{ col }}">
-                        {{ val }}
-                    </td>
-                {% endif %}
-            {% endfor %}
-        </tr>
-        {% endfor %}
+<tbody>
+{% for client in clients %}
+<tr data-row="{{ loop.index0 }}">
+{% for col, val in client.items() %}
+    {% if col in tick_columns %}
+        <td>
+            <input type="checkbox"
+                   class="tick readonly"
+                   data-col="{{ col }}"
+                   {% if val=="TRUE" %}checked{% endif %}>
+        </td>
+    {% else %}
+        <td contenteditable="false"
+            class="text readonly"
+            data-col="{{ col }}">
+            {{ val }}
+        </td>
+    {% endif %}
+{% endfor %}
+</tr>
+{% endfor %}
 
-        <!-- ADD CLIENT ROW -->
-        <tr class="add-row" onclick="addClient()">
-            <td colspan="{{ clients[0]|length }}">
-                ➕ إضافة عميل جديد
-            </td>
-        </tr>
-    </tbody>
+<tr class="add-row" onclick="addClient()">
+    <td colspan="{{ clients[0]|length }}">
+        ➕ إضافة عميل جديد
+    </td>
+</tr>
+
+</tbody>
 </table>
 
 <div style="text-align:center">
-    <button class="save-btn" onclick="saveChanges()">💾 حفظ التغييرات</button>
+<button onclick="enableEdit()">🔐 تفعيل وضع التعديل</button>
+<button onclick="save()" id="saveBtn" style="display:none">💾 حفظ التغييرات</button>
 </div>
 
 <script>
-let adminPassword = null;
+let admin = false;
+let password = "";
 
-function getPassword() {
-    if (!adminPassword) {
-        adminPassword = prompt("أدخل كلمة سر الأدمن:");
-    }
-    return adminPassword;
+function enableEdit(){
+    password = prompt("أدخل كلمة سر الأدمن:");
+    if(!password) return;
+
+    admin = true;
+    document.querySelectorAll(".readonly").forEach(e=>{
+        e.classList.remove("readonly");
+        if(e.classList.contains("text")){
+            e.contentEditable = true;
+        }
+    });
+    document.getElementById("saveBtn").style.display="inline";
 }
 
-function saveChanges() {
-    let password = getPassword();
-    if (!password) return;
-
+function save(){
     let updates = {};
+    document.querySelectorAll("tr[data-row]").forEach(row=>{
+        let r = row.dataset.row;
+        updates[r]={};
 
-    document.querySelectorAll("tr[data-row]").forEach(row => {
-        let rowIndex = row.dataset.row;
-        updates[rowIndex] = {};
-
-        row.querySelectorAll("input[type=checkbox]").forEach(cb => {
-            updates[rowIndex][cb.dataset.col] = cb.checked ? "TRUE" : "FALSE";
+        row.querySelectorAll(".tick").forEach(cb=>{
+            updates[r][cb.dataset.col] = cb.checked ? "TRUE":"FALSE";
         });
 
-        row.querySelectorAll("td[contenteditable]").forEach(td => {
-            updates[rowIndex][td.dataset.col] = td.innerText.trim();
+        row.querySelectorAll(".text").forEach(td=>{
+            updates[r][td.dataset.col] = td.innerText.trim();
         });
     });
 
-    fetch("/save", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            password: password,
-            updates: updates
-        })
-    })
-    .then(res => res.json())
-    .then(d => {
-        if (d.status === "success") {
-            alert("تم حفظ التغييرات ✅");
+    fetch("/save",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({password,updates})
+    }).then(r=>r.json()).then(d=>{
+        if(d.status=="success"){
+            alert("تم الحفظ ✅");
             location.reload();
         } else {
-            alert("كلمة السر خطأ ❌");
+            alert("فشل ❌");
         }
     });
 }
 
-function addClient() {
-    let password = getPassword();
-    if (!password) return;
-
-    fetch("/add_client", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({password: password})
-    })
-    .then(res => res.json())
-    .then(d => {
-        if (d.status === "success") {
-            location.reload();
-        } else {
-            alert("كلمة السر خطأ ❌");
-        }
-    });
+function addClient(){
+    if(!admin){
+        alert("فقط الأدمن يمكنه الإضافة");
+        return;
+    }
+    fetch("/add_client",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({password})
+    }).then(()=>location.reload());
 }
 </script>
 
