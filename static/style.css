@@ -1,7 +1,50 @@
-body { padding: 20px; background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-.client-list { max-height: 90vh; overflow-y: auto; border-right: 1px solid #dee2e6; }
-.client-list .client-item { cursor: pointer; transition: 0.2s; }
-.client-list .client-item:hover { background-color: #e9ecef; }
-.client-details { max-height: 90vh; overflow-y: auto; }
-.tick { margin-right: 10px; }
-.btn-edit { margin-top: 15px; }
+body {
+    padding: 20px;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.client-list {
+    max-height: 90vh;
+    overflow-y: auto;
+    border-right: 1px solid #dee2e6;
+}
+
+.client-list .client-item {
+    cursor: pointer;
+    transition: 0.2s;
+    padding: 8px;
+    min-width: 250px; /* توسعة عمود الاسم */
+}
+
+.client-list .client-item:hover {
+    background-color: #e9ecef;
+}
+
+.client-list .add-client-item {
+    font-weight: bold;
+    text-align: center;
+    color: #555;
+    border-top: 1px dashed #ccc;
+    margin-top: 5px;
+    padding: 8px;
+}
+
+.client-list .add-client-item:hover {
+    background-color: #f0f0f0;
+    color: #2a9df4;
+}
+
+.client-details {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.tick {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.btn-edit {
+    margin-top: 15px;
+}
