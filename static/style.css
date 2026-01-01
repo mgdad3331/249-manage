@@ -1,0 +1,7 @@
+body { padding: 20px; background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+.client-list { max-height: 90vh; overflow-y: auto; border-right: 1px solid #dee2e6; }
+.client-list .client-item { cursor: pointer; transition: 0.2s; }
+.client-list .client-item:hover { background-color: #e9ecef; }
+.client-details { max-height: 90vh; overflow-y: auto; }
+.tick { margin-right: 10px; }
+.btn-edit { margin-top: 15px; }
