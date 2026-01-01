@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import json
 
 # إعداد Flask
 app = Flask(__name__)
@@ -28,14 +29,13 @@ def index():
     data = sheet.get_all_records()
     return render_template('index.html', clients=data, tick_columns=tick_columns)
 
-# تحديث Check Tick أو التفاصيل
+# تحديث Check Tick أو التفاصيل مباشرة
 @app.route('/update', methods=['POST'])
 def update():
-    row_index = int(request.form['row_index']) + 2  # +2 بسبب 0-index و header
+    row_index = int(request.form['row_index']) + 2
     column_name = request.form['column_name']
     value = request.form['value']
 
-    # البحث عن رقم العمود في Sheet
     all_headers = sheet.row_values(1)
     col_index = all_headers.index(column_name) + 1
     sheet.update_cell(row_index, col_index, value)
@@ -49,9 +49,7 @@ def edit():
         return jsonify({"status": "failed", "message": "Wrong password"})
 
     row_index = int(request.form['row_index']) + 2
-    updates = request.form.get('updates')  # dict JSON
-    import json
-    updates = json.loads(updates)
+    updates = json.loads(request.form.get('updates'))
 
     all_headers = sheet.row_values(1)
     for key, val in updates.items():
