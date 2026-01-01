@@ -46,6 +46,20 @@ button {
     padding: 8px 20px;
     margin-top: 15px;
 }
+    .add-client-inline {
+    width: 100%;
+    padding: 10px;
+    background: #fff;
+    border: 1px dashed #ccc;
+    color: #555;
+    text-align: left;
+    cursor: pointer;
+}
+
+.add-client-inline:hover {
+    background: #f4f6f8;
+}
+
 </style>
 </head>
 
@@ -56,9 +70,14 @@ button {
 <table id="table">
 <thead>
 <tr>
-{% for col in clients[0].keys() %}
-    <th>{{ col }}</th>
+    {% for col in clients[0].keys() %}
+    {% if col == 'Name' %}
+        <th style="width:300px;">{{ col }}</th>
+    {% else %}
+        <th>{{ col }}</th>
+    {% endif %}
 {% endfor %}
+
 </tr>
 </thead>
 
@@ -83,18 +102,26 @@ button {
 {% endfor %}
 </tr>
 {% endfor %}
-
-<tr class="add-row" onclick="addClient()">
-    <td colspan="{{ clients[0]|length }}">
-        ➕ إضافة عميل جديد
-    </td>
+    <tr>
+    {% for col in clients[0].keys() %}
+        {% if col == 'Name' %}
+            <td>
+                <button class="add-client-inline">
+                    إضافة عميل جديد
+                </button>
+            </td>
+        {% else %}
+            <td></td>
+        {% endif %}
+    {% endfor %}
 </tr>
+
+
 
 </tbody>
 </table>
 
 <div style="text-align:center">
-<button onclick="enableEdit()">🔐 تفعيل وضع التعديل</button>
 <button onclick="save()" id="saveBtn" style="display:none">💾 حفظ التغييرات</button>
 </div>
 
