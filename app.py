@@ -11,6 +11,7 @@ scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/aut
 creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
 client = gspread.authorize(creds)
 
+# فتح الشيت
 sheet = client.open("Client_Management").sheet1
 
 # كلمة سر Admin
@@ -22,6 +23,23 @@ tick_columns = [
     "Internship Cert", "Documents", "National ID", "Power of Attorney",
     "Preliminary Accept", "Data Completion", "Foreign Fees", "Final Selection"
 ]
+
+# جميع الأعمدة
+all_columns = [
+    "Name", "Email", "University", "Address", "Phone", "Start Date"
+] + tick_columns
+
+# === التحقق من الأعمدة وإضافتها إذا الشيت فارغ ===
+worksheet = sheet
+existing_headers = worksheet.row_values(1)
+if not existing_headers:
+    worksheet.append_row(all_columns)
+    print("Headers added to the sheet successfully!")
+
+    # إضافة عميل تجريبي واحد (اختياري)
+    demo_client = ["Ahmed Ali", "ahmed@example.com", "Cairo University", "Cairo, Egypt", "0100000000", "2026-01-01"] + ["FALSE"]*len(tick_columns)
+    worksheet.append_row(demo_client)
+    print("Demo client added for testing.")
 
 # الصفحة الرئيسية
 @app.route('/')
