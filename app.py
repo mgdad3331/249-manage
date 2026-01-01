@@ -115,7 +115,7 @@ def add_client():
     if password != ADMIN_PASSWORD:
         return jsonify({"status": "failed"})
 
-    new_row = [""] * len(ALL_COLUMNS)
+    new_row = [" "] * len(ALL_COLUMNS)
     sheet.append_row(new_row)
 
     return jsonify({"status": "success"})
