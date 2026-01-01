@@ -4,114 +4,28 @@
 <meta charset="UTF-8">
 <title>Client Management</title>
 
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    padding: 20px;
-}
-h2 {
-    text-align:center;
-    color:#333;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-}
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-}
-th {
-    background: #2a9df4;
-    color: white;
-}
-tr:nth-child(even) {
-    background: #f9f9f9;
-}
-.tick {
-    font-size: 18px;
-}
-.readonly {
-    pointer-events: none;
-    opacity: 0.8;
-}
-.add-client-inline {
-    width: 100%;
-    padding: 8px 10px;
-    background: #fff;
-    border: 1px dashed #ccc;
-    color: #555;
-    text-align: center;
-    cursor: pointer;
-    font-size: 14px;
-}
-.add-client-inline:hover {
-    background: #f4f6f8;
-}
-</style>
-</head>
+<link rel="stylesheet" href="style.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="script.js"></script>
 
+</head>
 <body>
 
 <h2>Client Management System</h2>
 
-<table id="table">
-<thead>
-<tr>
-    {% for col in clients[0].keys() %}
-        {% if col == 'Name' %}
-            <th style="min-width: 300px;">{{ col }}</th>
-        {% else %}
-            <th>{{ col }}</th>
-        {% endif %}
-    {% endfor %}
-</tr>
-</thead>
+<div class="container" style="display:flex; gap:20px;">
 
-<tbody>
-{% for client in clients %}
-<tr data-row="{{ loop.index0 }}">
-    {% for col, val in client.items() %}
-        {% if col in tick_columns %}
-            <td class="tick readonly" data-col="{{ col }}">
-                {{ '✔' if val=='TRUE' else '⬜' }}
-            </td>
-        {% else %}
-            <td class="text readonly" data-col="{{ col }}">
-                {{ val }}
-            </td>
-        {% endif %}
-    {% endfor %}
-</tr>
-{% endfor %}
+    <!-- قائمة العملاء -->
+    <ul class="client-list" id="client-ul" style="list-style:none; padding:0; width:300px;">
+        <!-- سيتم ملؤها ديناميكياً -->
+    </ul>
 
-<!-- زر إضافة عميل جديد تحت آخر عميل -->
-<tr>
-    {% for col in clients[0].keys() %}
-        {% if col == 'Name' %}
-            <td>
-                <button class="add-client-inline" onclick="addClient()">
-                    إضافة عميل جديد
-                </button>
-            </td>
-        {% else %}
-            <td></td>
-        {% endif %}
-    {% endfor %}
-</tr>
+    <!-- تفاصيل العميل -->
+    <div class="client-details" id="details" style="flex:1; background:white; padding:15px; border:1px solid #ddd; min-height:400px;">
+        اختر عميل من القائمة لمشاهدة التفاصيل
+    </div>
 
-</tbody>
-</table>
-
-<script>
-// الزر حاليا لا ينفذ أي إضافة، مجرد واجهة
-function addClient(){
-    alert("فقط الأدمن يمكنه إضافة عميل جديد لاحقًا بعد إدخال كلمة السر.");
-}
-</script>
+</div>
 
 </body>
 </html>
