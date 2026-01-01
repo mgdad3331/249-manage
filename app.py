@@ -62,23 +62,11 @@ TICK_COLUMNS = [
 ALL_COLUMNS = STATIC_COLUMNS + TICK_COLUMNS
 
 # =========================
-# Auto-create headers if missing
+# Ensure headers exist
 # =========================
 headers = sheet.row_values(1)
 if not headers:
     sheet.append_row(ALL_COLUMNS)
-
-    # Add demo client (optional – useful for first run)
-    demo_client = [
-        "Ahmed Ali",
-        "ahmed@example.com",
-        "Cairo University",
-        "Cairo, Egypt",
-        "0100000000",
-        "2026-01-01"
-    ] + ["FALSE"] * len(TICK_COLUMNS)
-
-    sheet.append_row(demo_client)
 
 # =========================
 # Routes
@@ -93,32 +81,42 @@ def index():
         tick_columns=TICK_COLUMNS
     )
 
-@app.route('/update', methods=['POST'])
-def update():
-    row_index = int(request.form['row_index']) + 2
-    column_name = request.form['column_name']
-    value = request.form['value']
+# =========================
+# Save All Changes (Bulk Save)
+# =========================
+@app.route('/save', methods=['POST'])
+def save():
+    data = request.get_json()
 
-    headers = sheet.row_values(1)
-    col_index = headers.index(column_name) + 1
-
-    sheet.update_cell(row_index, col_index, value)
-    return jsonify({"status": "success"})
-
-@app.route('/edit', methods=['POST'])
-def edit():
-    password = request.form['password']
+    password = data.get("password")
     if password != ADMIN_PASSWORD:
         return jsonify({"status": "failed", "message": "Wrong password"})
 
-    row_index = int(request.form['row_index']) + 2
-    updates = json.loads(request.form['updates'])
-
+    updates_by_row = data.get("updates", {})
     headers = sheet.row_values(1)
 
-    for key, value in updates.items():
-        col_index = headers.index(key) + 1
-        sheet.update_cell(row_index, col_index, value)
+    for row_index, updates in updates_by_row.items():
+        sheet_row = int(row_index) + 2  # sheet starts from row 2
+        for col_name, value in updates.items():
+            if col_name in headers:
+                col_index = headers.index(col_name) + 1
+                sheet.update_cell(sheet_row, col_index, value)
+
+    return jsonify({"status": "success"})
+
+# =========================
+# Add New Client
+# =========================
+@app.route('/add_client', methods=['POST'])
+def add_client():
+    data = request.get_json()
+    password = data.get("password")
+
+    if password != ADMIN_PASSWORD:
+        return jsonify({"status": "failed"})
+
+    new_row = [""] * len(ALL_COLUMNS)
+    sheet.append_row(new_row)
 
     return jsonify({"status": "success"})
 
