@@ -1,73 +1,55 @@
 let clients = JSON.parse('{{ clients|tojson|safe }}');
 let tick_columns = JSON.parse('{{ tick_columns|tojson|safe }}');
 
+// عرض قائمة العملاء + زر إضافة عميل
+function renderClientList() {
+    let html = '';
+    clients.forEach((client, index) => {
+        html += `<li class="client-item" data-index="${index}">${client['Name']}</li>`;
+    });
+
+    // زر إضافة عميل جديد تحت آخر عميل
+    html += `<li class="client-item add-client-item" onclick="addClient()">إضافة عميل جديد</li>`;
+
+    $('#client-ul').html(html);
+}
+
+// عرض تفاصيل العميل
 function renderClientDetails(index){
     let client = clients[index];
-    let html = `<h5>${client['Name']}</h5>
-                <p>Email: ${client['Email']}</p>
-                <p>University: ${client['University']}</p>
-                <p>Address: ${client['Address']}</p>
-                <p>Phone: ${client['Phone']}</p>
-                <p>Start Date: ${client['Start Date']}</p>
+    let html = `<h4>${client['Name']}</h4>
+                <p><b>Email:</b> ${client['Email']}</p>
+                <p><b>University:</b> ${client['University']}</p>
+                <p><b>Address:</b> ${client['Address']}</p>
+                <p><b>Phone:</b> ${client['Phone']}</p>
+                <p><b>Start Date:</b> ${client['Start Date']}</p>
                 <hr>
-                <h5>Procedures</h5>`;
+                <h4>Procedures</h4>`;
 
     tick_columns.forEach(function(col){
-        let checked = client[col] ? 'checked' : '';
+        let checked = client[col] === 'TRUE';
         html += `<div class="form-check">
-                    <input type="checkbox" class="form-check-input tick" data-index="${index}" data-col="${col}" ${checked}>
-                    <label class="form-check-label">${col}</label>
+                    <span class="tick">${checked ? '✔' : '⬜'}</span> ${col}
                  </div>`;
     });
 
-    html += `<button class="btn btn-warning btn-edit" data-index="${index}">Edit (Admin)</button>`;
     $('#details').html(html);
 }
 
 // اختيار العميل
 $(document).on('click', '.client-item', function(){
     let index = $(this).data('index');
-    renderClientDetails(index);
+    if(index !== undefined){
+        renderClientDetails(index);
+    }
 });
 
-// تحديث Check Tick مباشرة
-$(document).on('change', '.tick', function(){
-    let index = $(this).data('index');
-    let col = $(this).data('col');
-    let value = $(this).is(':checked') ? 'TRUE' : 'FALSE';
+// زر إضافة العميل الجديد (حاليا واجهة فقط)
+function addClient(){
+    alert("فقط الأدمن يمكنه إضافة عميل جديد بعد إدخال كلمة السر.");
+}
 
-    $.post('/update', {row_index:index, column_name:col, value:value}, function(res){
-        if(res.status === 'success'){
-            clients[index][col] = value === 'TRUE';
-        }
-    });
-});
-
-// تعديل Admin
-$(document).on('click', '.btn-edit', function(){
-    let index = $(this).data('index');
-    let password = prompt("Enter Admin Password:");
-    if(!password) return;
-
-    let updates = {};
-    let newName = prompt("Edit Name:", clients[index]['Name']);
-    if(newName) updates['Name'] = newName;
-
-    $.post('/edit', {row_index:index, password:password, updates:JSON.stringify(updates)}, function(res){
-        if(res.status === 'success'){
-            alert('Updated!');
-            clients[index]['Name'] = updates['Name'];
-            renderClientDetails(index);
-        } else {
-            alert(res.message);
-        }
-    });
-});
-
-// فلترة العملاء
-$('#search').on('keyup', function(){
-    let val = $(this).val().toLowerCase();
-    $('#client-ul li').filter(function(){
-        $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1)
-    });
+// بدء التطبيق
+$(document).ready(function(){
+    renderClientList();
 });
