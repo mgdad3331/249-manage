@@ -11,14 +11,13 @@ import datetime
 app = Flask(__name__)
 
 # =========================
-# Google Sheets Credentials (FROM RENDER SECRET)
+# Google Sheets Credentials
 # =========================
 creds_json = os.environ.get("GOOGLE_CREDS_JSON")
 if not creds_json:
     raise Exception("GOOGLE_CREDS_JSON environment variable not found")
 
 creds_dict = json.loads(creds_json)
-
 scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
@@ -39,35 +38,21 @@ sheet = client.open(SHEET_NAME).sheet1
 ADMIN_PASSWORD = "Miqdad123"
 
 # =========================
-# Columns Definition
+# Columns Definition (العربية المظبوطة)
 # =========================
+
+# هذه الأعمدة تظهر كنصوص عادية
 STATIC_COLUMNS = [
-    "Name", "Email", "University", "Address", "Phone", "Start Date"
+    "الاسم", "البريد الالكتروني", "الجامعة", "الرغبة", "العنوان", "الرقم", "تاريخ البدء"
 ]
 
+# هذه الأعمدة ستتحول تلقائياً إلى نظام صاحات (Ticks)
 TICK_COLUMNS = [
-    "Secondary Cert",
-    "Bachelor Cert",
-    "Master Cert",
-    "Equivalency Cert",
-    "Internship Cert",
-    "Documents",
-    "National ID",
-    "Power of Attorney",
-    "Preliminary Accept",
-    "Data Completion",
-    "Foreign Fees",
-    "Final Selection"
+    "الشهادات", "التوثيقات", "المعادلة", "التوكيل", "الرقم الوطني", 
+    "قبول مبدئي", "تسليم الملف", "رسوم الوافدين", "ترشيح نهائي"
 ]
 
 ALL_COLUMNS = STATIC_COLUMNS + TICK_COLUMNS
-
-# =========================
-# Ensure headers exist
-# =========================
-headers = sheet.row_values(1)
-if not headers:
-    sheet.append_row(ALL_COLUMNS)
 
 # =========================
 # Routes
@@ -75,12 +60,16 @@ if not headers:
 
 @app.route('/')
 def index():
-    data = sheet.get_all_records()
-    return render_template(
-        'index.html',
-        clients=data,
-        tick_columns=TICK_COLUMNS
-    )
+    try:
+        data = sheet.get_all_records()
+        # نرسل TICK_COLUMNS لكي يعرف الـ HTML أي أعمدة يحولها لصاحات
+        return render_template(
+            'index.html',
+            clients=data,
+            tick_columns=TICK_COLUMNS
+        )
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 # =========================
 # Save All Changes (Bulk Save)
@@ -91,19 +80,23 @@ def save():
 
     password = data.get("password")
     if password != ADMIN_PASSWORD:
-        return jsonify({"status": "failed", "message": "Wrong password"})
+        return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
 
     updates_by_row = data.get("updates", {})
     headers = sheet.row_values(1)
 
-    for row_index, updates in updates_by_row.items():
-        sheet_row = int(row_index) + 2  # sheet starts from row 2
-        for col_name, value in updates.items():
-            if col_name in headers:
-                col_index = headers.index(col_name) + 1
-                sheet.update_cell(sheet_row, col_index, value)
-
-    return jsonify({"status": "success"})
+    try:
+        for row_index, updates in updates_by_row.items():
+            sheet_row = int(row_index) + 2  # السطر في شيت قوقل يبدأ من 2
+            for col_name, value in updates.items():
+                if col_name in headers:
+                    col_index = headers.index(col_name) + 1
+                    # تحديث الخلية بـ TRUE أو FALSE
+                    sheet.update_cell(sheet_row, col_index, value)
+        
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "failed", "message": str(e)})
 
 # =========================
 # Add New Client
@@ -112,22 +105,38 @@ def save():
 def add_client():
     data = request.get_json()
     if data.get("password") != ADMIN_PASSWORD:
-        return jsonify({"status": "failed", "message": "Wrong password"})
+        return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
 
     name = data.get("name", "عميل جديد")
     email = data.get("email", "")
     uni = data.get("uni", "")
     phone = data.get("phone", "")
     
-    # بناء الصف الجديد بالترتيب الصحيح للأعمدة
-    new_row = [name, email, uni, "السودان", phone, datetime.datetime.now().strftime("%Y-%m-%d")]
-    new_row += ["FALSE"] * len(TICK_COLUMNS) # الصاحات تبدأ كلها خطأ
-
-    sheet.append_row(new_row)
-    return jsonify({"status": "success"})
+    # بناء الصف الجديد حسب ترتيب قوقل شيت لديك
+    # ترتيبك: الاسم، البريد، الجامعة، الرغبة، العنوان، الرقم، تاريخ البدء
+    now = datetime.datetime.now().strftime("%Y-%m-%d")
     
+    new_row = [
+        name,         # الاسم
+        email,        # البريد
+        uni,          # الجامعة
+        "غير محدد",    # الرغبة (افتراضي)
+        "السودان",     # العنوان (افتراضي)
+        phone,        # الرقم (الهاتف)
+        now           # تاريخ البدء
+    ]
+    
+    # إضافة القيم الافتراضية للصاحات (كلها FALSE في البداية)
+    new_row += ["FALSE"] * len(TICK_COLUMNS)
+
+    try:
+        sheet.append_row(new_row)
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "failed", "message": str(e)})
+
 # =========================
-# Run Local (Render uses Gunicorn)
+# Run Local
 # =========================
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
