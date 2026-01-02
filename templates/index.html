@@ -105,27 +105,22 @@
                     {% for client in clients %}
                     <tr data-row="{{ loop.index0 }}">
                         {% for col, val in client.items() %}
-                            {% if col in tick_columns %}
-                                <td class="text-center">
+                            <td class="text-center">
+                                {% if col in tick_columns %}
                                     <div class="form-check d-flex justify-content-center">
                                         <input type="checkbox" class="form-check-input tick-input shadow-none" 
                                                data-col="{{ col }}" 
                                                {% if val|string|upper == "TRUE" %}checked{% endif %} disabled>
                                     </div>
-                                </td>
-                            {% else %}
-                        {% else %}
-    <td class="text-center">
-        <span class="view-text fw-bold text-dark">{{ val }}</span>
-        
-        <input type="text" 
-               class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
-               value="{{ val }}" 
-               data-col="{{ col }}"
-               style="max-width: 150px; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5;">
-    </td>
-{% endif %}
-                            {% endif %}
+                                {% else %}
+                                    <span class="view-text fw-bold text-dark">{{ val }}</span>
+                                    <input type="text" 
+                                           class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
+                                           value="{{ val }}" 
+                                           data-col="{{ col }}"
+                                           style="max-width: 150px; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5;">
+                                {% endif %}
+                            </td>
                         {% endfor %}
                     </tr>
                     {% endfor %}
