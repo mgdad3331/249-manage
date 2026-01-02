@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
+        <style>
         /* --- التنسيق العام --- */
         body {
             font-family: 'Tajawal', sans-serif;
@@ -32,17 +33,30 @@
             white-space: nowrap;
         }
         
-        /* --- نظام الصحات الجديد (Checkboxes) --- */
+        /* --- نظام الصحات (Checkboxes) المطور --- */
         .tick-input {
             width: 22px !important;
             height: 22px !important;
             cursor: pointer;
             border: 2px solid #0d6efd !important;
             border-radius: 4px !important;
+            opacity: 1 !important; /* يمنع البهتان نهائياً */
         }
-        .tick-input:checked {
-            background-color: #198754 !important; /* لون أخضر عند التفعيل */
+
+        /* لون الصح الزاهي عند التفعيل (سواء متاح التعديل أو مغلق) */
+        .tick-input:checked, 
+        .tick-input:checked:disabled {
+            background-color: #198754 !important; 
             border-color: #198754 !important;
+            opacity: 1 !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+        }
+
+        /* شكل المربع المعطل وهو غير مفعل (أبيض واضح وليس رمادي باهت) */
+        .tick-input:disabled {
+            background-color: #fff;
+            opacity: 1 !important;
+            cursor: default;
         }
 
         /* تمييز حالة التعديل */
@@ -51,6 +65,7 @@
         #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
         .btn-info { background-color: #0ea5e9; border: none; }
         .btn-warning { background-color: #f59e0b; border: none; color: #fff; }
+    </style>
     </style>
 </head>
 <body>
