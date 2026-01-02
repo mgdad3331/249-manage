@@ -185,11 +185,31 @@
     let currentNoteInput = null;
 
 // وظيفة عرض الملاحظة
-function showNote(btn) {
+    function showNote(btn) {
+    // 1. ربط الزر بالحقل المخفي
     currentNoteInput = $(btn).siblings('.note-data');
     let noteText = currentNoteInput.val();
     
+    // 2. وضع النص داخل ساحة الكتابة في المودال
     $('#noteTextArea').val(noteText);
+    
+    // 3. التحقق من وضع التعديل (هنا السحر!)
+    // نتحقق هل كلمة السر صحيحة وهل حقول الجدول الأخرى أصبحت ظاهرة
+    if (activePass === "321") {
+        // إذا التعديل مفتوح: اسمح بالكتابة وأظهر زر الحفظ الخاص بالمودال
+        $('#noteTextArea').prop('readonly', false);
+        $('#noteTextArea').css('background-color', '#fff'); // خلفية بيضاء للكتابة
+        $('#saveNoteBtn').removeClass('d-none'); // إظهار زر "حفظ الملاحظة"
+    } else {
+        // إذا التعديل مغلق: للقراءة فقط واخفِ زر الحفظ
+        $('#noteTextArea').prop('readonly', true);
+        $('#noteTextArea').css('background-color', '#f8f9fa'); // خلفية رمادية للقراءة
+        $('#saveNoteBtn').addClass('d-none'); 
+    }
+    
+    // 4. إظهار النافذة
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
     
     // إذا كان وضع التعديل مفتوحاً، اسمح بالكتابة في الملاحظة
     if (activePass === "Miqdad123") {
