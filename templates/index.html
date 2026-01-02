@@ -228,7 +228,7 @@ function showNote(btn) {
     
     $('#noteTextArea').val(noteText);
     
-    if (activePass === "Miqdad123") {
+    if (activePass === "321") {
         $('#noteTextArea').prop('readonly', false).css('background-color', '#fff');
         $('#saveNoteBtn').removeClass('d-none');
     } else {
@@ -261,7 +261,7 @@ $("#searchInput").on("keyup", function() {
 // 4. فتح التعديل العام
 function toggleGlobalEdit() {
     let pwd = prompt("أدخل كلمة السر:");
-    if (pwd === "Miqdad123") {
+    if (pwd === "321") {
         activePass = pwd;
         $('.tick-input').prop('disabled', false); 
         $('.view-text').addClass('d-none');
@@ -276,7 +276,7 @@ function toggleGlobalEdit() {
 // 5. إضافة عميل
 function openAddModal() {
     let pwd = prompt("أدخل كلمة السر للإضافة:");
-    if (pwd === "Miqdad123") {
+    if (pwd === "321") {
         activePass = pwd;
         new bootstrap.Modal(document.getElementById('addClientModal')).show();
     }
@@ -300,7 +300,7 @@ function executeAdd() {
 // 6. حفظ التغييرات النهائية
 function saveAll() {
     if (!activePass) activePass = prompt("أدخل كلمة السر للحفظ:");
-    if (activePass !== "Miqdad123") return alert("خطأ في كلمة السر");
+    if (activePass !== "321") return alert("خطأ في كلمة السر");
 
     let updates = {};
     $('#client-table tbody tr').each(function() {
