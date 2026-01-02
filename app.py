@@ -114,15 +114,14 @@ def add_client():
     if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"status": "failed", "message": "Wrong password"})
 
-    # جلب البيانات من الطلب
-    name = data.get("name", "New Client")
+    name = data.get("name", "عميل جديد")
     email = data.get("email", "")
     uni = data.get("uni", "")
     phone = data.get("phone", "")
-
-    # ترتيب الصف بناءً على STATIC_COLUMNS
-    new_row = [name, email, uni, "", phone, datetime.datetime.now().strftime("%Y-%m-%d")]
-    new_row += ["FALSE"] * len(TICK_COLUMNS)
+    
+    # بناء الصف الجديد بالترتيب الصحيح للأعمدة
+    new_row = [name, email, uni, "السودان", phone, datetime.datetime.now().strftime("%Y-%m-%d")]
+    new_row += ["FALSE"] * len(TICK_COLUMNS) # الصاحات تبدأ كلها خطأ
 
     sheet.append_row(new_row)
     return jsonify({"status": "success"})
