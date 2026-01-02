@@ -1,57 +1,97 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>نظام إدارة العملاء</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="script.js"></script>
+    <meta charset="utf-8">
+    <title>Management System</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-<h2 style="text-align:center; color:#2a9df4; margin-bottom:20px;">نظام إدارة العملاء</h2>
+<header class="topbar">
+    <div class="brand">
+        <h1>Management System</h1>
+        <p class="subtitle">لوحة متابعة العملاء والإجراءات</p>
+    </div>
+</header>
 
-<table id="client-table">
-    <thead>
-        <tr>
-            {% for col in clients[0].keys() %}
-                {% if col == 'Name' %}
-                    <th style="width:250px">{{ col }}</th>
-                {% else %}
-                    <th>{{ col }}</th>
-                {% endif %}
-            {% endfor %}
-        </tr>
-    </thead>
-    <tbody>
-        {% for client in clients %}
-        <tr data-row="{{ loop.index0 }}">
-            {% for col, val in client.items() %}
-                {% if col in tick_columns %}
-                    <td class="tick-cell" data-col="{{ col }}">
-                        <input type="checkbox" disabled {% if val=="TRUE" %}checked{% endif %}>
-                    </td>
-                {% else %}
-                    <td class="text-cell">{{ val }}</td>
-                {% endif %}
-            {% endfor %}
-        </tr>
-        {% endfor %}
+<main class="container">
 
-        <!-- زر إضافة عميل جديد أسفل آخر عميل -->
-        <tr>
-            {% for col in clients[0].keys() %}
-                {% if col == 'Name' %}
-                    <td>
-                        <button class="add-client-btn">➕ إضافة عميل جديد</button>
-                    </td>
-                {% else %}
-                    <td></td>
-                {% endif %}
-            {% endfor %}
-        </tr>
-    </tbody>
-</table>
+    <!-- جدول العملاء -->
+    <div class="table-wrap">
+        <table class="client-table" id="client-table">
+            <thead>
+                <tr>
+                    {% for col in clients[0].keys() %}
+                        {% if col == 'Name' %}
+                            <th class="col-name">{{ col }}</th>
+                        {% else %}
+                            <th>{{ col }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for client in clients %}
+                <tr class="client-row" data-row="{{ loop.index0 }}">
+                    {% for col, val in client.items() %}
+                        {% if col in tick_columns %}
+                            <td class="tick-cell">
+                                <input type="checkbox" class="tick" disabled {% if val == "TRUE" %}checked{% endif %}>
+                            </td>
+                        {% else %}
+                            {% if col == 'Name' %}
+                                <td class="name-cell">
+                                    <div class="name-wrap">
+                                        <div class="client-name">{{ val }}</div>
+
+                                        {% if loop.index0 == 0 %}
+                                        <!-- زر إضافة عميل جديد تحت اسم أول عميل -->
+                                        <div class="add-inline">
+                                            <button class="btn-add" onclick="addClient()">➕ إضافة عميل جديد</button>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            {% else %}
+                                <td class="text-cell">{{ val }}</td>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<!-- سكربت صغير لزر الإضافة -->
+<script>
+function addClient(){
+    let pwd = prompt("أدخل كلمة سر الأدمن لإضافة عميل جديد:");
+    if(!pwd) return;
+    fetch('/add_client', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({password: pwd})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.status === 'success'){
+            alert('تمت إضافة عميل جديد ✅');
+            location.reload();
+        } else {
+            alert('فشل الإضافة: ' + (d.message || 'خطأ'));
+        }
+    })
+    .catch(e=>{
+        console.error(e);
+        alert('حدث خطأ أثناء الإرسال');
+    });
+}
+</script>
 
 </body>
 </html>
