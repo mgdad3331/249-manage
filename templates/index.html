@@ -3,45 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Management System | نظام الإدارة</title>
+    <title>نظام إدارة العملاء | Professional Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <style>
+        /* --- التصميم الاحترافي (CSS) --- */
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f4f7fa;
+            direction: rtl;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-bottom: 4px solid #f59e0b;
+            padding: 1rem 2rem;
+        }
+        .brand-text { color: white; font-weight: bold; font-size: 1.3rem; }
+        
+        /* الجدول والصاحات */
+        .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .table thead th { background-color: #f8fafc; color: #475569; font-weight: 700; text-align: center; border-bottom: 2px solid #e2e8f0; }
+        
+        .form-check-input { width: 2.8em !important; height: 1.4em !important; cursor: pointer; }
+        .form-check-input:checked { background-color: #10b981 !important; border-color: #10b981 !important; }
+        
+        /* تمييز حالة التعديل */
+        .edit-mode-active { border: 2px solid #f59e0b !important; }
+        .table-warning-custom { background-color: #fef9c3 !important; }
+
+        #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; }
+    </style>
 </head>
 <body>
 
 <nav class="navbar navbar-dark shadow-sm mb-4">
     <div class="container-fluid d-flex justify-content-between align-items-center">
         <div class="navbar-brand d-flex align-items-center">
-            <img src="https://i.ibb.co/8nNk7gxX/logo-removebg-preview-1.png" alt="Logo" height="45" class="ms-3">
-            <div class="brand-text">
-                <span class="fw-bold d-block text-white">MANAGEMENT SYSTEM</span>
-            </div>
+            <img src="https://i.ibb.co/8nNk7gxX/logo-removebg-preview-1.png" alt="Logo" height="40" class="ms-3">
+            <span class="brand-text">MANAGEMENT SYSTEM</span>
         </div>
-        
         <div class="d-flex gap-2">
-            <button class="btn btn-info btn-sm px-3 fw-bold text-white" id="enable-all-edit">🔓 فتح التعديل العام</button>
-            <button class="btn btn-outline-light btn-sm px-3" id="add-client-btn">➕ إضافة عميل جديد</button>
-            <button class="btn btn-warning btn-sm px-3 fw-bold" id="save-all-btn">💾 حفظ التغييرات</button>
+            <button class="btn btn-info btn-sm px-4 fw-bold text-white" id="main-edit-btn" onclick="toggleGlobalEdit()">🔓 فتح التعديل العام</button>
+            <button class="btn btn-outline-light btn-sm px-3" onclick="openAddModal()">➕ إضافة عميل</button>
+            <button class="btn btn-warning btn-sm px-4 fw-bold" onclick="saveAll()">💾 حفظ التغييرات</button>
         </div>
     </div>
 </nav>
 
 <main class="container-fluid px-4">
-    <div class="row mb-4">
-        <div class="col-md-6 offset-md-3 text-center">
-            <input type="text" id="searchInput" class="form-control" placeholder="🔍 ابحث هنا...">
-        </div>
+    <div class="col-md-6 mx-auto">
+        <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 ابحث عن أي اسم أو رقم هاتف...">
     </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="client-table">
-                <thead class="bg-light">
+                <thead>
                     <tr>
                         {% if clients %}
                             {% for col in clients[0].keys() %}
-                                <th class="text-center py-3">{{ col }}</th>
+                                <th>{{ col }}</th>
                             {% endfor %}
                         {% endif %}
                     </tr>
@@ -55,11 +77,11 @@
                                     <div class="form-check form-switch d-inline-block">
                                         <input type="checkbox" class="form-check-input tick-input" 
                                                data-col="{{ col }}" 
-                                               {% if val == "TRUE" or val == True %}checked{% endif %} disabled>
+                                               {% if val|string|upper == "TRUE" %}checked{% endif %} disabled>
                                     </div>
                                 </td>
                             {% else %}
-                                <td class="text-center text-secondary fw-bold">{{ val }}</td>
+                                <td class="text-center fw-bold text-dark">{{ val }}</td>
                             {% endif %}
                         {% endfor %}
                     </tr>
@@ -75,14 +97,14 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white"><h5>إضافة عميل جديد</h5></div>
             <div class="modal-body">
-                <input type="text" id="newName" class="form-control mb-2" placeholder="الاسم">
-                <input type="email" id="newEmail" class="form-control mb-2" placeholder="الإيميل">
-                <input type="text" id="newUni" class="form-control mb-2" placeholder="الجامعة">
-                <input type="text" id="newPhone" class="form-control mb-2" placeholder="الهاتف">
+                <div class="mb-3"><label>الاسم</label><input type="text" id="newName" class="form-control"></div>
+                <div class="mb-3"><label>البريد</label><input type="email" id="newEmail" class="form-control"></div>
+                <div class="mb-3"><label>الجامعة</label><input type="text" id="newUni" class="form-control"></div>
+                <div class="mb-3"><label>الهاتف</label><input type="text" id="newPhone" class="form-control"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button class="btn btn-primary" id="confirm-add-btn">حفظ</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">إغاء</button>
+                <button class="btn btn-primary px-4" onclick="executeAdd()">حفظ وإضافة</button>
             </div>
         </div>
     </div>
@@ -90,6 +112,86 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<script>
+    let activePass = "";
+
+    // 1. وظيفة البحث
+    $("#searchInput").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#client-table tbody tr").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+
+    // 2. زر فتح التعديل لكل العملاء
+    function toggleGlobalEdit() {
+        let pwd = prompt("أدخل كلمة السر لفتح التعديل:");
+        if (pwd === "Miqdad123") {
+            activePass = pwd;
+            $('.tick-input').prop('disabled', false); // تفعيل الصاحات
+            $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 التعديل متاح الآن');
+            $('.card').addClass('edit-mode-active');
+            alert("تم تفعيل وضع التعديل لجميع العملاء.");
+        } else {
+            alert("كلمة السر خاطئة!");
+        }
+    }
+
+    // 3. إضافة عميل جديد
+    function openAddModal() {
+        let pwd = prompt("أدخل كلمة السر للإضافة:");
+        if (pwd === "Miqdad123") {
+            activePass = pwd;
+            new bootstrap.Modal(document.getElementById('addClientModal')).show();
+        } else {
+            alert("كلمة السر خاطئة!");
+        }
+    }
+
+    function executeAdd() {
+        const data = {
+            password: activePass,
+            name: $('#newName').val(),
+            email: $('#newEmail').val(),
+            uni: $('#newUni').val(),
+            phone: $('#newPhone').val()
+        };
+        fetch('/add_client', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        }).then(() => location.reload());
+    }
+
+    // 4. حفظ التغييرات النهائية
+    function saveAll() {
+        if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
+        if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
+
+        let updates = {};
+        $('#client-table tbody tr').each(function() {
+            let rowIdx = $(this).data('row');
+            updates[rowIdx] = {};
+            $(this).find('.tick-input').each(function() {
+                updates[rowIdx][$(this).data('col')] = $(this).is(':checked') ? "TRUE" : "FALSE";
+            });
+        });
+
+        fetch('/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: activePass, updates: updates })
+        }).then(r => r.json()).then(res => {
+            if(res.status === 'success') {
+                alert("تم الحفظ بنجاح في Google Sheets ✅");
+                location.reload();
+            } else {
+                alert("خطأ: " + res.message);
+            }
+        });
+    }
+</script>
+
 </body>
 </html>
