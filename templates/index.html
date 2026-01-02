@@ -168,14 +168,24 @@
     });
 
     // 2. تفعيل وضع التعديل (إزالة القفل عن الصحات)
+    // 2. تفعيل وضع التعديل (للصاحات والنصوص معاً)
     function toggleGlobalEdit() {
-        let pwd = prompt("أدخل كلمة السر لفتح التعديل لجميع العملاء:");
+        let pwd = prompt("أدخل كلمة السر لفتح التعديل العام:");
         if (pwd === "Miqdad123") {
             activePass = pwd;
+            
+            // 1. فك القفل عن الصاحات
             $('.tick-input').prop('disabled', false); 
-            $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 وضع التعديل نشط');
+            
+            // 2. إخفاء النصوص العادية وإظهار حقول الإدخال
+            $('.view-text').addClass('d-none');
+            $('.edit-input').removeClass('d-none');
+            
+            // 3. تغيير شكل الزر العلوي
+            $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 وضع التعديل نشط الآن');
             $('.card').addClass('edit-mode-active');
-            alert("تم تفعيل وضع الصحات بنجاح ✅");
+            
+            alert("تم فتح جميع الخلايا للتعديل ✅");
         } else {
             alert("كلمة السر خاطئة!");
         }
@@ -208,10 +218,51 @@
     }
 
     // 4. حفظ التغييرات النهائية (تحديث الكل بطلقة واحدة)
+    // 4. حفظ التغييرات النهائية (نصوص + صاحات)
     function saveAll() {
         if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
         if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
 
+        const saveBtn = document.querySelector('button[onclick="saveAll()"]');
+        let originalText = saveBtn.innerText;
+        saveBtn.innerText = "⏳ جاري الحفظ...";
+        saveBtn.disabled = true;
+
+        let updates = {};
+        $('#client-table tbody tr').each(function() {
+            let rowIdx = $(this).data('row');
+            updates[rowIdx] = {};
+            
+            // جمع بيانات الصاحات
+            $(this).find('.tick-input').each(function() {
+                updates[rowIdx][$(this).data('col')] = $(this).is(':checked') ? "TRUE" : "FALSE";
+            });
+            
+            // جمع بيانات النصوص المعدلة من حقول الإدخال
+            $(this).find('.edit-input').each(function() {
+                updates[rowIdx][$(this).data('col')] = $(this).val();
+            });
+        });
+
+        fetch('/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: activePass, updates: updates })
+        }).then(r => r.json()).then(res => {
+            if(res.status === 'success') {
+                alert("تم تحديث كافة البيانات في قوقل شيت بنجاح ✅");
+                location.reload();
+            } else {
+                alert("فشل الحفظ: " + res.message);
+                saveBtn.innerText = originalText;
+                saveBtn.disabled = false;
+            }
+        }).catch(err => {
+            alert("حدث خطأ في الاتصال بالسيرفر");
+            saveBtn.innerText = originalText;
+            saveBtn.disabled = false;
+        });
+    }
         // إظهار رسالة انتظار
         const saveBtn = document.querySelector('button[onclick="saveAll()"]');
         saveBtn.innerText = "⏳ جاري الحفظ...";
