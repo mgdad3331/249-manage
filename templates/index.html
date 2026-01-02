@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        <style>
         /* --- التنسيق العام --- */
         body {
             font-family: 'Tajawal', sans-serif;
@@ -33,17 +32,16 @@
             white-space: nowrap;
         }
         
-        /* --- نظام الصحات (Checkboxes) المطور --- */
+        /* --- نظام الصحات المطور --- */
         .tick-input {
             width: 22px !important;
             height: 22px !important;
             cursor: pointer;
             border: 2px solid #0d6efd !important;
             border-radius: 4px !important;
-            opacity: 1 !important; /* يمنع البهتان نهائياً */
+            opacity: 1 !important;
         }
 
-        /* لون الصح الزاهي عند التفعيل (سواء متاح التعديل أو مغلق) */
         .tick-input:checked, 
         .tick-input:checked:disabled {
             background-color: #198754 !important; 
@@ -52,20 +50,16 @@
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
         }
 
-        /* شكل المربع المعطل وهو غير مفعل (أبيض واضح وليس رمادي باهت) */
         .tick-input:disabled {
             background-color: #fff;
             opacity: 1 !important;
             cursor: default;
         }
 
-        /* تمييز حالة التعديل */
         .edit-mode-active { border: 2px solid #f59e0b !important; }
-        
         #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
         .btn-info { background-color: #0ea5e9; border: none; }
         .btn-warning { background-color: #f59e0b; border: none; color: #fff; }
-    </style>
     </style>
 </head>
 <body>
@@ -154,7 +148,7 @@
 <script>
     let activePass = "";
 
-    // 1. وظيفة البحث الذكي
+    // 1. وظيفة البحث
     $("#searchInput").on("keyup", function() {
         var value = $(this).val().toLowerCase();
         $("#client-table tbody tr").filter(function() {
@@ -162,24 +156,16 @@
         });
     });
 
-    // 2. تفعيل وضع التعديل (إزالة القفل عن الصحات)
-    // 2. تفعيل وضع التعديل (للصاحات والنصوص معاً)
+    // 2. تفعيل وضع التعديل العام
     function toggleGlobalEdit() {
         let pwd = prompt("أدخل كلمة السر لفتح التعديل العام:");
         if (pwd === "Miqdad123") {
             activePass = pwd;
-            
-            // 1. فك القفل عن الصاحات
             $('.tick-input').prop('disabled', false); 
-            
-            // 2. إخفاء النصوص العادية وإظهار حقول الإدخال
             $('.view-text').addClass('d-none');
             $('.edit-input').removeClass('d-none');
-            
-            // 3. تغيير شكل الزر العلوي
             $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 وضع التعديل نشط الآن');
             $('.card').addClass('edit-mode-active');
-            
             alert("تم فتح جميع الخلايا للتعديل ✅");
         } else {
             alert("كلمة السر خاطئة!");
@@ -212,8 +198,7 @@
         }).then(() => location.reload());
     }
 
-    // 4. حفظ التغييرات النهائية (تحديث الكل بطلقة واحدة)
-    // 4. حفظ التغييرات النهائية (نصوص + صاحات)
+    // 4. حفظ التغييرات النهائية
     function saveAll() {
         if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
         if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
@@ -228,12 +213,12 @@
             let rowIdx = $(this).data('row');
             updates[rowIdx] = {};
             
-            // جمع بيانات الصاحات
+            // جمع الصاحات
             $(this).find('.tick-input').each(function() {
                 updates[rowIdx][$(this).data('col')] = $(this).is(':checked') ? "TRUE" : "FALSE";
             });
             
-            // جمع بيانات النصوص المعدلة من حقول الإدخال
+            // جمع النصوص
             $(this).find('.edit-input').each(function() {
                 updates[rowIdx][$(this).data('col')] = $(this).val();
             });
@@ -258,40 +243,6 @@
             saveBtn.disabled = false;
         });
     }
-        // إظهار رسالة انتظار
-        const saveBtn = document.querySelector('button[onclick="saveAll()"]');
-        saveBtn.innerText = "⏳ جاري الحفظ...";
-        saveBtn.disabled = true;
-
-        let updates = {};
-        $('#client-table tbody tr').each(function() {
-            let rowIdx = $(this).data('row');
-            updates[rowIdx] = {};
-            $(this).find('.tick-input').each(function() {
-                updates[rowIdx][$(this).data('col')] = $(this).is(':checked') ? "TRUE" : "FALSE";
-            });
-        });
-
-        fetch('/save', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ password: activePass, updates: updates })
-        }).then(r => r.json()).then(res => {
-            if(res.status === 'success') {
-                alert("تم تحديث كافة البيانات بنجاح ✅");
-                location.reload();
-            } else {
-                alert("فشل الحفظ: " + res.message);
-                saveBtn.innerText = "💾 حفظ التغييرات";
-                saveBtn.disabled = false;
-            }
-        }).catch(err => {
-            alert("حدث خطأ في الاتصال بالسيرفر");
-            saveBtn.innerText = "💾 حفظ التغييرات";
-            saveBtn.disabled = false;
-        });
-    }
 </script>
-
 </body>
 </html>
