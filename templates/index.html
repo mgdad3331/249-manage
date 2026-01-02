@@ -3,30 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة العملاء | Professional Management</title>
+    <title>نظام إدارة العملاء المالي | Professional Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* تمييز الأعمدة المالية باللون الأصفر */
-.col-finance {
-    background-color: #fef9c3 !important; /* لون أصفر فاتح */
-    color: #854d0e !important; /* لون نص بني متناسق */
-    font-weight: bold;
-}
-.table th.col-finance {
-    background-color: #facc15 !important; /* أصفر أغمق للرأس */
-}
-        /* تكبير عرض خلية الاسم */
-.table td:first-child, .table th:first-child {
-    min-width: 250px !important; /* سيجعل العرض 250 بكسل بدلاً من التلقائي */
-}
-
-/* تعديل عرض حقل الإدخال داخل الاسم ليمتد بالكامل */
-.table td:first-child .edit-input {
-    max-width: 100% !important;
-    width: 100%;
-}
         /* --- التنسيق العام --- */
         body {
             font-family: 'Tajawal', sans-serif;
@@ -40,7 +21,25 @@
         }
         .brand-text { color: white; font-weight: bold; font-size: 1.3rem; }
         
-        /* تصميم الجدول */
+        /* تمييز الأعمدة المالية باللون الأصفر */
+        .col-finance {
+            background-color: #fef9c3 !important;
+            color: #854d0e !important;
+            font-weight: bold;
+            text-align: center;
+        }
+        .table th.col-finance {
+            background-color: #facc15 !important;
+            color: #451a03 !important;
+        }
+
+        /* تكبير عرض خلية الاسم وتنسيقها */
+        #client-table td:first-child, #client-table th:first-child {
+            min-width: 280px !important;
+            text-align: right !important;
+            padding-right: 20px;
+        }
+
         .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .table thead th { 
             background-color: #f8fafc; 
@@ -51,7 +50,7 @@
             white-space: nowrap;
         }
         
-        /* --- نظام الصحات المطور --- */
+        /* نظام الصحات */
         .tick-input {
             width: 22px !important;
             height: 22px !important;
@@ -61,21 +60,20 @@
             opacity: 1 !important;
         }
 
-        .tick-input:checked, 
-        .tick-input:checked:disabled {
+        .tick-input:checked, .tick-input:checked:disabled {
             background-color: #198754 !important; 
             border-color: #198754 !important;
-            opacity: 1 !important;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
         }
 
-        .tick-input:disabled {
-            background-color: #fff;
-            opacity: 1 !important;
-            cursor: default;
+        .edit-input { 
+            width: 90%; 
+            min-width: 120px; 
+            border: 1px solid #f59e0b; 
+            font-weight: bold; 
+            background-color: #fffcf5; 
         }
-
-        .edit-mode-active { border: 2px solid #f59e0b !important; }
+        
         #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
         .btn-info { background-color: #0ea5e9; border: none; }
         .btn-warning { background-color: #f59e0b; border: none; color: #fff; }
@@ -99,7 +97,7 @@
 
 <main class="container-fluid px-4">
     <div class="col-md-6 mx-auto">
-        <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 ابحث عن أي اسم أو بيانات داخل الجدول...">
+        <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 ابحث عن أي اسم أو بيانات...">
     </div>
 
     <div class="card shadow-sm">
@@ -111,17 +109,12 @@
                             {% for col in clients[0].keys() %}
                                 <th>{{ col }}</th>
                             {% endfor %}
+                            <th class="col-finance">جملة المطلوب</th>
+                            <th class="col-finance">جملة المتبقي</th>
                         {% endif %}
                     </tr>
                 </thead>
                 <tbody>
-                    <td class="text-center col-finance total-required" data-base="26000">0</td>
-<td class="text-center col-finance">
-    <input type="number" class="form-control form-control-sm edit-input d-none received-amount text-center shadow-none mx-auto" 
-           value="{{ client.get('جملة المستلم', 0) }}" data-col="جملة المستلم" style="max-width: 100px;">
-    <span class="view-text">{{ client.get('جملة المستلم', 0) }}</span>
-</td>
-<td class="text-center col-finance total-remaining">0</td>
                     {% for client in clients %}
                     <tr data-row="{{ loop.index0 }}">
                         {% for col, val in client.items() %}
@@ -134,12 +127,15 @@
                                     </div>
                                 {% else %}
                                     <span class="view-text fw-bold text-dark">{{ val }}</span>
-                                <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
-       value="{{ val }}" data-col="{{ col }}"
-       style="width: 90%; min-width: 120px; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5;">
+                                    <input type="text" 
+                                           class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto financial-trigger" 
+                                           value="{{ val }}" 
+                                           data-col="{{ col }}">
                                 {% endif %}
                             </td>
                         {% endfor %}
+                        <td class="col-finance total-required">0</td>
+                        <td class="col-finance total-remaining">0</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -153,10 +149,10 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white"><h5>إضافة عميل جديد</h5></div>
             <div class="modal-body">
-                <div class="mb-3"><label class="fw-bold mb-1">الاسم</label><input type="text" id="newName" class="form-control" placeholder="الاسم الكامل"></div>
-                <div class="mb-3"><label class="fw-bold mb-1">البريد</label><input type="email" id="newEmail" class="form-control" placeholder="example@mail.com"></div>
-                <div class="mb-3"><label class="fw-bold mb-1">الجامعة</label><input type="text" id="newUni" class="form-control" placeholder="اسم الجامعة"></div>
-                <div class="mb-3"><label class="fw-bold mb-1">الهاتف</label><input type="text" id="newPhone" class="form-control" placeholder="00249..."></div>
+                <div class="mb-3"><label class="fw-bold mb-1">الاسم</label><input type="text" id="newName" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">البريد</label><input type="email" id="newEmail" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">الجامعة</label><input type="text" id="newUni" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">الهاتف</label><input type="text" id="newPhone" class="form-control"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
@@ -170,51 +166,50 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    function calculateFinances() {
-    $('#client-table tbody tr').each(function() {
-        let row = $(this);
-        let officeFees = 26000;
-        let additionals = 0;
-
-        // ابحث عن الصحات (افترضنا أن أسماء الأعمدة هي الرقم الوطني والتوكيل)
-        row.find('.tick-input').each(function() {
-            let colName = $(this).data('col');
-            if ($(this).is(':checked')) {
-                if (colName === "الرقم الوطني" || colName === "التوكيل") {
-                    additionals += 3500;
-                }
-            }
-        });
-
-        let totalRequired = officeFees + additionals;
-        let received = parseFloat(row.find('.received-amount').val()) || 0;
-        let remaining = totalRequired - received;
-
-        // تحديث الأرقام في الجدول
-        row.find('.total-required').text(totalRequired.toLocaleString());
-        row.find('.total-remaining').text(remaining.toLocaleString());
-        
-        // تلوين المتبقي بالأحمر إذا كان العميل لم يكمل الدفع
-        if (remaining > 0) {
-            row.find('.total-remaining').css('color', '#dc3545');
-        } else {
-            row.find('.total-remaining').css('color', '#198754');
-        }
-    });
-}
-
-// تشغيل الحسابات عند تحميل الصفحة
-$(document).ready(function() {
-    calculateFinances();
-});
-
-// إعادة الحساب عند تغيير أي صح أو مبلغ مستلم
-$(document).on('change', '.tick-input, .received-amount', function() {
-    calculateFinances();
-});
     let activePass = "";
 
-    // 1. وظيفة البحث
+    // 1. محرك الحسابات (المعادلة: 26000 + 3500 لكل صح - المستلم)
+    function calculateFinances() {
+        $('#client-table tbody tr').each(function() {
+            let row = $(this);
+            let baseFees = 26000;
+            let additionals = 0;
+            let received = 0;
+
+            // حساب الإضافات من الصحات
+            row.find('.tick-input').each(function() {
+                let colName = $(this).data('col');
+                if ($(this).is(':checked')) {
+                    if (colName === "الرقم الوطني" || colName === "التوكيل") {
+                        additionals += 3500;
+                    }
+                }
+            });
+
+            // الحصول على قيمة "جملة المستلم" من حقول الإدخال
+            row.find('.edit-input').each(function() {
+                if ($(this).data('col') === "جملة المستلم") {
+                    received = parseFloat($(this).val()) || 0;
+                }
+            });
+
+            let totalRequired = baseFees + additionals;
+            let totalRemaining = totalRequired - received;
+
+            // عرض النتائج في الأعمدة الصفراء
+            row.find('.total-required').text(totalRequired.toLocaleString());
+            row.find('.total-remaining').text(totalRemaining.toLocaleString());
+
+            // تلوين المتبقي (أحمر لو عليه فلوس، أخضر لو خلص)
+            if (totalRemaining > 0) {
+                row.find('.total-remaining').css('color', '#dc3545');
+            } else {
+                row.find('.total-remaining').css('color', '#198754');
+            }
+        });
+    }
+
+    // 2. البحث
     $("#searchInput").on("keyup", function() {
         var value = $(this).val().toLowerCase();
         $("#client-table tbody tr").filter(function() {
@@ -222,7 +217,7 @@ $(document).on('change', '.tick-input, .received-amount', function() {
         });
     });
 
-    // 2. تفعيل وضع التعديل العام
+    // 3. فتح التعديل العام
     function toggleGlobalEdit() {
         let pwd = prompt("أدخل كلمة السر لفتح التعديل العام:");
         if (pwd === "Miqdad123") {
@@ -238,39 +233,12 @@ $(document).on('change', '.tick-input, .received-amount', function() {
         }
     }
 
-    // 3. إضافة عميل
-    function openAddModal() {
-        let pwd = prompt("أدخل كلمة السر للإضافة:");
-        if (pwd === "Miqdad123") {
-            activePass = pwd;
-            new bootstrap.Modal(document.getElementById('addClientModal')).show();
-        } else {
-            alert("كلمة السر خاطئة!");
-        }
-    }
-
-    function executeAdd() {
-        const data = {
-            password: activePass,
-            name: $('#newName').val(),
-            email: $('#newEmail').val(),
-            uni: $('#newUni').val(),
-            phone: $('#newPhone').val()
-        };
-        fetch('/add_client', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        }).then(() => location.reload());
-    }
-
-    // 4. حفظ التغييرات النهائية
+    // 4. الحفظ النهائي
     function saveAll() {
         if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
         if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
 
         const saveBtn = document.querySelector('button[onclick="saveAll()"]');
-        let originalText = saveBtn.innerText;
         saveBtn.innerText = "⏳ جاري الحفظ...";
         saveBtn.disabled = true;
 
@@ -279,14 +247,11 @@ $(document).on('change', '.tick-input, .received-amount', function() {
             let rowIdx = $(this).data('row');
             updates[rowIdx] = {};
             
-            // جمع الصاحات
-            $(this).find('.tick-input').each(function() {
-                updates[rowIdx][$(this).data('col')] = $(this).is(':checked') ? "TRUE" : "FALSE";
-            });
-            
-            // جمع النصوص
-            $(this).find('.edit-input').each(function() {
-                updates[rowIdx][$(this).data('col')] = $(this).val();
+            // جمع الصحات والنصوص معاً
+            $(this).find('.tick-input, .edit-input').each(function() {
+                let col = $(this).data('col');
+                let val = $(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val();
+                updates[rowIdx][col] = val;
             });
         });
 
@@ -296,19 +261,23 @@ $(document).on('change', '.tick-input, .received-amount', function() {
             body: JSON.stringify({ password: activePass, updates: updates })
         }).then(r => r.json()).then(res => {
             if(res.status === 'success') {
-                alert("تم تحديث كافة البيانات في قوقل شيت بنجاح ✅");
+                alert("تم تحديث قوقل شيت بنجاح ✅");
                 location.reload();
             } else {
                 alert("فشل الحفظ: " + res.message);
-                saveBtn.innerText = originalText;
+                saveBtn.innerText = "💾 حفظ التغييرات";
                 saveBtn.disabled = false;
             }
-        }).catch(err => {
-            alert("حدث خطأ في الاتصال بالسيرفر");
-            saveBtn.innerText = originalText;
+        }).catch(() => {
+            alert("خطأ في الاتصال");
+            saveBtn.innerText = "💾 حفظ التغييرات";
             saveBtn.disabled = false;
         });
     }
+
+    // تشغيل المحرك عند التحميل وعند أي تغيير
+    $(document).ready(calculateFinances);
+    $(document).on('change', '.tick-input, .financial-trigger', calculateFinances);
 </script>
 </body>
 </html>
