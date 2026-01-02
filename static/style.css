@@ -1,54 +1,143 @@
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f8f9fa;
-    padding: 20px;
+/* عام */
+:root{
+    --blue-600: #2a9df4;
+    --blue-700: #1f7fd6;
+    --orange-500: #ff8a33;
+    --muted: #6b7280;
+    --bg: #f5f7fb;
+    --card: #ffffff;
 }
 
-h2 {
-    font-weight: bold;
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: #0b1220;
+    -webkit-font-smoothing:antialiased;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 12px;
-    text-align: center;
-}
-
-th {
-    background-color: #2a9df4;
+/* Top bar */
+.topbar{
+    background: linear-gradient(90deg, rgba(42,157,244,0.95), rgba(255,138,51,0.95));
     color: white;
-    font-size: 14px;
+    padding: 18px 24px;
+    box-shadow: 0 6px 20px rgba(15,23,42,0.08);
+}
+.brand h1{
+    margin:0;
+    font-size:20px;
+    letter-spacing:0.3px;
+}
+.subtitle{
+    margin:4px 0 0 0;
+    font-size:13px;
+    opacity:0.95;
 }
 
-tr:nth-child(even) {
-    background-color: #f9f9f9;
+/* container */
+.container{
+    max-width:1200px;
+    margin:20px auto;
+    padding:0 18px;
 }
 
-.tick-cell input[type="checkbox"] {
-    width: 25px;
-    height: 25px;
-    cursor: not-allowed;
+/* table wrap */
+.table-wrap{
+    background: var(--card);
+    border-radius:12px;
+    padding:14px;
+    box-shadow: 0 8px 30px rgba(11,18,32,0.06);
+    overflow:auto;
 }
 
-.add-client-btn {
-    padding: 8px 15px;
-    background-color: #fff;
-    border: 2px dashed #2a9df4;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 5px;
-    width: 100%;
+/* table */
+.client-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:900px;
 }
 
-.add-client-btn:hover {
-    background-color: #e9f1fc;
+/* headers */
+.client-table thead th{
+    text-align:center;
+    padding:12px 10px;
+    font-weight:600;
+    background: linear-gradient(180deg, rgba(42,157,244,0.12), rgba(255,138,51,0.06));
+    color: #073042;
+    border-bottom:1px solid rgba(11,18,32,0.06);
+    font-size:13px;
+}
+
+/* columns */
+.client-table th, .client-table td{
+    border-bottom: 1px solid rgba(11,18,32,0.04);
+    padding:12px 10px;
+    vertical-align:middle;
+}
+
+/* اسم العميل أعرض */
+.col-name, .name-cell{
+    min-width:320px;
+    text-align:left;
+    padding-left:18px;
+}
+
+/* اسم داخل الخانة */
+.client-name{
+    font-weight:700;
+    color:#12324b;
+    margin-bottom:6px;
+}
+
+/* add inline زر */
+.add-inline{
+    margin-top:6px;
+}
+.btn-add{
+    background: #ffffff;
+    color: var(--blue-700);
+    border: 2px dashed rgba(42,157,244,0.85);
+    padding:8px 12px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer;
+    transition: all .18s ease;
+}
+.btn-add:hover{
+    transform:translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15,23,42,0.06);
+}
+
+/* text cells */
+.text-cell{
+    color: var(--muted);
+    font-size:14px;
+}
+
+/* tick cell */
+.tick-cell{
+    text-align:center;
+}
+.tick{
+    width:22px;
+    height:22px;
+    transform:scale(1.2);
+}
+
+/* zebra rows */
+.client-row:nth-child(even){
+    background: rgba(11,18,32,0.02);
+}
+
+/* responsive */
+@media (max-width:980px){
+    .container{padding:0 12px}
+    .col-name, .name-cell{min-width:220px}
+    .client-table{min-width:800px}
+}
+@media (max-width:640px){
+    .client-table{min-width:700px}
+    .client-name{font-size:15px}
+    .btn-add{padding:6px 10px}
 }
