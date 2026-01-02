@@ -105,22 +105,27 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="client-table">
                 <thead>
-                    <tr>
-                        {% if clients %}
-                            {% for col in clients[0].keys() %}
-                                <th>{{ col }}</th>
-                            {% endfor %}
-                            <th class="col-finance">جملة المطلوب</th>
-                            <th class="col-finance">جملة المستلم</th>
-                            <th class="col-finance">جملة المتبقي</th>
-                        <th class="text-center">التفاصيل</th>
-                        {% endif %}
-                    </tr>
-                </thead>
+    <tr>
+        {% if clients %}
+            {% for col in clients[0].keys() %}
+                {# إذا كان اسم العمود هو الملاحظات أو جملة المستلم لا ترسم له عنواناً هنا لأننا سنرسمه يدوياً في الأعمدة المالية #}
+                {% if col != "الملاحظات" and col != "جملة المستلم" %}
+                    <th>{{ col }}</th>
+                {% endif %}
+            {% endfor %}
+            <th class="col-finance">جملة المطلوب</th>
+            <th class="col-finance">جملة المستلم</th>
+            <th class="col-finance">جملة المتبقي</th>
+            <th class="text-center">التفاصيل</th>
+        {% endif %}
+    </tr>
+</thead>
                 <tbody>
     {% for client in clients %}
     <tr data-row="{{ loop.index0 }}">
         {% for col, val in client.items() %}
+            {# نتخطى عرض الملاحظات والمستلم هنا لأننا سنضعهم في الأعمدة الملونة والزر #}
+            {% if col != "الملاحظات" and col != "جملة المستلم" %}
             <td class="text-center">
                 {% if col in tick_columns %}
                     <div class="form-check d-flex justify-content-center">
@@ -134,6 +139,7 @@
                            value="{{ val }}" data-col="{{ col }}">
                 {% endif %}
             </td>
+            {% endif %}
         {% endfor %}
 
         <td class="col-finance total-required">0</td>
@@ -148,13 +154,15 @@
         <td class="col-finance total-remaining">0</td>
 
         <td class="text-center">
+            {# الحقل المخفي الذي يحتوي على الداتا #}
             <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showNote(this)">
                 👁️ ملاحظة
             </button>
         </td>
     </tr>
-    {% endfor %} </tbody>
+    {% endfor %}
+</tbody>
             </table>
         </div>
     </div>
