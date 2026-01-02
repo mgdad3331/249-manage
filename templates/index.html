@@ -204,7 +204,7 @@ function calculateFinances() {
         row.find('.tick-input').each(function() {
             let colName = $(this).data('col').toString().trim();
             if ($(this).is(':checked')) {
-                if (colName === "الرقم الوطني" || colName === "التوكيل") {
+                if (colName === "رقم وطني" || colName === "توكيل") {
                     additionals += 3500;
                 }
             }
