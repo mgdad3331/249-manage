@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- التصميم الاحترافي (CSS) --- */
+        /* --- التنسيق العام --- */
         body {
             font-family: 'Tajawal', sans-serif;
             background-color: #f4f7fa;
@@ -21,18 +21,36 @@
         }
         .brand-text { color: white; font-weight: bold; font-size: 1.3rem; }
         
-        /* الجدول والصاحات */
+        /* تصميم الجدول */
         .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .table thead th { background-color: #f8fafc; color: #475569; font-weight: 700; text-align: center; border-bottom: 2px solid #e2e8f0; }
+        .table thead th { 
+            background-color: #f8fafc; 
+            color: #475569; 
+            font-weight: 700; 
+            text-align: center; 
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
         
-        .form-check-input { width: 2.8em !important; height: 1.4em !important; cursor: pointer; }
-        .form-check-input:checked { background-color: #10b981 !important; border-color: #10b981 !important; }
-        
+        /* --- نظام الصحات الجديد (Checkboxes) --- */
+        .tick-input {
+            width: 22px !important;
+            height: 22px !important;
+            cursor: pointer;
+            border: 2px solid #0d6efd !important;
+            border-radius: 4px !important;
+        }
+        .tick-input:checked {
+            background-color: #198754 !important; /* لون أخضر عند التفعيل */
+            border-color: #198754 !important;
+        }
+
         /* تمييز حالة التعديل */
         .edit-mode-active { border: 2px solid #f59e0b !important; }
-        .table-warning-custom { background-color: #fef9c3 !important; }
-
-        #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; }
+        
+        #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
+        .btn-info { background-color: #0ea5e9; border: none; }
+        .btn-warning { background-color: #f59e0b; border: none; color: #fff; }
     </style>
 </head>
 <body>
@@ -53,7 +71,7 @@
 
 <main class="container-fluid px-4">
     <div class="col-md-6 mx-auto">
-        <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 ابحث عن أي اسم أو رقم هاتف...">
+        <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 ابحث عن أي اسم أو بيانات داخل الجدول...">
     </div>
 
     <div class="card shadow-sm">
@@ -74,8 +92,8 @@
                         {% for col, val in client.items() %}
                             {% if col in tick_columns %}
                                 <td class="text-center">
-                                    <div class="form-check form-switch d-inline-block">
-                                        <input type="checkbox" class="form-check-input tick-input" 
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox" class="form-check-input tick-input shadow-none" 
                                                data-col="{{ col }}" 
                                                {% if val|string|upper == "TRUE" %}checked{% endif %} disabled>
                                     </div>
@@ -97,13 +115,13 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white"><h5>إضافة عميل جديد</h5></div>
             <div class="modal-body">
-                <div class="mb-3"><label>الاسم</label><input type="text" id="newName" class="form-control"></div>
-                <div class="mb-3"><label>البريد</label><input type="email" id="newEmail" class="form-control"></div>
-                <div class="mb-3"><label>الجامعة</label><input type="text" id="newUni" class="form-control"></div>
-                <div class="mb-3"><label>الهاتف</label><input type="text" id="newPhone" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">الاسم</label><input type="text" id="newName" class="form-control" placeholder="الاسم الكامل"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">البريد</label><input type="email" id="newEmail" class="form-control" placeholder="example@mail.com"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">الجامعة</label><input type="text" id="newUni" class="form-control" placeholder="اسم الجامعة"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">الهاتف</label><input type="text" id="newPhone" class="form-control" placeholder="00249..."></div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">إغاء</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button class="btn btn-primary px-4" onclick="executeAdd()">حفظ وإضافة</button>
             </div>
         </div>
@@ -116,7 +134,7 @@
 <script>
     let activePass = "";
 
-    // 1. وظيفة البحث
+    // 1. وظيفة البحث الذكي
     $("#searchInput").on("keyup", function() {
         var value = $(this).val().toLowerCase();
         $("#client-table tbody tr").filter(function() {
@@ -124,21 +142,21 @@
         });
     });
 
-    // 2. زر فتح التعديل لكل العملاء
+    // 2. تفعيل وضع التعديل (إزالة القفل عن الصحات)
     function toggleGlobalEdit() {
-        let pwd = prompt("أدخل كلمة السر لفتح التعديل:");
+        let pwd = prompt("أدخل كلمة السر لفتح التعديل لجميع العملاء:");
         if (pwd === "Miqdad123") {
             activePass = pwd;
-            $('.tick-input').prop('disabled', false); // تفعيل الصاحات
-            $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 التعديل متاح الآن');
+            $('.tick-input').prop('disabled', false); 
+            $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 وضع التعديل نشط');
             $('.card').addClass('edit-mode-active');
-            alert("تم تفعيل وضع التعديل لجميع العملاء.");
+            alert("تم تفعيل وضع الصحات بنجاح ✅");
         } else {
             alert("كلمة السر خاطئة!");
         }
     }
 
-    // 3. إضافة عميل جديد
+    // 3. إضافة عميل
     function openAddModal() {
         let pwd = prompt("أدخل كلمة السر للإضافة:");
         if (pwd === "Miqdad123") {
@@ -164,10 +182,15 @@
         }).then(() => location.reload());
     }
 
-    // 4. حفظ التغييرات النهائية
+    // 4. حفظ التغييرات النهائية (تحديث الكل بطلقة واحدة)
     function saveAll() {
         if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
         if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
+
+        // إظهار رسالة انتظار
+        const saveBtn = document.querySelector('button[onclick="saveAll()"]');
+        saveBtn.innerText = "⏳ جاري الحفظ...";
+        saveBtn.disabled = true;
 
         let updates = {};
         $('#client-table tbody tr').each(function() {
@@ -184,11 +207,17 @@
             body: JSON.stringify({ password: activePass, updates: updates })
         }).then(r => r.json()).then(res => {
             if(res.status === 'success') {
-                alert("تم الحفظ بنجاح في Google Sheets ✅");
+                alert("تم تحديث كافة البيانات بنجاح ✅");
                 location.reload();
             } else {
-                alert("خطأ: " + res.message);
+                alert("فشل الحفظ: " + res.message);
+                saveBtn.innerText = "💾 حفظ التغييرات";
+                saveBtn.disabled = false;
             }
+        }).catch(err => {
+            alert("حدث خطأ في الاتصال بالسيرفر");
+            saveBtn.innerText = "💾 حفظ التغييرات";
+            saveBtn.disabled = false;
         });
     }
 </script>
