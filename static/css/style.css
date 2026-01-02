@@ -143,41 +143,147 @@ body{
 }
 
 ##تحسين شكل الاعمدة 
-/* شعار الشركة */
-.logo{
-    height: 50px;
-    display: block;
-    margin-bottom: 8px;
+/* ========== Base Reset ========== */
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8fafe;
+    color: #1e2a38;
 }
 
-/* تحسين تصميم رأس الجدول */
-.client-table thead th{
-    text-align:center;
-    padding:14px 12px;
-    font-weight:600;
-    background: linear-gradient(90deg, rgba(42,157,244,0.15), rgba(255,138,51,0.1));
-    color: #073042;
-    border-bottom:2px solid rgba(11,18,32,0.08);
-    font-size:14px;
+/* ========== Header ========== */
+.topbar {
+    background: linear-gradient(90deg, #2a9df4 0%, #ff8a33 100%);
+    padding: 18px 24px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+}
+.topbar .logo {
+    height: 60px;
+    margin-bottom: 6px;
+}
+.topbar .subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* ========== Table Container ========== */
+.container {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+.table-wrap {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 6px 25px rgba(50, 50, 93, 0.05);
+}
+
+/* ========== Table Styles ========== */
+.client-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.client-table th {
+    background-color: #eef6ff;
+    color: #0b1726;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 10px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.client-table td {
+    background: white;
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #2a3d53;
+    border: none;
+    position: relative;
+}
+
+/* Rows */
+.client-table tr {
     border-radius: 6px;
+    transition: background 0.2s ease;
+}
+.client-table tr:hover td {
+    background: #f1f7ff;
 }
 
-/* تحسين تصميم الخلايا */
-.client-table td{
-    padding:10px 12px;
-    font-size:14px;
-    color:#0b1220;
+/* ========== Column Widths ========== */
+.col-name {
+    min-width: 320px;
+    text-align: left;
+    padding-left: 18px;
 }
 
-/* خطوط أفقية مريحة للعين */
-.client-row:nth-child(even){
-    background-color: rgba(42,157,244,0.03);
-}
-.client-row:nth-child(odd){
-    background-color: rgba(255,138,51,0.02);
+/* ========== Tick Boxes ========== */
+.tick-cell input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    transform: scale(1.4);
+    cursor: default;
 }
 
-/* تحسين النصوص داخل الخلايا */
+/* ========== First Client Add Button Inline ========== */
+.add-inline {
+    margin-top: 6px;
+    text-align: left;
+}
+.btn-add {
+    background: white;
+    color: #2a9df4;
+    border: 2px dashed #2a9df4;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+.btn-add:hover {
+    background: #eef6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 71, 255, 0.07);
+}
+
+/* ========== Zebra Effect ========== */
+.client-row:nth-child(even) td {
+    background: #f6faff;
+}
+.client-row:nth-child(odd) td {
+    background: #ffffff;
+}
+
+/* ========== Text Cells ========== */
+.text-cell {
+    text-align: center;
+    font-size: 14px;
+    color: #243447;
+}
+
+/* For responsiveness (optional) */
+@media (max-width: 1024px) {
+    .client-table {
+        font-size: 13px;
+    }
+}
+@media (max-width: 768px) {
+    .col-name { min-width: 240px; }
+    .btn-add { padding: 6px 12px; font-size: 13px; }
+}
+
 .text-cell{
     color: #1a2733;
 }
