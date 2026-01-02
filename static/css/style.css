@@ -1,26 +1,48 @@
 body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f7fb;
-    color: #0b1220;
+    font-family: 'Tajawal', sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
 }
 
-/* جدول العملاء */
-table#client-table th {
-    font-size: 14px;
+/* التعديل على شريط العنوان */
+.navbar {
+    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+    padding: 0.8rem 1rem;
+    border-bottom: 3px solid #ff8a33;
 }
 
-table#client-table td {
-    font-size: 13px;
+.brand-text span {
+    letter-spacing: 1px;
+    font-size: 1.1rem;
+    color: #ffffff;
 }
 
-/* زر إضافة عميل */
-button.btn-outline-primary {
-    border-color: #2a9df4;
-    color: #2a9df4;
-    transition: 0.2s;
+.brand-text small {
+    font-size: 0.75rem;
+    font-weight: bold;
 }
 
-button.btn-outline-primary:hover {
-    background-color: #2a9df4;
-    color: white;
+/* الجدول */
+.table thead th {
+    font-weight: 700;
+    color: #495057;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #e3f2fd;
+    transition: 0.3s;
+}
+
+/* أزرار التبديل (Switches) */
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.card {
+    border-radius: 12px;
+    overflow: hidden;
 }
