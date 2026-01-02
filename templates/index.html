@@ -3,29 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <title>Client Management</title>
-
 <link rel="stylesheet" href="style.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="script.js"></script>
-
 </head>
 <body>
 
-<h2>Client Management System</h2>
+<h2 style="text-align:center">نظام إدارة العملاء</h2>
 
-<div class="container" style="display:flex; gap:20px;">
+<table id="client-table">
+    <thead>
+        <tr>
+            {% for col in clients[0].keys() %}
+                {% if col == 'Name' %}
+                    <th style="width:250px">{{ col }}</th>
+                {% else %}
+                    <th>{{ col }}</th>
+                {% endif %}
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for client in clients %}
+        <tr data-row="{{ loop.index0 }}">
+            {% for col, val in client.items() %}
+                {% if col in tick_columns %}
+                    <td class="tick-cell" data-col="{{ col }}">
+                        <span class="tick">{{ '✔' if val=='TRUE' else '⬜' }}</span>
+                    </td>
+                {% else %}
+                    <td>{{ val }}</td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
 
-    <!-- قائمة العملاء -->
-    <ul class="client-list" id="client-ul" style="list-style:none; padding:0; width:300px;">
-        <!-- سيتم ملؤها ديناميكياً -->
-    </ul>
-
-    <!-- تفاصيل العميل -->
-    <div class="client-details" id="details" style="flex:1; background:white; padding:15px; border:1px solid #ddd; min-height:400px;">
-        اختر عميل من القائمة لمشاهدة التفاصيل
-    </div>
-
-</div>
+        <!-- زر إضافة عميل جديد أسفل آخر عميل -->
+        <tr>
+            {% for col in clients[0].keys() %}
+                {% if col == 'Name' %}
+                    <td colspan="1">
+                        <button class="add-client-btn">إضافة عميل جديد</button>
+                    </td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
 
 </body>
 </html>
