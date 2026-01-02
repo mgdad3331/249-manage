@@ -1,63 +1,61 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Management System</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <header class="topbar">
-    <div class="brand">
-        <!-- شعار الشركة -->
-        <img src="https://i.ibb.co/8nNk7gxX/logo-removebg-preview-1.png" alt="Company Logo" class="logo">
-        <h1>Management System</h1>
-        <p class="subtitle">لوحة متابعة العملاء والإجراءات</p>
+
+<header class="bg-gradient d-flex align-items-center p-3 mb-4" style="background: linear-gradient(90deg,#2a9df4,#ff8a33);">
+    <img src="https://i.ibb.co/8nNk7gxX/logo-removebg-preview-1.png" alt="Logo" height="50" class="me-3">
+    <div>
+        <h1 class="h4 text-white mb-0">Management System</h1>
+        <small class="text-white-50">لوحة متابعة العملاء والإجراءات</small>
     </div>
 </header>
 
-
 <main class="container">
 
-    <!-- جدول العملاء -->
-    <div class="table-wrap">
-        <table class="client-table" id="client-table">
-            <thead>
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-striped table-hover align-middle" id="client-table">
+            <thead class="table-primary">
                 <tr>
                     {% for col in clients[0].keys() %}
                         {% if col == 'Name' %}
-                            <th class="col-name">{{ col }}</th>
+                            <th class="text-start">{{ col }}</th>
                         {% else %}
-                            <th>{{ col }}</th>
+                            <th class="text-center">{{ col }}</th>
                         {% endif %}
                     {% endfor %}
                 </tr>
             </thead>
-
             <tbody>
                 {% for client in clients %}
-                <tr class="client-row" data-row="{{ loop.index0 }}">
+                <tr data-row="{{ loop.index0 }}">
                     {% for col, val in client.items() %}
                         {% if col in tick_columns %}
-                            <td class="tick-cell">
-                                <input type="checkbox" class="tick" disabled {% if val == "TRUE" %}checked{% endif %}>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input" disabled {% if val == "TRUE" %}checked{% endif %}>
                             </td>
                         {% else %}
                             {% if col == 'Name' %}
-                                <td class="name-cell">
-                                    <div class="name-wrap">
-                                        <div class="client-name">{{ val }}</div>
+                                <td class="text-start">
+                                    <div class="d-flex flex-column">
+                                        <strong>{{ val }}</strong>
 
                                         {% if loop.index0 == 0 %}
-                                        <!-- زر إضافة عميل جديد تحت اسم أول عميل -->
-                                        <div class="add-inline">
-                                            <button class="btn-add" onclick="addClient()">➕ إضافة عميل جديد</button>
-                                        </div>
+                                        <button class="btn btn-outline-primary btn-sm mt-2 align-self-start"
+                                                onclick="addClient()">➕ إضافة عميل جديد</button>
                                         {% endif %}
                                     </div>
                                 </td>
                             {% else %}
-                                <td class="text-cell">{{ val }}</td>
+                                <td class="text-center">{{ val }}</td>
                             {% endif %}
                         {% endif %}
                     {% endfor %}
@@ -69,7 +67,10 @@
 
 </main>
 
-<!-- سكربت صغير لزر الإضافة -->
+<!-- Bootstrap JS Bundle (Optional for responsive features) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Script Add Client -->
 <script>
 function addClient(){
     let pwd = prompt("أدخل كلمة سر الأدمن لإضافة عميل جديد:");
