@@ -2,14 +2,14 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Client Management</title>
+<title>نظام إدارة العملاء</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="script.js"></script>
 </head>
 <body>
 
-<h2 style="text-align:center">نظام إدارة العملاء</h2>
+<h2 style="text-align:center; color:#2a9df4; margin-bottom:20px;">نظام إدارة العملاء</h2>
 
 <table id="client-table">
     <thead>
@@ -29,10 +29,10 @@
             {% for col, val in client.items() %}
                 {% if col in tick_columns %}
                     <td class="tick-cell" data-col="{{ col }}">
-                        <span class="tick">{{ '✔' if val=='TRUE' else '⬜' }}</span>
+                        <input type="checkbox" disabled {% if val=="TRUE" %}checked{% endif %}>
                     </td>
                 {% else %}
-                    <td>{{ val }}</td>
+                    <td class="text-cell">{{ val }}</td>
                 {% endif %}
             {% endfor %}
         </tr>
@@ -42,8 +42,8 @@
         <tr>
             {% for col in clients[0].keys() %}
                 {% if col == 'Name' %}
-                    <td colspan="1">
-                        <button class="add-client-btn">إضافة عميل جديد</button>
+                    <td>
+                        <button class="add-client-btn">➕ إضافة عميل جديد</button>
                     </td>
                 {% else %}
                     <td></td>
