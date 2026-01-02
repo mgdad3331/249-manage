@@ -188,7 +188,7 @@
             row.find('.tick-input').each(function() {
                 let colName = $(this).data('col').trim();
                 if ($(this).is(':checked')) {
-                    if (colName === "الرقم الوطني" || colName === "التوكيل") {
+                    if (colName === "رقم وطني" || colName === "توكيل") {
                         additionals += 3500;
                     }
                 }
@@ -220,7 +220,7 @@
     // فتح التعديل العام
     function toggleGlobalEdit() {
         let pwd = prompt("أدخل كلمة السر لفتح التعديل العام:");
-        if (pwd === "Miqdad123") {
+        if (pwd === "m249m") {
             activePass = pwd;
             $('.tick-input').prop('disabled', false); 
             $('.view-text').addClass('d-none');
@@ -257,7 +257,7 @@
     // حفظ التغييرات
     function saveAll() {
         if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
-        if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
+        if (activePass !== "m249m") return alert("فشل الحفظ: كلمة السر غير صحيحة");
 
         const saveBtn = document.querySelector('button[onclick="saveAll()"]');
         saveBtn.innerText = "⏳ جاري الحفظ...";
