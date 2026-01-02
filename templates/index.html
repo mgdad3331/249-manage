@@ -148,6 +148,28 @@
                         <td class="col-finance total-remaining">0</td>
                     </tr>
                     {% endfor %}
+                        
+                        <td class="col-finance total-required">0</td>
+
+                        <td class="col-finance">
+                            {% set received_val = client.get('جملة المستلم', '0') %}
+                            <span class="view-text">{{ received_val }}</span>
+                            <input type="number" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto received-amount-input" 
+                                   value="{{ received_val }}" data-col="جملة المستلم">
+                        </td>
+
+                        <td class="col-finance total-remaining">0</td>
+
+                        <td class="text-center">
+                            <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
+                            <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showNote(this)">
+                                👁️ ملاحظة
+                            </button>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -176,6 +198,36 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    let currentNoteInput = null;
+
+// وظيفة عرض الملاحظة
+function showNote(btn) {
+    currentNoteInput = $(btn).siblings('.note-data');
+    let noteText = currentNoteInput.val();
+    
+    $('#noteTextArea').val(noteText);
+    
+    // إذا كان وضع التعديل مفتوحاً، اسمح بالكتابة في الملاحظة
+    if (activePass === "Miqdad123") {
+        $('#noteTextArea').prop('readonly', false);
+        $('#saveNoteBtn').removeClass('d-none');
+    } else {
+        $('#noteTextArea').prop('readonly', true);
+        $('#saveNoteBtn').addClass('d-none');
+    }
+    
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+
+// وظيفة تحديث الملاحظة في الحقل المخفي تمهيداً لحفظها في الشيت
+function updateNoteFromModal() {
+    let newText = $('#noteTextArea').val();
+    if (currentNoteInput) {
+        currentNoteInput.val(newText);
+        bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+        alert("تم تحديث الملاحظة مؤقتاً، اضغط على 'حفظ التغييرات' الرئيسي للتثبيت النهائي ✅");
+    }
+}
     let activePass = "";
 
     // محرك الحسابات المطور
@@ -294,5 +346,24 @@
     $(document).ready(calculateFinances);
     $(document).on('change input', '.financial-calc-trigger, .received-amount-input, .financial-trigger', calculateFinances);
 </script>
+    
+    <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">📝 ملاحظات العميل</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <textarea id="noteTextArea" class="form-control" rows="6" placeholder="اكتب التفاصيل هنا..." readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" id="saveNoteBtn" class="btn btn-warning d-none" onclick="updateNoteFromModal()">حفظ الملاحظة</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
 </body>
 </html>
