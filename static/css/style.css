@@ -141,3 +141,44 @@ body{
     .client-name{font-size:15px}
     .btn-add{padding:6px 10px}
 }
+
+##تحسين شكل الاعمدة 
+/* شعار الشركة */
+.logo{
+    height: 50px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* تحسين تصميم رأس الجدول */
+.client-table thead th{
+    text-align:center;
+    padding:14px 12px;
+    font-weight:600;
+    background: linear-gradient(90deg, rgba(42,157,244,0.15), rgba(255,138,51,0.1));
+    color: #073042;
+    border-bottom:2px solid rgba(11,18,32,0.08);
+    font-size:14px;
+    border-radius: 6px;
+}
+
+/* تحسين تصميم الخلايا */
+.client-table td{
+    padding:10px 12px;
+    font-size:14px;
+    color:#0b1220;
+}
+
+/* خطوط أفقية مريحة للعين */
+.client-row:nth-child(even){
+    background-color: rgba(42,157,244,0.03);
+}
+.client-row:nth-child(odd){
+    background-color: rgba(255,138,51,0.02);
+}
+
+/* تحسين النصوص داخل الخلايا */
+.text-cell{
+    color: #1a2733;
+}
+
