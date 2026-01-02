@@ -213,14 +213,22 @@ function calculateFinances() {
         let additionals = 0;
 
         // حساب الإضافات من الصحات (تنظيف المسافات والتحقق من الاسم)
-        row.find('.tick-input').each(function() {
-            let colName = $(this).data('col').toString().trim();
-            if ($(this).is(':checked')) {
-                if (colName === "رقم وطني" || colName === "توكيل") {
-                    additionals += 3500;
-                }
-            }
-        });
+        // داخل دالة calculateFinances ابحث عن هذا الجزء:
+row.find('.tick-input').each(function() {
+    let colName = $(this).data('col').toString().trim();
+    if ($(this).is(':checked')) {
+        
+        // 1. حساب الرقم الوطني والتوكيل (3500 جنيه)
+        if (colName === "الرقم الوطني" || colName === "التوكيل") {
+            additionals += 3500;
+        }
+        
+        // 2. إضافة شرط التوثيقات الجديد (5500 جنيه)
+        if (colName === "توثيقات") {
+            additionals += 5500;
+        }
+    }
+});
 
         // جلب مبلغ المستلم من الحقل الصحيح
         let received = parseFloat(row.find('.received-amount-input').val()) || 0;
