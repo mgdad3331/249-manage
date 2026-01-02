@@ -1,48 +1,91 @@
+/* تحسين الخطوط والخلفية */
 body {
     font-family: 'Tajawal', sans-serif;
-    background-color: #f0f2f5;
+    background-color: #f4f7fa;
     color: #333;
+    direction: rtl;
 }
 
-/* التعديل على شريط العنوان */
+/* شريط العنوان الاحترافي */
 .navbar {
-    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-    padding: 0.8rem 1rem;
-    border-bottom: 3px solid #ff8a33;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 0.8rem 1.5rem;
+    border-bottom: 4px solid #f59e0b; /* خط برتقالي ذهبي */
 }
 
 .brand-text span {
     letter-spacing: 1px;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: #ffffff;
 }
 
 .brand-text small {
-    font-size: 0.75rem;
-    font-weight: bold;
+    font-size: 0.8rem;
+    color: #38bdf8 !important; /* لون سماوي للنص الفرعي */
 }
 
-/* الجدول */
+/* تحسين شكل الجدول والحاوية */
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
 .table thead th {
+    background-color: #f8fafc;
     font-weight: 700;
-    color: #495057;
-    text-transform: uppercase;
+    color: #475569;
     font-size: 0.85rem;
-    border-bottom: 2px solid #dee2e6;
+    border-bottom: 2px solid #e2e8f0;
+    text-align: center;
 }
 
+/* تأثير عند المرور على الصف */
 .table-hover tbody tr:hover {
-    background-color: #e3f2fd;
+    background-color: #f1f5f9;
+    transition: 0.2s ease-in-out;
+}
+
+/* --- نظام الصاحات (Switches) --- */
+.form-check-input {
+    width: 2.8em !important;
+    height: 1.4em !important;
+    cursor: pointer;
+    background-color: #cbd5e1; /* لون رمادي عند التعطيل */
+    border: none;
+}
+
+.form-check-input:checked {
+    background-color: #10b981 !important; /* أخضر زاهي عند التفعيل */
+    border-color: #10b981 !important;
+}
+
+/* تمييز الصف الذي يتم تعديله حالياً */
+.table-warning {
+    background-color: #fef9c3 !important; /* أصفر فاتح جداً */
+    border-right: 5px solid #f59e0b; /* علامة جانبية برتقالية */
+}
+
+/* شريط البحث */
+.input-group-text {
+    border-radius: 0 8px 8px 0 !important;
+}
+
+#searchInput {
+    border-radius: 8px 0 0 8px !important;
+    height: 45px;
+}
+
+/* أزرار الإجراءات */
+.edit-btn {
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.8rem;
     transition: 0.3s;
 }
 
-/* أزرار التبديل (Switches) */
-.form-check-input:checked {
-    background-color: #28a745;
-    border-color: #28a745;
-}
-
-.card {
-    border-radius: 12px;
-    overflow: hidden;
+.btn-success {
+    background-color: #10b981;
+    border: none;
 }
