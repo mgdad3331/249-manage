@@ -27,6 +27,7 @@
             color: #854d0e !important;
             font-weight: bold;
             text-align: center;
+            border: 1px solid #fde68a !important;
         }
         .table th.col-finance {
             background-color: #facc15 !important;
@@ -35,7 +36,7 @@
 
         /* تكبير عرض خلية الاسم وتنسيقها */
         #client-table td:first-child, #client-table th:first-child {
-            min-width: 280px !important;
+            min-width: 300px !important;
             text-align: right !important;
             padding-right: 20px;
         }
@@ -67,11 +68,11 @@
         }
 
         .edit-input { 
-            width: 90%; 
-            min-width: 120px; 
+            width: 95%; 
             border: 1px solid #f59e0b; 
             font-weight: bold; 
             background-color: #fffcf5; 
+            border-radius: 5px;
         }
         
         #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
@@ -110,6 +111,7 @@
                                 <th>{{ col }}</th>
                             {% endfor %}
                             <th class="col-finance">جملة المطلوب</th>
+                            <th class="col-finance">جملة المستلم</th>
                             <th class="col-finance">جملة المتبقي</th>
                         {% endif %}
                     </tr>
@@ -121,7 +123,7 @@
                             <td class="text-center">
                                 {% if col in tick_columns %}
                                     <div class="form-check d-flex justify-content-center">
-                                        <input type="checkbox" class="form-check-input tick-input shadow-none" 
+                                        <input type="checkbox" class="form-check-input tick-input shadow-none financial-calc-trigger" 
                                                data-col="{{ col }}" 
                                                {% if val|string|upper == "TRUE" %}checked{% endif %} disabled>
                                     </div>
@@ -134,7 +136,14 @@
                                 {% endif %}
                             </td>
                         {% endfor %}
+                        
                         <td class="col-finance total-required">0</td>
+                        <td class="col-finance">
+                            {% set received_val = client.get('جملة المستلم', '0') %}
+                            <span class="view-text">{{ received_val }}</span>
+                            <input type="number" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto received-amount-input" 
+                                   value="{{ received_val }}" data-col="جملة المستلم">
+                        </td>
                         <td class="col-finance total-remaining">0</td>
                     </tr>
                     {% endfor %}
@@ -168,17 +177,16 @@
 <script>
     let activePass = "";
 
-    // 1. محرك الحسابات (المعادلة: 26000 + 3500 لكل صح - المستلم)
+    // محرك الحسابات المطور
     function calculateFinances() {
         $('#client-table tbody tr').each(function() {
             let row = $(this);
             let baseFees = 26000;
             let additionals = 0;
-            let received = 0;
 
-            // حساب الإضافات من الصحات
+            // حساب 3500 لكل صح في الأعمدة المطلوبة
             row.find('.tick-input').each(function() {
-                let colName = $(this).data('col');
+                let colName = $(this).data('col').trim();
                 if ($(this).is(':checked')) {
                     if (colName === "الرقم الوطني" || colName === "التوكيل") {
                         additionals += 3500;
@@ -186,30 +194,22 @@
                 }
             });
 
-            // الحصول على قيمة "جملة المستلم" من حقول الإدخال
-            row.find('.edit-input').each(function() {
-                if ($(this).data('col') === "جملة المستلم") {
-                    received = parseFloat($(this).val()) || 0;
-                }
-            });
+            // جلب قيمة المستلم
+            let received = parseFloat(row.find('.received-amount-input').val()) || 0;
 
             let totalRequired = baseFees + additionals;
             let totalRemaining = totalRequired - received;
 
-            // عرض النتائج في الأعمدة الصفراء
+            // عرض النتائج في الخلايا الصفراء
             row.find('.total-required').text(totalRequired.toLocaleString());
             row.find('.total-remaining').text(totalRemaining.toLocaleString());
 
-            // تلوين المتبقي (أحمر لو عليه فلوس، أخضر لو خلص)
-            if (totalRemaining > 0) {
-                row.find('.total-remaining').css('color', '#dc3545');
-            } else {
-                row.find('.total-remaining').css('color', '#198754');
-            }
+            // تلوين المتبقي
+            row.find('.total-remaining').css('color', totalRemaining > 0 ? '#dc3545' : '#198754');
         });
     }
 
-    // 2. البحث
+    // البحث
     $("#searchInput").on("keyup", function() {
         var value = $(this).val().toLowerCase();
         $("#client-table tbody tr").filter(function() {
@@ -217,7 +217,7 @@
         });
     });
 
-    // 3. فتح التعديل العام
+    // فتح التعديل العام
     function toggleGlobalEdit() {
         let pwd = prompt("أدخل كلمة السر لفتح التعديل العام:");
         if (pwd === "Miqdad123") {
@@ -226,14 +226,35 @@
             $('.view-text').addClass('d-none');
             $('.edit-input').removeClass('d-none');
             $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 وضع التعديل نشط الآن');
-            $('.card').addClass('edit-mode-active');
-            alert("تم فتح جميع الخلايا للتعديل ✅");
-        } else {
-            alert("كلمة السر خاطئة!");
+            calculateFinances();
         }
     }
 
-    // 4. الحفظ النهائي
+    // إضافة عميل
+    function openAddModal() {
+        let pwd = prompt("أدخل كلمة السر للإضافة:");
+        if (pwd === "Miqdad123") {
+            activePass = pwd;
+            new bootstrap.Modal(document.getElementById('addClientModal')).show();
+        }
+    }
+
+    function executeAdd() {
+        const data = {
+            password: activePass,
+            name: $('#newName').val(),
+            email: $('#newEmail').val(),
+            uni: $('#newUni').val(),
+            phone: $('#newPhone').val()
+        };
+        fetch('/add_client', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        }).then(() => location.reload());
+    }
+
+    // حفظ التغييرات
     function saveAll() {
         if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
         if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
@@ -246,8 +267,6 @@
         $('#client-table tbody tr').each(function() {
             let rowIdx = $(this).data('row');
             updates[rowIdx] = {};
-            
-            // جمع الصحات والنصوص معاً
             $(this).find('.tick-input, .edit-input').each(function() {
                 let col = $(this).data('col');
                 let val = $(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val();
@@ -268,16 +287,11 @@
                 saveBtn.innerText = "💾 حفظ التغييرات";
                 saveBtn.disabled = false;
             }
-        }).catch(() => {
-            alert("خطأ في الاتصال");
-            saveBtn.innerText = "💾 حفظ التغييرات";
-            saveBtn.disabled = false;
         });
     }
 
-    // تشغيل المحرك عند التحميل وعند أي تغيير
     $(document).ready(calculateFinances);
-    $(document).on('change', '.tick-input, .financial-trigger', calculateFinances);
+    $(document).on('change input', '.financial-calc-trigger, .received-amount-input, .financial-trigger', calculateFinances);
 </script>
 </body>
 </html>
