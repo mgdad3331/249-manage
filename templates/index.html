@@ -173,11 +173,23 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white"><h5>إضافة عميل جديد</h5></div>
             <div class="modal-body">
-                <div class="mb-3"><label class="fw-bold mb-1">الاسم</label><input type="text" id="newName" class="form-control"></div>
-                <div class="mb-3"><label class="fw-bold mb-1">البريد</label><input type="email" id="newEmail" class="form-control"></div>
-                <div class="mb-3"><label class="fw-bold mb-1">الجامعة</label><input type="text" id="newUni" class="form-control"></div>
-                <div class="mb-3"><label class="fw-bold mb-1">الهاتف</label><input type="text" id="newPhone" class="form-control"></div>
-            </div>
+    <div class="mb-3">
+        <label class="fw-bold mb-1">الاسم بالكامل</label>
+        <input type="text" id="newName" class="form-control" placeholder="أدخل اسم العميل">
+    </div>
+    <div class="mb-3">
+        <label class="fw-bold mb-1">الجامعة</label>
+        <input type="text" id="newUni" class="form-control" placeholder="اسم الجامعة">
+    </div>
+    <div class="mb-3">
+        <label class="fw-bold mb-1">رقم الهاتف</label>
+        <input type="text" id="newPhone" class="form-control" placeholder="">
+    </div>
+    <div class="mb-3">
+        <label class="fw-bold mb-1">البريد الإلكتروني</label>
+        <input type="email" id="newEmail" class="form-control" placeholder="email@example.com">
+    </div>
+</div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button class="btn btn-primary px-4" onclick="executeAdd()">حفظ وإضافة</button>
