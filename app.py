@@ -108,7 +108,7 @@ def save():
 # =========================
 # Add New Client
 # =========================
-    @app.route('/add_client', methods=['POST'])
+@app.route('/add_client', methods=['POST'])
 def add_client():
     data = request.get_json()
     if data.get("password") != ADMIN_PASSWORD:
