@@ -5,7 +5,6 @@ import json
 import os
 import datetime
 
-
 # =========================
 # Flask App
 # =========================
@@ -111,14 +110,17 @@ def save():
 # =========================
 @app.route('/add_client', methods=['POST'])
 def add_client():
-    
     data = request.get_json()
     password = data.get("password")
 
     if password != ADMIN_PASSWORD:
-        return jsonify({"status": "failed"})
-        new_row = ["NEW_"+datetime.datetime.now().isoformat()] + [" "] * (len(ALL_COLUMNS)-1)
-    sheet.append_row(new_row)
+        return jsonify({"status": "failed", "message": "Wrong password"})
+
+    # عميل جديد بالقيم الافتراضية
+    new_row = ["NEW_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")]  # الاسم
+    new_row += [""] * (len(STATIC_COLUMNS)-1)  # بقية المعلومات الفارغة
+    new_row += ["FALSE"] * len(TICK_COLUMNS)   # جميع الـ ticks FALSE
+
     sheet.append_row(new_row)
 
     return jsonify({"status": "success"})
