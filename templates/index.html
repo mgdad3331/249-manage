@@ -161,5 +161,43 @@
         });
     }
 </script>
+    <script>
+// 1. وظيفة تفعيل التعديل عند الضغط على الزر
+function enableEdit(btn) {
+    let pwd = prompt("أدخل كلمة السر لفتح التعديل لهذا العميل:");
+    if (pwd === "Miqdad123") {
+        let row = $(btn).closest('tr');
+        row.find('.tick-switch').prop('disabled', false); // فتح الصاحات
+        row.addClass('table-warning'); // تمييز الصف
+        $(btn).text('🔓 مفتوح').prop('disabled', true);
+    } else {
+        alert("كلمة السر خطأ!");
+    }
+}
+
+// 2. وظيفة حفظ كل شيء (ترسل البيانات لـ app.py)
+function saveAllChanges() {
+    let pwd = prompt("تأكيد الحفظ؟ أدخل كلمة السر:");
+    if (!pwd) return;
+
+    let updates = {};
+    $('#client-table tbody tr').each(function() {
+        let rowIndex = $(this).data('row');
+        updates[rowIndex] = {};
+        $(this).find('.tick-switch').each(function() {
+            updates[rowIndex][$(this).data('col')] = $(this).is(':checked') ? "TRUE" : "FALSE";
+        });
+    });
+
+    fetch('/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ password: pwd, updates: updates })
+    }).then(r => r.json()).then(res => {
+        if(res.status === 'success') alert("تم الحفظ في Google Sheets ✅");
+        else alert("خطأ: " + res.message);
+    });
+}
+</script>
 </body>
 </html>
