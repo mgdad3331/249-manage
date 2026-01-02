@@ -8,6 +8,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
+        /* تكبير عرض خلية الاسم */
+.table td:first-child, .table th:first-child {
+    min-width: 250px !important; /* سيجعل العرض 250 بكسل بدلاً من التلقائي */
+}
+
+/* تعديل عرض حقل الإدخال داخل الاسم ليمتد بالكامل */
+.table td:first-child .edit-input {
+    max-width: 100% !important;
+    width: 100%;
+}
         /* --- التنسيق العام --- */
         body {
             font-family: 'Tajawal', sans-serif;
@@ -108,11 +118,9 @@
                                     </div>
                                 {% else %}
                                     <span class="view-text fw-bold text-dark">{{ val }}</span>
-                                    <input type="text" 
-                                           class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
-                                           value="{{ val }}" 
-                                           data-col="{{ col }}"
-                                           style="max-width: 150px; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5;">
+                                <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
+       value="{{ val }}" data-col="{{ col }}"
+       style="width: 90%; min-width: 120px; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5;">
                                 {% endif %}
                             </td>
                         {% endfor %}
