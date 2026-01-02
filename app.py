@@ -108,23 +108,25 @@ def save():
 # =========================
 # Add New Client
 # =========================
-@app.route('/add_client', methods=['POST'])
+    @app.route('/add_client', methods=['POST'])
 def add_client():
     data = request.get_json()
-    password = data.get("password")
-
-    if password != ADMIN_PASSWORD:
+    if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"status": "failed", "message": "Wrong password"})
 
-    # عميل جديد بالقيم الافتراضية
-    new_row = ["NEW_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")]  # الاسم
-    new_row += [""] * (len(STATIC_COLUMNS)-1)  # بقية المعلومات الفارغة
-    new_row += ["FALSE"] * len(TICK_COLUMNS)   # جميع الـ ticks FALSE
+    # جلب البيانات من الطلب
+    name = data.get("name", "New Client")
+    email = data.get("email", "")
+    uni = data.get("uni", "")
+    phone = data.get("phone", "")
+
+    # ترتيب الصف بناءً على STATIC_COLUMNS
+    new_row = [name, email, uni, "", phone, datetime.datetime.now().strftime("%Y-%m-%d")]
+    new_row += ["FALSE"] * len(TICK_COLUMNS)
 
     sheet.append_row(new_row)
-
     return jsonify({"status": "success"})
-
+    
 # =========================
 # Run Local (Render uses Gunicorn)
 # =========================
