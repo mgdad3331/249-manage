@@ -16,24 +16,21 @@
             <img src="https://i.ibb.co/8nNk7gxX/logo-removebg-preview-1.png" alt="Logo" height="45" class="ms-3">
             <div class="brand-text">
                 <span class="fw-bold d-block text-white">MANAGEMENT SYSTEM</span>
-                <small class="text-info">لوحة تحكم إدارة العملاء</small>
             </div>
         </div>
         
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-light btn-sm px-3" onclick="checkPassForAdd()">➕ إضافة عميل جديد</button>
-            <button class="btn btn-warning btn-sm px-3 fw-bold" onclick="saveAllChanges()">💾 حفظ التغييرات</button>
+            <button class="btn btn-info btn-sm px-3 fw-bold text-white" id="enable-all-edit">🔓 فتح التعديل العام</button>
+            <button class="btn btn-outline-light btn-sm px-3" id="add-client-btn">➕ إضافة عميل جديد</button>
+            <button class="btn btn-warning btn-sm px-3 fw-bold" id="save-all-btn">💾 حفظ التغييرات</button>
         </div>
     </div>
 </nav>
 
 <main class="container-fluid px-4">
     <div class="row mb-4">
-        <div class="col-md-6 offset-md-3">
-            <div class="input-group shadow-sm">
-                <span class="input-group-text bg-white border-end-0">🔍</span>
-                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="ابحث عن عميل (الاسم، الهاتف، الجامعة)...">
-            </div>
+        <div class="col-md-6 offset-md-3 text-center">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 ابحث هنا...">
         </div>
     </div>
 
@@ -46,7 +43,6 @@
                             {% for col in clients[0].keys() %}
                                 <th class="text-center py-3">{{ col }}</th>
                             {% endfor %}
-                            <th class="text-center py-3">الإجراءات</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -63,14 +59,9 @@
                                     </div>
                                 </td>
                             {% else %}
-                                <td class="text-center text-secondary fw-bold">
-                                    {{ val }}
-                                </td>
+                                <td class="text-center text-secondary fw-bold">{{ val }}</td>
                             {% endif %}
                         {% endfor %}
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-outline-primary px-3" onclick="enableRowEdit(this)">📝 تعديل</button>
-                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -81,34 +72,17 @@
 
 <div class="modal fade" id="addClientModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content text-end">
-            <div class="modal-header bg-primary text-white text-start">
-                <h5 class="modal-title">إضافة عميل جديد</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white"><h5>إضافة عميل جديد</h5></div>
             <div class="modal-body">
-                <form id="newClientForm">
-                    <div class="mb-3 text-start">
-                        <label class="form-label">الاسم الكامل</label>
-                        <input type="text" id="newName" class="form-control" placeholder="أدخل اسم العميل" required>
-                    </div>
-                    <div class="mb-3 text-start">
-                        <label class="form-label">البريد الإلكتروني</label>
-                        <input type="email" id="newEmail" class="form-control" placeholder="example@mail.com">
-                    </div>
-                    <div class="mb-3 text-start">
-                        <label class="form-label">الجامعة</label>
-                        <input type="text" id="newUni" class="form-control" placeholder="اسم الجامعة">
-                    </div>
-                    <div class="mb-3 text-start">
-                        <label class="form-label">رقم الهاتف</label>
-                        <input type="text" id="newPhone" class="form-control" placeholder="0123456789">
-                    </div>
-                </form>
+                <input type="text" id="newName" class="form-control mb-2" placeholder="الاسم">
+                <input type="email" id="newEmail" class="form-control mb-2" placeholder="الإيميل">
+                <input type="text" id="newUni" class="form-control mb-2" placeholder="الجامعة">
+                <input type="text" id="newPhone" class="form-control mb-2" placeholder="الهاتف">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-primary px-4" onclick="submitNewClient()">حفظ العميل</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button class="btn btn-primary" id="confirm-add-btn">حفظ</button>
             </div>
         </div>
     </div>
@@ -116,95 +90,6 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    let adminPass = "";
-
-    // 1. نظام البحث السريع
-    $(document).ready(function(){
-        $("#searchInput").on("keyup", function() {
-            var value = $(this).val().toLowerCase();
-            $("#client-table tbody tr").filter(function() {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-        });
-    });
-
-    // 2. التحقق من كلمة السر وفتح Modal الإضافة
-    function checkPassForAdd() {
-        let pwd = prompt("أدخل كلمة سر الأدمن لإضافة عميل:");
-        if (pwd === "Miqdad123") {
-            adminPass = pwd;
-            var myModal = new bootstrap.Modal(document.getElementById('addClientModal'));
-            myModal.show();
-        } else if (pwd !== null) {
-            alert("كلمة السر خاطئة!");
-        }
-    }
-
-    // 3. تفعيل التعديل لصف معين
-    function enableRowEdit(btn) {
-        let pwd = prompt("أدخل كلمة سر الأدمن لفتح تعديل هذا العميل:");
-        if (pwd === "Miqdad123") {
-            let row = $(btn).closest('tr');
-            row.find('.tick-input').prop('disabled', false); // فتح الصاحات للتعديل
-            row.addClass('table-warning'); // تمييز الصف باللون الأصفر
-            $(btn).text('🔓 مفتوح').removeClass('btn-outline-primary').addClass('btn-success').prop('disabled', true);
-        } else if (pwd !== null) {
-            alert("كلمة السر خاطئة!");
-        }
-    }
-
-    // 4. إرسال العميل الجديد
-    function submitNewClient() {
-        const data = {
-            password: adminPass,
-            name: $('#newName').val(),
-            email: $('#newEmail').val(),
-            uni: $('#newUni').val(),
-            phone: $('#newPhone').val()
-        };
-
-        if(!data.name) return alert("يرجى إدخال اسم العميل");
-
-        fetch('/add_client', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        }).then(r => r.json()).then(res => {
-            if(res.status === 'success') location.reload();
-            else alert("خطأ: " + res.message);
-        });
-    }
-
-    // 5. حفظ كافة التغييرات في السيرفر
-    function saveAllChanges() {
-        let pwd = prompt("لتأكيد حفظ التعديلات النهائية، أدخل كلمة السر:");
-        if (!pwd) return;
-
-        let updates = {};
-        $('#client-table tbody tr').each(function() {
-            let rowIndex = $(this).data('row');
-            updates[rowIndex] = {};
-            $(this).find('.tick-input').each(function() {
-                updates[rowIndex][$(this).data('col')] = $(this).is(':checked') ? "TRUE" : "FALSE";
-            });
-        });
-
-        fetch('/save', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ password: pwd, updates: updates })
-        }).then(r => r.json()).then(res => {
-            if(res.status === 'success') {
-                alert("تم تحديث البيانات في Google Sheets بنجاح ✅");
-                location.reload();
-            } else {
-                alert("فشل الحفظ: " + res.message);
-            }
-        });
-    }
-</script>
-
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
