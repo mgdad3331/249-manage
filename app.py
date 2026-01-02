@@ -35,7 +35,7 @@ sheet = client.open(SHEET_NAME).sheet1
 # =========================
 # Admin Password
 # =========================
-ADMIN_PASSWORD = "M@249"
+ADMIN_PASSWORD = "Miqdad123"
 
 # =========================
 # Columns Definition (العربية المظبوطة)
