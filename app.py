@@ -77,7 +77,6 @@ def index():
 @app.route('/save', methods=['POST'])
 def save():
     data = request.get_json()
-
     password = data.get("password")
     if password != ADMIN_PASSWORD:
         return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
@@ -86,18 +85,23 @@ def save():
     headers = sheet.row_values(1)
 
     try:
-        for row_index, updates in updates_by_row.items():
-            sheet_row = int(row_index) + 2  # السطر في شيت قوقل يبدأ من 2
+        # نجلب كل البيانات الحالية مرة واحدة لتعديلها في الذاكرة
+        all_data = sheet.get_all_values() 
+        
+        for row_index_str, updates in updates_by_row.items():
+            row_idx = int(row_index_str) + 1 # +1 لأن المصفوفة تبدأ من 0 والعناوين في 0
+            
             for col_name, value in updates.items():
                 if col_name in headers:
-                    col_index = headers.index(col_name) + 1
-                    # تحديث الخلية بـ TRUE أو FALSE
-                    sheet.update_cell(sheet_row, col_index, value)
+                    col_idx = headers.index(col_name)
+                    all_data[row_idx][col_idx] = value
+        
+        # نحدث الشيت بالكامل بطلب واحد فقط! (هذا يحمي من خطأ Quota 429)
+        sheet.update('A1', all_data)
         
         return jsonify({"status": "success"})
     except Exception as e:
-        return jsonify({"status": "failed", "message": str(e)})
-
+        return jsonify({"status": "failed", "message": f"خطأ في الحفظ: {str(e)}"})
 # =========================
 # Add New Client
 # =========================
