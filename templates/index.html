@@ -114,7 +114,17 @@
                                     </div>
                                 </td>
                             {% else %}
-                                <td class="text-center fw-bold text-dark">{{ val }}</td>
+                        {% else %}
+    <td class="text-center">
+        <span class="view-text fw-bold text-dark">{{ val }}</span>
+        
+        <input type="text" 
+               class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
+               value="{{ val }}" 
+               data-col="{{ col }}"
+               style="max-width: 150px; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5;">
+    </td>
+{% endif %}
                             {% endif %}
                         {% endfor %}
                     </tr>
