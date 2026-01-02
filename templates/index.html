@@ -182,174 +182,151 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    let currentNoteInput = null;
+    let activePass = "";
+let currentNoteInput = null;
 
-// وظيفة عرض الملاحظة
-    function showNote(btn) {
-    // 1. ربط الزر بالحقل المخفي
+// 1. محرك الحسابات (المعادلة: 26000 + 3500 لكل صح - المستلم)
+function calculateFinances() {
+    $('#client-table tbody tr').each(function() {
+        let row = $(this);
+        let baseFees = 26000;
+        let additionals = 0;
+
+        // حساب الإضافات من الصحات (تنظيف المسافات والتحقق من الاسم)
+        row.find('.tick-input').each(function() {
+            let colName = $(this).data('col').toString().trim();
+            if ($(this).is(':checked')) {
+                if (colName === "الرقم الوطني" || colName === "التوكيل") {
+                    additionals += 3500;
+                }
+            }
+        });
+
+        // جلب مبلغ المستلم من الحقل الصحيح
+        let received = parseFloat(row.find('.received-amount-input').val()) || 0;
+
+        let totalRequired = baseFees + additionals;
+        let totalRemaining = totalRequired - received;
+
+        // عرض النتائج في الأعمدة الصفراء
+        row.find('.total-required').text(totalRequired.toLocaleString());
+        row.find('.total-remaining').text(totalRemaining.toLocaleString());
+
+        // تلوين المتبقي
+        if (totalRemaining > 0) {
+            row.find('.total-remaining').css('color', '#dc3545');
+        } else {
+            row.find('.total-remaining').css('color', '#198754');
+        }
+    });
+}
+
+// 2. وظيفة الملاحظات (فتح المودال وتحريره)
+function showNote(btn) {
     currentNoteInput = $(btn).siblings('.note-data');
     let noteText = currentNoteInput.val();
     
-    // 2. وضع النص داخل ساحة الكتابة في المودال
     $('#noteTextArea').val(noteText);
     
-    // 3. التحقق من وضع التعديل (هنا السحر!)
-    // نتحقق هل كلمة السر صحيحة وهل حقول الجدول الأخرى أصبحت ظاهرة
-    if (activePass === "321") {
-        // إذا التعديل مفتوح: اسمح بالكتابة وأظهر زر الحفظ الخاص بالمودال
-        $('#noteTextArea').prop('readonly', false);
-        $('#noteTextArea').css('background-color', '#fff'); // خلفية بيضاء للكتابة
-        $('#saveNoteBtn').removeClass('d-none'); // إظهار زر "حفظ الملاحظة"
-    } else {
-        // إذا التعديل مغلق: للقراءة فقط واخفِ زر الحفظ
-        $('#noteTextArea').prop('readonly', true);
-        $('#noteTextArea').css('background-color', '#f8f9fa'); // خلفية رمادية للقراءة
-        $('#saveNoteBtn').addClass('d-none'); 
-    }
-    
-    // 4. إظهار النافذة
-    new bootstrap.Modal(document.getElementById('noteModal')).show();
-}
-    
-    // إذا كان وضع التعديل مفتوحاً، اسمح بالكتابة في الملاحظة
     if (activePass === "Miqdad123") {
-        $('#noteTextArea').prop('readonly', false);
+        $('#noteTextArea').prop('readonly', false).css('background-color', '#fff');
         $('#saveNoteBtn').removeClass('d-none');
     } else {
-        $('#noteTextArea').prop('readonly', true);
+        $('#noteTextArea').prop('readonly', true).css('background-color', '#f8f9fa');
         $('#saveNoteBtn').addClass('d-none');
     }
     
-    new bootstrap.Modal(document.getElementById('noteModal')).show();
+    let nModal = new bootstrap.Modal(document.getElementById('noteModal'));
+    nModal.show();
 }
 
-// وظيفة تحديث الملاحظة في الحقل المخفي تمهيداً لحفظها في الشيت
 function updateNoteFromModal() {
     let newText = $('#noteTextArea').val();
     if (currentNoteInput) {
         currentNoteInput.val(newText);
+        // إغلاق المودال برمجياً
         bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
-        alert("تم تحديث الملاحظة مؤقتاً، اضغط على 'حفظ التغييرات' الرئيسي للتثبيت النهائي ✅");
+        alert("تم تحديث الملاحظة مؤقتاً بالجدول، اضغط 'حفظ التغييرات' للرفع النهائي.");
     }
 }
-    let activePass = "";
 
-    // محرك الحسابات المطور
-    function calculateFinances() {
-        $('#client-table tbody tr').each(function() {
-            let row = $(this);
-            let baseFees = 26000;
-            let additionals = 0;
+// 3. البحث
+$("#searchInput").on("keyup", function() {
+    var value = $(this).val().toLowerCase();
+    $("#client-table tbody tr").filter(function() {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    });
+});
 
-            // حساب 3500 لكل صح في الأعمدة المطلوبة
-            row.find('.tick-input').each(function() {
-                let colName = $(this).data('col').trim();
-                if ($(this).is(':checked')) {
-                    if (colName === "رقم وطني" || colName === "توكيل") {
-                        additionals += 3500;
-                    }
-                }
-            });
-
-            // جلب قيمة المستلم
-            let received = parseFloat(row.find('.received-amount-input').val()) || 0;
-
-            let totalRequired = baseFees + additionals;
-            let totalRemaining = totalRequired - received;
-
-            // عرض النتائج في الخلايا الصفراء
-            row.find('.total-required').text(totalRequired.toLocaleString());
-            row.find('.total-remaining').text(totalRemaining.toLocaleString());
-
-            // تلوين المتبقي
-            row.find('.total-remaining').css('color', totalRemaining > 0 ? '#dc3545' : '#198754');
-        });
+// 4. فتح التعديل العام
+function toggleGlobalEdit() {
+    let pwd = prompt("أدخل كلمة السر:");
+    if (pwd === "Miqdad123") {
+        activePass = pwd;
+        $('.tick-input').prop('disabled', false); 
+        $('.view-text').addClass('d-none');
+        $('.edit-input').removeClass('d-none');
+        $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 التعديل نشط');
+        calculateFinances();
+    } else {
+        alert("كلمة السر خطأ!");
     }
+}
 
-    // البحث
-    $("#searchInput").on("keyup", function() {
-        var value = $(this).val().toLowerCase();
-        $("#client-table tbody tr").filter(function() {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+// 5. إضافة عميل
+function openAddModal() {
+    let pwd = prompt("أدخل كلمة السر للإضافة:");
+    if (pwd === "Miqdad123") {
+        activePass = pwd;
+        new bootstrap.Modal(document.getElementById('addClientModal')).show();
+    }
+}
+
+function executeAdd() {
+    const data = {
+        password: activePass,
+        name: $('#newName').val(),
+        email: $('#newEmail').val(),
+        uni: $('#newUni').val(),
+        phone: $('#newPhone').val()
+    };
+    fetch('/add_client', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    }).then(() => location.reload());
+}
+
+// 6. حفظ التغييرات النهائية
+function saveAll() {
+    if (!activePass) activePass = prompt("أدخل كلمة السر للحفظ:");
+    if (activePass !== "Miqdad123") return alert("خطأ في كلمة السر");
+
+    let updates = {};
+    $('#client-table tbody tr').each(function() {
+        let rowIdx = $(this).data('row');
+        updates[rowIdx] = {};
+        $(this).find('.tick-input, .edit-input').each(function() {
+            let col = $(this).data('col');
+            let val = $(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val();
+            updates[rowIdx][col] = val;
         });
     });
 
-    // فتح التعديل العام
-    function toggleGlobalEdit() {
-        let pwd = prompt("أدخل كلمة السر لفتح التعديل العام:");
-        if (pwd === "321") {
-            activePass = pwd;
-            $('.tick-input').prop('disabled', false); 
-            $('.view-text').addClass('d-none');
-            $('.edit-input').removeClass('d-none');
-            $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 وضع التعديل نشط الآن');
-            calculateFinances();
-        }
-    }
+    fetch('/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ password: activePass, updates: updates })
+    }).then(r => r.json()).then(res => {
+        if(res.status === 'success') { alert("تم الحفظ ✅"); location.reload(); }
+    });
+}
 
-    // إضافة عميل
-    function openAddModal() {
-        let pwd = prompt("أدخل كلمة السر للإضافة:");
-        if (pwd === "Miqdad123") {
-            activePass = pwd;
-            new bootstrap.Modal(document.getElementById('addClientModal')).show();
-        }
-    }
-
-    function executeAdd() {
-        const data = {
-            password: activePass,
-            name: $('#newName').val(),
-            email: $('#newEmail').val(),
-            uni: $('#newUni').val(),
-            phone: $('#newPhone').val()
-        };
-        fetch('/add_client', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        }).then(() => location.reload());
-    }
-
-    // حفظ التغييرات
-    function saveAll() {
-        if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
-        if (activePass !== "321") return alert("فشل الحفظ: كلمة السر غير صحيحة");
-
-        const saveBtn = document.querySelector('button[onclick="saveAll()"]');
-        saveBtn.innerText = "⏳ جاري الحفظ...";
-        saveBtn.disabled = true;
-
-        let updates = {};
-        $('#client-table tbody tr').each(function() {
-            let rowIdx = $(this).data('row');
-            updates[rowIdx] = {};
-            $(this).find('.tick-input, .edit-input').each(function() {
-                let col = $(this).data('col');
-                let val = $(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val();
-                updates[rowIdx][col] = val;
-            });
-        });
-
-        fetch('/save', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ password: activePass, updates: updates })
-        }).then(r => r.json()).then(res => {
-            if(res.status === 'success') {
-                alert("تم تحديث قوقل شيت بنجاح ✅");
-                location.reload();
-            } else {
-                alert("فشل الحفظ: " + res.message);
-                saveBtn.innerText = "💾 حفظ التغييرات";
-                saveBtn.disabled = false;
-            }
-        });
-    }
-
-    $(document).ready(calculateFinances);
-    $(document).on('change input', '.financial-calc-trigger, .received-amount-input, .financial-trigger', calculateFinances);
-</script>
+// تشغيل المحرك عند التحميل
+$(document).ready(calculateFinances);
+$(document).on('change input', '.tick-input, .received-amount-input, .financial-trigger', calculateFinances);
+    </script>
+    
     
     <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
