@@ -306,14 +306,26 @@ function executeAdd() {
 }
 
 // 6. حفظ التغييرات النهائية
-function saveAll() {
-    if (!activePass) activePass = prompt("أدخل كلمة السر للحفظ:");
-    if (activePass !== "321") return alert("خطأ في كلمة السر");
+    function saveAll() {
+    if (!activePass) activePass = prompt("أدخل كلمة السر لتأكيد الحفظ:");
+    if (activePass !== "Miqdad123") return alert("فشل الحفظ: كلمة السر غير صحيحة");
+
+    // --- بداية التأثيرات البصرية ---
+    const saveBtn = document.querySelector('button[onclick="saveAll()"]');
+    const originalText = saveBtn.innerHTML; // حفظ النص الأصلي (💾 حفظ التغييرات)
+    
+    saveBtn.disabled = true; // تعطيل الزر لمنع الضغط المتكرر
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري الحفظ والرفع...';
+    saveBtn.classList.remove('btn-warning');
+    saveBtn.classList.add('btn-secondary');
+    // ------------------------------
 
     let updates = {};
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
+        
+        // جمع كل البيانات بما فيها الملاحظات المخفية
         $(this).find('.tick-input, .edit-input').each(function() {
             let col = $(this).data('col');
             let val = $(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val();
@@ -325,11 +337,32 @@ function saveAll() {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ password: activePass, updates: updates })
-    }).then(r => r.json()).then(res => {
-        if(res.status === 'success') { alert("تم الحفظ ✅"); location.reload(); }
+    })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === 'success') {
+            // تأثير النجاح
+            saveBtn.innerHTML = '✅ تم التحديث بنجاح';
+            saveBtn.classList.replace('btn-secondary', 'btn-success');
+            
+            setTimeout(() => {
+                location.reload(); // إعادة تحميل الصفحة لرؤية البيانات الجديدة
+            }, 1000);
+        } else {
+            alert("فشل الحفظ: " + res.message);
+            // إعادة الزر لحالته الأصلية عند الخطأ
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+            saveBtn.classList.replace('btn-secondary', 'btn-warning');
+        }
+    })
+    .catch(() => {
+        alert("خطأ في الاتصال بالسيرفر");
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+        saveBtn.classList.replace('btn-secondary', 'btn-warning');
     });
 }
-
 // تشغيل المحرك عند التحميل
 $(document).ready(calculateFinances);
 $(document).on('change input', '.tick-input, .received-amount-input, .financial-trigger', calculateFinances);
