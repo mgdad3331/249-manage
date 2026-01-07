@@ -3,32 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة العملاء المالي | Smart Management</title>
+    <title>نظام إدارة العملاء المالي | Pro Smart System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- التنسيق العام --- */
         body { font-family: 'Tajawal', sans-serif; background-color: #f4f7fa; direction: rtl; }
         .navbar { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 4px solid #f59e0b; padding: 1rem 2rem; }
         .brand-text { color: white; font-weight: bold; font-size: 1.3rem; }
-        
-        /* تمييز الأعمدة المالية */
         .col-finance { background-color: #fef9c3 !important; color: #854d0e !important; font-weight: bold; text-align: center; border: 1px solid #fde68a !important; }
         .table th.col-finance { background-color: #facc15 !important; color: #451a03 !important; }
 
-        /* زر إعداد الرسوم الذكي */
+        /* زر الترس في العناوين */
         .fee-config-btn {
-            display: none; /* يظهر فقط في وضع التعديل */
-            cursor: pointer;
-            font-size: 0.8rem;
-            background: #fff;
-            border: 1px solid #f59e0b;
-            border-radius: 4px;
-            padding: 0 4px;
-            margin-right: 5px;
-            vertical-align: middle;
-            color: #b45309;
+            display: none; cursor: pointer; font-size: 0.9rem; background: #fff;
+            border: 1px solid #f59e0b; border-radius: 4px; padding: 0 5px; margin-right: 5px; color: #b45309;
         }
         .edit-active .fee-config-btn { display: inline-block; }
 
@@ -36,12 +25,11 @@
         .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .table thead th { background-color: #f8fafc; color: #475569; font-weight: 700; text-align: center; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
 
-        /* نظام الصحات */
+        /* الصحات */
         .tri-state-toggle, .tick-input {
             width: 24px !important; height: 24px !important; border: 2px solid #0d6efd !important;
-            border-radius: 4px !important; cursor: pointer; transition: all 0.2s ease;
-            background-color: #fff; margin: auto; display: block; opacity: 1 !important;
-            background-size: 100% 100% !important; background-repeat: no-repeat !important;
+            border-radius: 4px !important; cursor: pointer; background-color: #fff; margin: auto; display: block;
+            opacity: 1 !important; background-size: 100% 100% !important; background-repeat: no-repeat !important;
         }
         .tick-input:disabled, .tri-state-toggle { opacity: 1 !important; filter: none !important; pointer-events: none; }
         .edit-active .tick-input, .edit-active .tri-state-toggle { pointer-events: auto; }
@@ -146,28 +134,51 @@
 <div class="modal fade" id="feeSettingsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-warning">
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header bg-warning">
                 <h5 class="modal-title fw-bold">⚙️ إعدادات رسوم: <span id="currentFeeCol"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3 text-center">
-                    <label class="form-label fw-bold">المبلغ المطلوب لهذا الإجراء (جنيه):</label>
-                    <input type="number" id="newFeeAmount" class="form-control form-control-lg text-center fw-bold border-warning" placeholder="0.00">
-                </div>
-                <div class="alert alert-info py-2 small">
-                    💡 عند تغيير المبلغ، سيتم تحديث "جملة المطلوب" فوراً لجميع العملاء الذين لديهم هذا الإجراء (أصفر أو أزرق).
-                </div>
+            <div class="modal-body text-center">
+                <label class="form-label fw-bold">المبلغ الافتراضي (جنيه):</label>
+                <input type="number" id="newFeeAmount" class="form-control form-control-lg text-center fw-bold border-warning">
+                <p class="mt-3 small text-muted">تغيير هذا المبلغ سيؤثر على جميع من لديهم هذا الإجراء.</p>
             </div>
             <div class="modal-footer justify-content-center">
-                <button class="btn btn-warning px-5 fw-bold" onclick="applySmartFee()">تحديث المبالغ الآن</button>
+                <button class="btn btn-warning px-5 fw-bold" onclick="applySmartFee()">تحديث الكل</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="addClientModal" tabindex="-1" aria-hidden="true">...</div>
-<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">...</div>
+<div class="modal fade" id="addClientModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white"><h5>إضافة عميل جديد</h5></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="fw-bold mb-1">الاسم بالكامل</label><input type="text" id="newName" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">الجامعة</label><input type="text" id="newUni" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">رقم الهاتف</label><input type="text" id="newPhone" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold mb-1">البريد الإلكتروني</label><input type="email" id="newEmail" class="form-control"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button class="btn btn-primary px-4" onclick="executeAdd()">حفظ</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white"><h5 class="modal-title">📝 الملاحظات والتخصيص المالي</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <textarea id="noteTextArea" class="form-control" rows="6" readonly></textarea>
+                <div class="mt-2 alert alert-warning p-2 small d-none" id="customFeeHint">
+                    💡 لتخصيص مبلغ لهذا العميل: اكتب في سطر جديد كلمة <b>EXTRA:</b> متبوعة بالمبلغ. مثال: <code>EXTRA:500</code> للإضافة أو <code>EXTRA:-500</code> للخصم.
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button><button id="saveNoteBtn" class="btn btn-warning d-none" onclick="updateNoteFromModal()">حفظ</button></div>
+        </div>
+    </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -175,77 +186,34 @@
 <script>
 let activePass = "";
 let currentNoteInput = null;
-
-// --- نظام التسعير الذكي ---
-let feeDatabase = {
-    "رقم وطني": 3500,
-    "توكيل": 3500,
-    "توثيقات": 5500,
-    "معادلة": 0,
-    "قبول مبدئي": 0,
-    "تسليم الملف": 0,
-    "رسوم الوافدين": 0
-};
-
+let feeDatabase = { "رقم وطني": 3500, "توكيل": 3500, "توثيقات": 5500, "معادلة": 0, "قبول مبدئي": 0, "تسليم الملف": 0, "رسوم الوافدين": 0 };
 let activeFeeCol = "";
 
-function openFeeModal(col) {
-    activeFeeCol = col;
-    $('#currentFeeCol').text(col);
-    $('#newFeeAmount').val(feeDatabase[col]);
-    new bootstrap.Modal(document.getElementById('feeSettingsModal')).show();
-}
-
-function applySmartFee() {
-    let newVal = parseFloat($('#newFeeAmount').val()) || 0;
-    feeDatabase[activeFeeCol] = newVal;
-    bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide();
-    calculateFinances(); // إعادة حساب الجدول بالكامل بالأسعار الجديدة
-}
-
-// --- محرك الحسابات المحدث ---
 function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
         let baseFees = 26000;
         let additionals = 0;
-
+        
         row.find('.tick-input, .tri-state-toggle').each(function() {
             let colName = $(this).data('col').toString().trim();
             let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
-
             if (status === "PAID" || status === "TRUE") {
-                // النظام يسحب السعر من قاعدة البيانات المتغيرة feeDatabase
-                let fee = feeDatabase[colName] || 0;
-                additionals += fee;
+                additionals += (feeDatabase[colName] || 0);
             }
         });
 
+        // ميزة التخصيص الفردي من الملاحظات
+        let noteContent = row.find('.note-data').val() || "";
+        let extraMatch = noteContent.match(/EXTRA:(-?\d+)/);
+        if(extraMatch) additionals += parseFloat(extraMatch[1]);
+
         let received = parseFloat(row.find('.received-amount-input').val()) || 0;
         let totalRequired = baseFees + additionals;
-        let totalRemaining = totalRequired - received;
-
         row.find('.total-required').text(totalRequired.toLocaleString());
-        row.find('.total-remaining').text(totalRemaining.toLocaleString());
-        row.find('.total-remaining').css('color', totalRemaining > 0 ? '#dc3545' : '#198754');
+        row.find('.total-remaining').text((totalRequired - received).toLocaleString());
+        row.find('.total-remaining').css('color', (totalRequired - received) > 0 ? '#dc3545' : '#198754');
     });
-}
-
-// --- الوظائف الأساسية كما هي في كودك مع ربط الحسابات ---
-function toggleTriState(el) {
-    if (activePass !== "321") return;
-    let val = $(el).attr('data-value');
-    let newVal = "FALSE";
-    if (val === "FALSE" || val === "" || val === "NONE") newVal = "PAID";
-    else if (val === "PAID") newVal = "TRUE";
-    else newVal = "FALSE";
-
-    $(el).attr('data-value', newVal);
-    if(newVal === "PAID") $(el).addClass('state-paid').removeClass('state-done');
-    else if(newVal === "TRUE") $(el).addClass('state-done').removeClass('state-paid');
-    else $(el).removeClass('state-paid state-done');
-    
-    calculateFinances();
 }
 
 function toggleGlobalEdit() {
@@ -257,34 +225,63 @@ function toggleGlobalEdit() {
         $('.view-text').addClass('d-none');
         $('.edit-input').removeClass('d-none');
         $('#main-edit-btn').removeClass('btn-info').addClass('btn-success').text('🔓 التعديل نشط');
+        $('#customFeeHint').removeClass('d-none');
         calculateFinances();
-    } else { alert("كلمة السر خطأ!"); }
+    } else { alert("خطأ!"); }
 }
 
-// بقية وظائف الحفظ (saveAll) والبحث والإضافة تبقى كما هي تماماً في كودك المرفق
+function openFeeModal(col) { activeFeeCol = col; $('#currentFeeCol').text(col); $('#newFeeAmount').val(feeDatabase[col]); new bootstrap.Modal(document.getElementById('feeSettingsModal')).show(); }
+function applySmartFee() { feeDatabase[activeFeeCol] = parseFloat($('#newFeeAmount').val()) || 0; bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); calculateFinances(); }
+
+function toggleTriState(el) {
+    if (activePass !== "321") return;
+    let val = $(el).attr('data-value');
+    let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    calculateFinances();
+}
+
+function showNote(btn) {
+    currentNoteInput = $(btn).siblings('.note-data');
+    $('#noteTextArea').val(currentNoteInput.val());
+    if (activePass === "321") {
+        $('#noteTextArea').prop('readonly', false);
+        $('#saveNoteBtn, #customFeeHint').removeClass('d-none');
+    } else {
+        $('#noteTextArea').prop('readonly', true);
+        $('#saveNoteBtn, #customFeeHint').addClass('d-none');
+    }
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+
+function updateNoteFromModal() {
+    currentNoteInput.val($('#noteTextArea').val());
+    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+    calculateFinances();
+}
+
+function openAddModal() { if (prompt("كلمة السر للإضافة:") === "321") { activePass = "321"; new bootstrap.Modal(document.getElementById('addClientModal')).show(); } }
+function executeAdd() {
+    const data = { password: activePass, name: $('#newName').val(), email: $('#newEmail').val(), uni: $('#newUni').val(), phone: $('#newPhone').val() };
+    fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }).then(() => location.reload());
+}
+
 function saveAll() {
     if (activePass !== "321") activePass = prompt("أدخل كلمة السر للحفظ:");
     if (activePass !== "321") return alert("فشل الحفظ: كلمة السر غير صحيحة");
-    const saveBtn = document.querySelector('button[onclick="saveAll()"]');
-    const originalText = saveBtn.innerHTML;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الرفع...';
     let updates = {};
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
         $(this).find('.tick-input, .edit-input, .tri-state-toggle').each(function() {
             let col = $(this).data('col');
-            if (!col) return;
-            let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
-            updates[rowIdx][col] = val;
+            if (col) {
+                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                updates[rowIdx][col] = val;
+            }
         });
     });
-    fetch('/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ password: activePass, updates: updates }) })
-    .then(r => r.json()).then(res => {
-        if(res.status === 'success') { saveBtn.innerHTML = '✅ تم الحفظ بنجاح'; setTimeout(() => location.reload(), 800); }
-        else { alert("فشل: " + res.message); saveBtn.disabled = false; saveBtn.innerHTML = originalText; }
-    });
+    fetch('/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ password: activePass, updates: updates }) }).then(() => location.reload());
 }
 
 $("#searchInput").on("keyup", function() {
