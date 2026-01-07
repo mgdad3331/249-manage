@@ -293,7 +293,6 @@ function executeAdd() {
     if (activePass !== "321") activePass = prompt("أدخل كلمة السر للحفظ:");
     if (activePass !== "321") return alert("فشل الحفظ: كلمة السر غير صحيحة");
 
-    // تفعيل تأثير التحميل
     $('#save-text').text('جاري الحفظ...');
     $('#save-spinner').removeClass('d-none');
     $('#save-all-btn').prop('disabled', true);
@@ -303,29 +302,36 @@ function executeAdd() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
         
-        // البحث عن كل العناصر القابلة للتعديل بما فيها التوجل والمبالغ
-        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
-            let col = $(this).data('col');
-            if (col) {
-                let val;
-                // الحالة 1: إذا كان مربع ملون (رقم وطني، تسليم الملف، الخ)
-                if ($(this).hasClass('tri-state-toggle')) {
-                    val = $(this).attr('data-value'); 
-                } 
-                // الحالة 2: إذا كان مربع اختيار تقليدي (Checklist)
-                else if ($(this).is(':checkbox')) {
-                    val = $(this).is(':checked') ? "TRUE" : "FALSE";
-                } 
-                // الحالة 3: إذا كان حقل نصي أو رقمي (الاسم، الجامعة، المبالغ، الملاحظات)
-                else {
-                    val = $(this).val();
+        // نمر على كل خلية تحتوي على بيانات قابلة للتعديل
+        $(this).find('td').each(function() {
+            let input = $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input');
+            if (input.length > 0) {
+                let col = input.data('col');
+                if (col) {
+                    let val;
+                    
+                    // 1. الأولوية للخانة النصية إذا كان المستخدم كتب فيها رقم (مثل 3000)
+                    let textInput = $(this).find('input[type="text"], input[type="number"]').not('.note-data');
+                    if (textInput.length > 0 && textInput.val().trim() !== "" && !$(this).find('.tri-state-toggle').length) {
+                         val = textInput.val();
+                    }
+                    // 2. إذا كان مربع ملون (Tri-state)
+                    else if (input.hasClass('tri-state-toggle')) {
+                        val = input.attr('data-value');
+                    } 
+                    // 3. إذا كان مربع صح تقليدي
+                    else if (input.is(':checkbox')) {
+                        val = input.is(':checked') ? "TRUE" : "FALSE";
+                    } 
+                    // 4. الملاحظات أو أي حقل إدخال آخر
+                    else {
+                        val = input.val();
+                    }
+                    updates[rowIdx][col] = val;
                 }
-                updates[rowIdx][col] = val;
             }
         });
     });
-
-    console.log("البيانات المرسلة:", updates); // للتحقق في متصفحك (F12)
 
     fetch('/save', { 
         method: 'POST', 
@@ -342,12 +348,10 @@ function executeAdd() {
         }
     })
     .catch(error => {
-        console.error("Error:", error);
         alert("فشل الاتصال بالسيرفر");
         resetSaveButton();
     });
 }
-
 function resetSaveButton() {
     $('#save-text').text('💾 حفظ التغييرات');
     $('#save-spinner').addClass('d-none');
