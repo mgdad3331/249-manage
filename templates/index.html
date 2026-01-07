@@ -303,23 +303,29 @@ function executeAdd() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
         
-        // التعديل الجوهري هنا: أضفنا .received-amount-input لضمان قراءة خانة جملة المستلم
+        // البحث عن كل العناصر القابلة للتعديل بما فيها التوجل والمبالغ
         $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
             let col = $(this).data('col');
             if (col) {
                 let val;
+                // الحالة 1: إذا كان مربع ملون (رقم وطني، تسليم الملف، الخ)
                 if ($(this).hasClass('tri-state-toggle')) {
-                    val = $(this).attr('data-value');
-                } else if ($(this).is(':checkbox')) {
+                    val = $(this).attr('data-value'); 
+                } 
+                // الحالة 2: إذا كان مربع اختيار تقليدي (Checklist)
+                else if ($(this).is(':checkbox')) {
                     val = $(this).is(':checked') ? "TRUE" : "FALSE";
-                } else {
-                    // التقاط قيمة المدخلات النصية والرقمية (بما فيها المبالغ المالية)
+                } 
+                // الحالة 3: إذا كان حقل نصي أو رقمي (الاسم، الجامعة، المبالغ، الملاحظات)
+                else {
                     val = $(this).val();
                 }
                 updates[rowIdx][col] = val;
             }
         });
     });
+
+    console.log("البيانات المرسلة:", updates); // للتحقق في متصفحك (F12)
 
     fetch('/save', { 
         method: 'POST', 
@@ -331,11 +337,12 @@ function executeAdd() {
             alert("تم حفظ جميع البيانات بنجاح ✅");
             location.reload();
         } else {
-            alert("حدث خطأ أثناء الحفظ ❌");
+            alert("حدث خطأ في السيرفر ❌");
             resetSaveButton();
         }
     })
-    .catch(() => {
+    .catch(error => {
+        console.error("Error:", error);
         alert("فشل الاتصال بالسيرفر");
         resetSaveButton();
     });
