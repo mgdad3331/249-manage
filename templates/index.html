@@ -21,6 +21,7 @@
         }
         .brand-text { color: white; font-weight: bold; font-size: 1.3rem; }
         
+        /* تمييز الأعمدة المالية */
         .col-finance {
             background-color: #fef9c3 !important;
             color: #854d0e !important;
@@ -33,8 +34,9 @@
             color: #451a03 !important;
         }
 
+        /* تنسيق خلية الاسم */
         #client-table td:first-child, #client-table th:first-child {
-            min-width: 250px !important;
+            min-width: 280px !important;
             text-align: right !important;
             padding-right: 20px;
         }
@@ -45,52 +47,60 @@
             color: #475569; 
             font-weight: 700; 
             text-align: center; 
+            border-bottom: 2px solid #e2e8f0;
             white-space: nowrap;
         }
 
-        /* --- نظام التبديل الثلاثي المحدث (Tri-State) --- */
-        .tri-state-toggle {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #0d6efd; /* نفس حدود الصح العادي */
-            border-radius: 4px;
+        /* --- نظام الصحات الموحد (Tri-State & Normal) --- */
+        .tri-state-toggle, .tick-input {
+            width: 24px !important;
+            height: 24px !important;
+            border: 2px solid #0d6efd !important;
+            border-radius: 4px !important;
             cursor: pointer;
             transition: all 0.2s ease;
             background-color: #fff;
             margin: auto;
-            pointer-events: none;
-            background-size: 100% 100%;
+            display: block;
+            opacity: 1 !important; /* منع البهتان */
+            background-size: 100% 100% !important;
+            background-repeat: no-repeat !important;
         }
-        
-        .edit-active .tri-state-toggle { pointer-events: auto; }
 
-        /* المرحلة الأولى: تم الدفع (أصفر + صح أسود) */
+        /* منع بهتان العناصر المعطلة */
+        .tick-input:disabled, .tri-state-toggle {
+            opacity: 1 !important;
+            filter: none !important;
+            pointer-events: none; /* مقفل افتراضياً */
+        }
+
+        .edit-active .tick-input, .edit-active .tri-state-toggle {
+            pointer-events: auto; /* يفتح عند الضغط على تعديل */
+        }
+
+        /* الحالة: تم الدفع (أصفر مع صح أسود) */
         .state-paid {
             background-color: #ffc107 !important;
             border-color: #ffc107 !important;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
         }
 
-        /* المرحلة الثانية: اكتمل الإجراء (أزرق + صح أبيض - مثل العادي) */
-        .state-done {
+        /* الحالة: اكتمل أو صح عادي (أزرق مع صح أبيض) */
+        .state-done, .tick-input:checked {
             background-color: #0d6efd !important;
             border-color: #0d6efd !important;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
         }
 
-        /* نظام الصح العادي (للحالات الأخرى) */
-        .tick-input {
-            width: 22px !important;
-            height: 22px !important;
-            cursor: pointer;
-            border: 2px solid #0d6efd !important;
-        }
+        .tick-input { appearance: none; } /* إخفاء شكل المتصفح الافتراضي */
 
         .edit-input { 
             width: 95%; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5; border-radius: 5px;
         }
         
         #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
+        .btn-info { background-color: #0ea5e9; border: none; }
+        .btn-warning { background-color: #f59e0b; border: none; color: #fff; }
     </style>
 </head>
 <body class="edit-locked">
@@ -240,7 +250,7 @@ function toggleTriState(el) {
     calculateFinances();
 }
 
-// 2. محرك الحسابات
+// 2. محرك الحسابات الشامل
 function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
@@ -267,12 +277,12 @@ function calculateFinances() {
     });
 }
 
-// 3. التعديل العام
+// 3. فتح التعديل العام بكلمة السر 321
 function toggleGlobalEdit() {
     let pwd = prompt("أدخل كلمة السر:");
     if (pwd === "321") {
         activePass = pwd;
-        $('body').addClass('edit-active');
+        $('body').addClass('edit-active').removeClass('edit-locked');
         $('.tick-input').prop('disabled', false); 
         $('.view-text').addClass('d-none');
         $('.edit-input').removeClass('d-none');
@@ -281,15 +291,15 @@ function toggleGlobalEdit() {
     } else { alert("كلمة السر خطأ!"); }
 }
 
-// 4. حفظ الكل
+// 4. حفظ التغييرات النهائية
 function saveAll() {
     if (activePass !== "321") activePass = prompt("أدخل كلمة السر للحفظ:");
-    if (activePass !== "321") return alert("خطأ في كلمة السر");
+    if (activePass !== "321") return alert("فشل الحفظ: كلمة السر غير صحيحة");
 
     const saveBtn = document.querySelector('button[onclick="saveAll()"]');
     const originalText = saveBtn.innerHTML;
     saveBtn.disabled = true;
-    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...';
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الرفع...';
 
     let updates = {};
     $('#client-table tbody tr').each(function() {
@@ -320,16 +330,20 @@ function saveAll() {
     .then(r => r.json())
     .then(res => {
         if(res.status === 'success') {
-            saveBtn.innerHTML = '✅ تم بنجاح';
+            saveBtn.innerHTML = '✅ تم الحفظ بنجاح';
             setTimeout(() => location.reload(), 800);
         } else {
             alert("فشل: " + res.message);
             saveBtn.disabled = false; saveBtn.innerHTML = originalText;
         }
+    })
+    .catch(() => {
+        alert("خطأ في الاتصال");
+        saveBtn.disabled = false; saveBtn.innerHTML = originalText;
     });
 }
 
-// 5. الوظائف الإضافية
+// 5. البحث والملاحظات والإضافة
 $("#searchInput").on("keyup", function() {
     var v = $(this).val().toLowerCase();
     $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
@@ -373,7 +387,7 @@ function executeAdd() {
 }
 
 $(document).ready(calculateFinances);
-$(document).on('change input', '.received-amount-input', calculateFinances);
+$(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
 </script>
 </body>
 </html>
