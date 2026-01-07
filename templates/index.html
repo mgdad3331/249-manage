@@ -289,8 +289,7 @@ function executeAdd() {
     const data = { password: activePass, name: $('#newName').val(), email: $('#newEmail').val(), uni: $('#newUni').val(), phone: $('#newPhone').val() };
     fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }).then(() => location.reload());
 }
-
-function saveAll() {
+    function saveAll() {
     if (activePass !== "321") activePass = prompt("أدخل كلمة السر للحفظ:");
     if (activePass !== "321") return alert("فشل الحفظ: كلمة السر غير صحيحة");
 
@@ -303,10 +302,20 @@ function saveAll() {
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
-        $(this).find('.tick-input, .edit-input, .tri-state-toggle').each(function() {
+        
+        // التعديل الجوهري هنا: أضفنا .received-amount-input لضمان قراءة خانة جملة المستلم
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
             let col = $(this).data('col');
             if (col) {
-                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                let val;
+                if ($(this).hasClass('tri-state-toggle')) {
+                    val = $(this).attr('data-value');
+                } else if ($(this).is(':checkbox')) {
+                    val = $(this).is(':checked') ? "TRUE" : "FALSE";
+                } else {
+                    // التقاط قيمة المدخلات النصية والرقمية (بما فيها المبالغ المالية)
+                    val = $(this).val();
+                }
                 updates[rowIdx][col] = val;
             }
         });
