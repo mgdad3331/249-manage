@@ -5,6 +5,11 @@ body {
     color: #333;
     direction: rtl;
 }
+.navbar-brand img {
+    height: 70px !important; /* غير الرقم هنا للحجم المناسب لك */
+    width: auto; /* للحفاظ على أبعاد الشعار دون تمطيط */
+    transition: transform 0.3s ease; /* إضافة لمسة جمالية عند التحميل */
+}
 
 /* شريط العنوان الاحترافي */
 .navbar {
