@@ -302,52 +302,35 @@ function executeAdd() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
         
-        // نمر على كل خلية تحتوي على بيانات قابلة للتعديل
-        $(this).find('td').each(function() {
-            let input = $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input');
-            if (input.length > 0) {
-                let col = input.data('col');
-                if (col) {
-                    let val;
-                    
-                    // 1. الأولوية للخانة النصية إذا كان المستخدم كتب فيها رقم (مثل 3000)
-                    let textInput = $(this).find('input[type="text"], input[type="number"]').not('.note-data');
-                    if (textInput.length > 0 && textInput.val().trim() !== "" && !$(this).find('.tri-state-toggle').length) {
-                         val = textInput.val();
-                    }
-                    // 2. إذا كان مربع ملون (Tri-state)
-                    else if (input.hasClass('tri-state-toggle')) {
-                        val = input.attr('data-value');
-                    } 
-                    // 3. إذا كان مربع صح تقليدي
-                    else if (input.is(':checkbox')) {
-                        val = input.is(':checked') ? "TRUE" : "FALSE";
-                    } 
-                    // 4. الملاحظات أو أي حقل إدخال آخر
-                    else {
-                        val = input.val();
-                    }
-                    updates[rowIdx][col] = val;
-                }
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
+            let col = $(this).data('col');
+            if (col) {
+                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                updates[rowIdx][col] = val;
             }
         });
     });
 
+    // التعديل الأهم: إرسال مبالغ الترس (feeDatabase) مع التحديثات
     fetch('/save', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ password: activePass, updates: updates }) 
+        body: JSON.stringify({ 
+            password: activePass, 
+            updates: updates,
+            fees: feeDatabase  // نرسل مبالغ الترس هنا ليتم حفظها في السيرفر
+        }) 
     })
     .then(response => {
         if(response.ok) {
-            alert("تم حفظ جميع البيانات بنجاح ✅");
+            alert("تم حفظ العملاء ومبالغ الرسوم بنجاح ✅");
             location.reload();
         } else {
             alert("حدث خطأ في السيرفر ❌");
             resetSaveButton();
         }
     })
-    .catch(error => {
+    .catch(() => {
         alert("فشل الاتصال بالسيرفر");
         resetSaveButton();
     });
