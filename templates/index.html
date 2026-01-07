@@ -211,7 +211,7 @@
 <script>
 let activePass = "";
 let currentNoteInput = null;
-let feeDatabase = { "رقم وطني": 3500, "توكيل": 3500, "توثيقات": 5500, "معادلة": 0, "قبول مبدئي": 0, "تسليم الملف": 0, "رسوم الوافدين": 0 };
+    let feeDatabase = {{ fees | tojson | safe if fees else '{ "رقم وطني": 3500, "توكيل": 3500, "توثيقات": 5500, "معادلة": 0, "قبول مبدئي": 0, "تسليم الملف": 0, "رسوم الوافدين": 0 }' | safe }};
 let activeFeeCol = "";
 
 function calculateFinances() {
@@ -285,9 +285,22 @@ function updateNoteFromModal() {
 }
 
 function openAddModal() { if (prompt("كلمة السر للإضافة:") === "321") { activePass = "321"; new bootstrap.Modal(document.getElementById('addClientModal')).show(); } }
-function executeAdd() {
-    const data = { password: activePass, name: $('#newName').val(), email: $('#newEmail').val(), uni: $('#newUni').val(), phone: $('#newPhone').val() };
-    fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }).then(() => location.reload());
+    function executeAdd() {
+    const data = { 
+        password: activePass, 
+        name: $('#newName').val(), 
+        email: $('#newEmail').val(), 
+        uni: $('#newUni').val(), 
+        phone: $('#newPhone').val() 
+    };
+    fetch('/add_client', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(data) 
+    }).then(res => res.json()).then(res => {
+        if(res.status === "success") location.reload();
+        else alert("خطأ: " + res.message);
+    });
 }
     function saveAll() {
     if (activePass !== "321") activePass = prompt("أدخل كلمة السر للحفظ:");
@@ -311,22 +324,23 @@ function executeAdd() {
         });
     });
 
-    // التعديل الأهم: إرسال مبالغ الترس (feeDatabase) مع التحديثات
+    // إرسال البيانات للسيرفر
     fetch('/save', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({ 
             password: activePass, 
             updates: updates,
-            fees: feeDatabase  // نرسل مبالغ الترس هنا ليتم حفظها في السيرفر
+            fees: feeDatabase  // تأكد من وجود هذا السطر كما هو
         }) 
     })
-    .then(response => {
-        if(response.ok) {
-            alert("تم حفظ العملاء ومبالغ الرسوم بنجاح ✅");
+    .then(response => response.json()) // تعديل لقراءة الرد كـ JSON
+    .then(res => {
+        if(res.status === "success") {
+            alert("تم حفظ العملاء وتحديث أسعار الترس بنجاح ✅");
             location.reload();
         } else {
-            alert("حدث خطأ في السيرفر ❌");
+            alert("فشل الحفظ: " + res.message);
             resetSaveButton();
         }
     })
