@@ -21,7 +21,6 @@
         }
         .brand-text { color: white; font-weight: bold; font-size: 1.3rem; }
         
-        /* تمييز الأعمدة المالية باللون الأصفر */
         .col-finance {
             background-color: #fef9c3 !important;
             color: #854d0e !important;
@@ -34,7 +33,6 @@
             color: #451a03 !important;
         }
 
-        /* تكبير عرض خلية الاسم */
         #client-table td:first-child, #client-table th:first-child {
             min-width: 250px !important;
             text-align: right !important;
@@ -47,43 +45,40 @@
             color: #475569; 
             font-weight: 700; 
             text-align: center; 
-            border-bottom: 2px solid #e2e8f0;
             white-space: nowrap;
         }
 
-        /* --- نظام التبديل الثلاثي (Tri-State) --- */
+        /* --- نظام التبديل الثلاثي المحدث (Tri-State) --- */
         .tri-state-toggle {
-            width: 26px;
-            height: 26px;
-            border: 2px solid #cbd5e1;
-            border-radius: 6px;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #0d6efd; /* نفس حدود الصح العادي */
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             background-color: #fff;
             margin: auto;
-            pointer-events: none; /* معطل افتراضياً حتى يفتح التعديل */
+            pointer-events: none;
+            background-size: 100% 100%;
         }
         
         .edit-active .tri-state-toggle { pointer-events: auto; }
 
-        /* حالة تم الدفع (أصفر) */
+        /* المرحلة الأولى: تم الدفع (أصفر + صح أسود) */
         .state-paid {
-            background-color: #facc15 !important;
-            border-color: #eab308 !important;
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
         }
-        .state-paid::after { content: '$'; color: #451a03; font-weight: bold; font-size: 14px; }
 
-        /* حالة اكتمل (أخضر) */
+        /* المرحلة الثانية: اكتمل الإجراء (أزرق + صح أبيض - مثل العادي) */
         .state-done {
-            background-color: #22c55e !important;
-            border-color: #16a34a !important;
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
         }
-        .state-done::after { content: '✓'; color: #fff; font-weight: bold; font-size: 16px; }
 
-        /* نظام الصحات العادي */
+        /* نظام الصح العادي (للحالات الأخرى) */
         .tick-input {
             width: 22px !important;
             height: 22px !important;
@@ -92,19 +87,15 @@
         }
 
         .edit-input { 
-            width: 95%; 
-            border: 1px solid #f59e0b; 
-            font-weight: bold; 
-            background-color: #fffcf5; 
-            border-radius: 5px;
+            width: 95%; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5; border-radius: 5px;
         }
         
         #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
-        .btn-info { background-color: #0ea5e9; border: none; }
-        .btn-warning { background-color: #f59e0b; border: none; color: #fff; }
     </style>
 </head>
-<body class="edit-locked"> <nav class="navbar navbar-dark shadow-sm mb-4">
+<body class="edit-locked">
+
+<nav class="navbar navbar-dark shadow-sm mb-4">
     <div class="container-fluid d-flex justify-content-between align-items-center">
         <div class="navbar-brand d-flex align-items-center">
             <img src="https://i.ibb.co/8nNk7gxX/logo-removebg-preview-1.png" alt="Logo" height="40" class="ms-3">
@@ -148,7 +139,6 @@
                             {% if col != "الملاحظات" and col != "جملة المستلم" %}
                             <td class="text-center">
                                 {% if col in tick_columns %}
-                                    {# تحديد هل العمود من السبعة الخاصة أم عادي #}
                                     {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
                                         <div class="tri-state-toggle {{ 'state-paid' if val|string|upper == 'PAID' else ('state-done' if val|string|upper == 'TRUE' else '') }}" 
                                              data-col="{{ col }}" 
@@ -156,7 +146,7 @@
                                              onclick="toggleTriState(this)">
                                         </div>
                                     {% else %}
-                                        <input type="checkbox" class="form-check-input tick-input shadow-none financial-calc-trigger" 
+                                        <input type="checkbox" class="form-check-input tick-input shadow-none" 
                                                data-col="{{ col }}" 
                                                {% if val|string|upper == "TRUE" %}checked{% endif %} disabled>
                                     {% endif %}
@@ -228,14 +218,14 @@
 let activePass = "";
 let currentNoteInput = null;
 
-// 1. التبديل الثلاثي (فارغ -> PAID -> TRUE)
+// 1. التبديل الثلاثي (فارغ -> PAID "أصفر" -> TRUE "أزرق")
 function toggleTriState(el) {
     if (activePass !== "321") return;
     
     let val = $(el).attr('data-value');
     let newVal = "FALSE";
 
-    if (val === "FALSE" || val === "") {
+    if (val === "FALSE" || val === "" || val === "NONE") {
         newVal = "PAID";
         $(el).addClass('state-paid').removeClass('state-done');
     } else if (val === "PAID") {
@@ -250,14 +240,13 @@ function toggleTriState(el) {
     calculateFinances();
 }
 
-// 2. محرك الحسابات المحدث
+// 2. محرك الحسابات
 function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
         let baseFees = 26000;
         let additionals = 0;
 
-        // فحص الخانات (عادية أو ثلاثية)
         row.find('.tick-input, .tri-state-toggle').each(function() {
             let colName = $(this).data('col').toString().trim();
             let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
@@ -340,7 +329,7 @@ function saveAll() {
     });
 }
 
-// 5. بقية الوظائف (البحث، الملاحظات، إضافة عميل)
+// 5. الوظائف الإضافية
 $("#searchInput").on("keyup", function() {
     var v = $(this).val().toLowerCase();
     $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
