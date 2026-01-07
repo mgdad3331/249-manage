@@ -30,7 +30,41 @@ client = gspread.authorize(creds)
 # Open Google Sheet
 # =========================
 SHEET_NAME = "Client_Management"
-sheet = client.open(SHEET_NAME).sheet1
+spreadsheet = client.open(SHEET_NAME)
+sheet = spreadsheet.sheet1
+
+# =========================
+# نظام حفظ مبالغ الترس (Settings)
+# =========================
+try:
+    # محاولة فتح ورقة الإعدادات، إذا لم توجد سيتم إنشاؤها تلقائياً
+    try:
+        settings_sheet = spreadsheet.worksheet("Settings")
+    except gspread.exceptions.WorksheetNotFound:
+        settings_sheet = spreadsheet.add_worksheet(title="Settings", rows="20", cols="2")
+        # إدخال القيم الافتراضية لأول مرة فقط
+        default_fees = [
+            ["الخدمة", "المبلغ"],
+            ["رقم وطني", 3500],
+            ["توثيقات", 5500],
+            ["معادلة", 0],
+            ["توكيل", 3500],
+            ["قبول مبدئي", 0],
+            ["تسليم الملف", 0],
+            ["رسوم الوافدين", 0]
+        ]
+        settings_sheet.update('A1', default_fees)
+
+    def get_fees_from_db():
+        """جلب الرسوم من ورقة Settings وتحويلها لقاموس"""
+        records = settings_sheet.get_all_records()
+        return {row["الخدمة"]: row["المبلغ"] for row in records}
+
+except Exception as e:
+    print(f"Settings Initialization Error: {e}")
+    # في حال حدوث خطأ، نستخدم قيم افتراضية لكي لا يتوقف النظام
+    def get_fees_from_db():
+        return {"رقم وطني": 3500, "توثيقات": 5500, "معادلة": 0, "توكيل": 3500, "قبول مبدئي": 0, "تسليم الملف": 0, "رسوم الوافدين": 0}
 
 # =========================
 # Admin Password
@@ -40,12 +74,8 @@ ADMIN_PASSWORD = "321"
 # =========================
 # Columns Definition (العربية المظبوطة)
 # =========================
-# الأعمدة ذات المرحلتين (دفع ثم اكتمال)
 SPECIAL_COLUMNS = ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"]
-
-# بقية الأعمدة التي تظل "صح" عادية (مرحلة واحدة)
 NORMAL_TICK_COLUMNS = ["الشهادات", "استلام الملف", "ترشيح نهائي", "172$"]
-
 TICK_COLUMNS = SPECIAL_COLUMNS + NORMAL_TICK_COLUMNS
 
 # =========================
@@ -56,11 +86,14 @@ TICK_COLUMNS = SPECIAL_COLUMNS + NORMAL_TICK_COLUMNS
 def index():
     try:
         data = sheet.get_all_records()
-        # نرسل TICK_COLUMNS لكي يعرف الـ HTML أي أعمدة يحولها لصاحات
+        # جلب المبالغ الحقيقية من صفحة Settings بدلاً من الكود الثابت
+        current_fees = get_fees_from_db()
+        
         return render_template(
             'index.html',
             clients=data,
-            tick_columns=TICK_COLUMNS
+            tick_columns=TICK_COLUMNS,
+            fees=current_fees  # نرسل الرسوم لملف HTML
         )
     except Exception as e:
         return f"Error: {str(e)}"
@@ -76,26 +109,34 @@ def save():
         return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
 
     updates_by_row = data.get("updates", {})
+    new_fees = data.get("fees") # استقبال مبالغ الترس الجديدة من المتصفح
     headers = sheet.row_values(1)
 
     try:
-        # نجلب كل البيانات الحالية مرة واحدة لتعديلها في الذاكرة
+        # 1. تحديث بيانات العملاء في Sheet1
         all_data = sheet.get_all_values() 
         
         for row_index_str, updates in updates_by_row.items():
-            row_idx = int(row_index_str) + 1 # +1 لأن المصفوفة تبدأ من 0 والعناوين في 0
+            row_idx = int(row_index_str) + 1 
             
             for col_name, value in updates.items():
                 if col_name in headers:
                     col_idx = headers.index(col_name)
                     all_data[row_idx][col_idx] = value
         
-        # نحدث الشيت بالكامل بطلب واحد فقط! (هذا يحمي من خطأ Quota 429)
         sheet.update('A1', all_data)
+
+        # 2. تحديث مبالغ الترس في ورقة Settings (هنا يتم الحفظ الدائم)
+        if new_fees:
+            fees_data = [["الخدمة", "المبلغ"]]
+            for service_name, amount in new_fees.items():
+                fees_data.append([service_name, amount])
+            settings_sheet.update('A1', fees_data)
         
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "failed", "message": f"خطأ في الحفظ: {str(e)}"})
+
 # =========================
 # Add New Client
 # =========================
@@ -110,20 +151,17 @@ def add_client():
     uni = data.get("uni", "")
     phone = data.get("phone", "")
     
-    # بناء الصف الجديد حسب ترتيب قوقل شيت لديك
-    # ترتيبك: الاسم، البريد، الجامعة، الرغبة، العنوان، الرقم، تاريخ البدء
     now = datetime.datetime.now().strftime("%Y-%m-%d")
     new_row = [
-    name,         # خانة الاسم
-    email,        # خانة البريد
-    uni,          # خانة الجامعة
-    "لم يحدد",    # خانة الرغبة
-    "",           # خانة العنوان (تركناها فارغة بدلاً من السودان)
-    phone,        # خانة الرقم (الهاتف) - هنا سيصل الرقم صحيحاً
-    now           # خانة البدء
-]
+        name,      # خانة الاسم
+        email,     # خانة البريد
+        uni,       # خانة الجامعة
+        "لم يحدد", # خانة الرغبة
+        "",        # خانة العنوان
+        phone,     # خانة الرقم
+        now        # خانة البدء
+    ]
     
-    # إضافة القيم الافتراضية للصاحات (كلها FALSE في البداية)
     new_row += ["FALSE"] * len(TICK_COLUMNS)
 
     try:
