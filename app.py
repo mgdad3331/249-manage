@@ -6,12 +6,15 @@ import os
 import datetime
 from functools import lru_cache
 import logging
+import hashlib
+import secrets
 
 # =========================
 # Flask App Configuration
 # =========================
 app = Flask(__name__)
-app.config['JSON_AS_ASCII'] = False  # دعم العربية في JSON
+app.config['JSON_AS_ASCII'] = False
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
 
 # إعداد نظام Logging
 logging.basicConfig(
@@ -19,6 +22,38 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# =========================
+# Security Configuration
+# =========================
+class SecurityManager:
+    """نظام الأمان المحسّن"""
+    
+    @staticmethod
+    def get_admin_password():
+        """جلب كلمة السر من Environment Variable"""
+        password = os.environ.get("ADMIN_PASSWORD")
+        if not password:
+            logger.warning("⚠️ ADMIN_PASSWORD not set, using default (INSECURE!)")
+            return "321"  # قيمة افتراضية للتطوير فقط
+        return password
+    
+    @staticmethod
+    def hash_password(password):
+        """تشفير كلمة السر (للاستخدام المستقبلي)"""
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    @staticmethod
+    def verify_password(provided_password):
+        """التحقق من كلمة السر"""
+        admin_pass = SecurityManager.get_admin_password()
+        return provided_password == admin_pass
+    
+    @staticmethod
+    def log_action(action, user_ip, success=True):
+        """تسجيل العمليات الحساسة"""
+        status = "✅ SUCCESS" if success else "❌ FAILED"
+        logger.info(f"{status} | Action: {action} | IP: {user_ip}")
 
 # =========================
 # Google Sheets Credentials
@@ -50,12 +85,12 @@ client = initialize_google_sheets()
 # =========================
 # Open Google Sheet
 # =========================
-SHEET_NAME = "Client_Management"
+SHEET_NAME = os.environ.get("SHEET_NAME", "Client_Management")
 spreadsheet = client.open(SHEET_NAME)
 sheet = spreadsheet.sheet1
 
 # =========================
-# Settings Sheet Management (نظام إدارة الرسوم)
+# Settings Sheet Management
 # =========================
 def initialize_settings_sheet():
     """تهيئة ورقة الإعدادات مع القيم الافتراضية"""
@@ -67,7 +102,6 @@ def initialize_settings_sheet():
             logger.info("⚠️ Settings sheet not found, creating new one...")
             settings_sheet = spreadsheet.add_worksheet(title="Settings", rows="20", cols="2")
             
-            # القيم الافتراضية للرسوم
             default_fees = [
                 ["الخدمة", "المبلغ"],
                 ["رقم وطني", 3500],
@@ -89,11 +123,11 @@ def initialize_settings_sheet():
 settings_sheet = initialize_settings_sheet()
 
 # =========================
-# Fee Database Functions (محسّنة مع Cache)
+# Fee Database Functions
 # =========================
 @lru_cache(maxsize=1)
 def get_fees_from_db_cached():
-    """جلب الرسوم من Settings مع تخزين مؤقت لتحسين الأداء"""
+    """جلب الرسوم من Settings مع تخزين مؤقت"""
     try:
         if settings_sheet is None:
             logger.warning("⚠️ Using default fees (Settings sheet unavailable)")
@@ -108,7 +142,7 @@ def get_fees_from_db_cached():
         return get_default_fees()
 
 def get_default_fees():
-    """القيم الافتراضية للرسوم في حال فشل التحميل"""
+    """القيم الافتراضية للرسوم"""
     return {
         "رقم وطني": 3500,
         "توثيقات": 5500,
@@ -122,11 +156,6 @@ def get_default_fees():
 def clear_fees_cache():
     """مسح الـ Cache بعد تحديث الرسوم"""
     get_fees_from_db_cached.cache_clear()
-
-# =========================
-# Admin Password
-# =========================
-ADMIN_PASSWORD = "321"
 
 # =========================
 # Columns Definition
@@ -145,11 +174,9 @@ def index():
     try:
         logger.info("📊 Loading main page...")
         
-        # جلب بيانات العملاء
         data = sheet.get_all_records()
         logger.info(f"✅ Loaded {len(data)} client records")
         
-        # جلب الرسوم من الـ Cache
         current_fees = get_fees_from_db_cached()
         
         return render_template(
@@ -163,27 +190,53 @@ def index():
         return f"حدث خطأ في تحميل الصفحة: {str(e)}", 500
 
 # =========================
-# Save All Changes (Bulk Save)
+# NEW: Get Client Names API
+# =========================
+@app.route('/get_clients', methods=['GET'])
+def get_clients():
+    """API لجلب أسماء العملاء فقط"""
+    try:
+        data = sheet.get_all_records()
+        # استخراج الأسماء فقط
+        client_names = [client.get('الاسم', '') for client in data if client.get('الاسم')]
+        
+        logger.info(f"✅ Retrieved {len(client_names)} client names")
+        return jsonify({
+            "status": "success",
+            "clients": client_names
+        })
+    except Exception as e:
+        logger.error(f"❌ Error retrieving clients: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+# =========================
+# Save All Changes
 # =========================
 @app.route('/save', methods=['POST'])
 def save():
-    """حفظ جميع التعديلات (بيانات + رسوم + رسوم مخصصة)"""
+    """حفظ جميع التعديلات مع نظام أمان محسّن"""
     try:
         data = request.get_json()
         password = data.get("password")
+        user_ip = request.remote_addr
         
-        # التحقق من كلمة السر
-        if password != ADMIN_PASSWORD:
-            logger.warning("⚠️ Failed save attempt - incorrect password")
+        # التحقق من كلمة السر باستخدام SecurityManager
+        if not SecurityManager.verify_password(password):
+            SecurityManager.log_action("SAVE_ATTEMPT", user_ip, success=False)
+            logger.warning(f"⚠️ Failed save attempt from IP: {user_ip}")
             return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
 
+        SecurityManager.log_action("SAVE_DATA", user_ip, success=True)
+        
         updates_by_row = data.get("updates", {})
         new_fees = data.get("fees")
         custom_fees = data.get("customFees", {})
         
         logger.info(f"💾 Starting save operation for {len(updates_by_row)} rows...")
 
-        # الحصول على العناوين
         headers = sheet.row_values(1)
         
         # 1. تحديث بيانات العملاء
@@ -201,7 +254,7 @@ def save():
             sheet.update('A1', all_data)
             logger.info(f"✅ Updated {len(updates_by_row)} client records")
 
-        # 2. تحديث الرسوم العامة في Settings
+        # 2. تحديث الرسوم العامة
         if new_fees and settings_sheet:
             fees_data = [["الخدمة", "المبلغ"]]
             for service_name, amount in new_fees.items():
@@ -211,7 +264,7 @@ def save():
             clear_fees_cache()
             logger.info(f"✅ Updated {len(new_fees)} fee records")
         
-        # 3. حفظ الرسوم المخصصة (في ورقة منفصلة)
+        # 3. حفظ الرسوم المخصصة
         if custom_fees:
             try:
                 try:
@@ -219,7 +272,6 @@ def save():
                 except gspread.exceptions.WorksheetNotFound:
                     custom_fees_sheet = spreadsheet.add_worksheet(title="CustomFees", rows="100", cols="3")
                 
-                # تحويل البيانات لصيغة مناسبة
                 custom_data = [["الخدمة", "العميل", "المبلغ"]]
                 for service, clients in custom_fees.items():
                     for client_name, amount in clients.items():
@@ -242,43 +294,42 @@ def save():
 # =========================
 @app.route('/add_client', methods=['POST'])
 def add_client():
-    """إضافة عميل جديد"""
+    """إضافة عميل جديد مع نظام أمان محسّن"""
     try:
         data = request.get_json()
+        user_ip = request.remote_addr
         
         # التحقق من كلمة السر
-        if data.get("password") != ADMIN_PASSWORD:
-            logger.warning("⚠️ Failed add attempt - incorrect password")
+        if not SecurityManager.verify_password(data.get("password")):
+            SecurityManager.log_action("ADD_CLIENT_ATTEMPT", user_ip, success=False)
+            logger.warning(f"⚠️ Failed add attempt from IP: {user_ip}")
             return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
 
-        # استخراج البيانات مع قيم افتراضية
+        SecurityManager.log_action("ADD_CLIENT", user_ip, success=True)
+        
         name = data.get("name", "عميل جديد")
         email = data.get("email", "")
         uni = data.get("uni", "")
         phone = data.get("phone", "")
         
-        # التحقق من صحة البيانات
         if not name or name.strip() == "":
             return jsonify({"status": "failed", "message": "الاسم مطلوب!"})
         
-        # إنشاء الصف الجديد
         now = datetime.datetime.now().strftime("%Y-%m-%d")
         new_row = [
-            name.strip(),  # الاسم
-            email.strip(), # البريد
-            uni.strip(),   # الجامعة
-            "لم يحدد",     # الرغبة
-            "",            # العنوان
-            phone.strip(), # الرقم
-            now            # تاريخ البدء
+            name.strip(),
+            email.strip(),
+            uni.strip(),
+            "لم يحدد",
+            "",
+            phone.strip(),
+            now
         ]
         
-        # إضافة القيم الافتراضية للـ Tick Columns
         new_row += ["FALSE"] * len(TICK_COLUMNS)
         
-        # إضافة الصف
         sheet.append_row(new_row)
-        logger.info(f"✅ Added new client: {name}")
+        logger.info(f"✅ Added new client: {name} from IP: {user_ip}")
         
         return jsonify({"status": "success"})
         
@@ -293,12 +344,12 @@ def add_client():
 def health():
     """نقطة نهاية لفحص صحة الخادم"""
     try:
-        # اختبار الاتصال بـ Google Sheets
         spreadsheet.fetch_sheet_metadata()
         return jsonify({
             "status": "healthy",
             "sheet_name": SHEET_NAME,
-            "timestamp": datetime.datetime.now().isoformat()
+            "timestamp": datetime.datetime.now().isoformat(),
+            "security": "enabled" if os.environ.get("ADMIN_PASSWORD") else "default"
         })
     except Exception as e:
         logger.error(f"❌ Health check failed: {str(e)}")
@@ -325,4 +376,5 @@ def internal_error(e):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"🚀 Starting server on port {port}...")
+    logger.info(f"🔐 Security: {'ENABLED (Custom Password)' if os.environ.get('ADMIN_PASSWORD') else 'DEFAULT (321)'}")
     app.run(host='0.0.0.0', port=port, debug=False)
