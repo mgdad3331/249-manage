@@ -1,96 +1,421 @@
-/* تحسين الخطوط والخلفية */
+/* ==================== الخطوط والإعدادات الأساسية ==================== */
 body {
     font-family: 'Tajawal', sans-serif;
     background-color: #f4f7fa;
-    color: #333;
     direction: rtl;
-}
-.navbar-brand img {
-    height: 70px !important; /* غير الرقم هنا للحجم المناسب لك */
-    width: auto; /* للحفاظ على أبعاد الشعار دون تمطيط */
-    transition: transform 0.3s ease; /* إضافة لمسة جمالية عند التحميل */
+    min-height: 100vh;
 }
 
-/* شريط العنوان الاحترافي */
+/* ==================== شريط التنقل ==================== */
 .navbar {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    padding: 0.8rem 1.5rem;
-    border-bottom: 4px solid #f59e0b; /* خط برتقالي ذهبي */
+    border-bottom: 4px solid #f59e0b;
+    padding: 1rem 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.brand-text span {
-    letter-spacing: 1px;
-    font-size: 1.2rem;
-    color: #ffffff;
+.brand-text {
+    color: white;
+    font-weight: bold;
+    font-size: 1.3rem;
+    letter-spacing: 0.5px;
 }
 
-.brand-text small {
-    font-size: 0.8rem;
-    color: #38bdf8 !important; /* لون سماوي للنص الفرعي */
+.navbar-brand img {
+    transition: transform 0.3s ease;
 }
 
-/* تحسين شكل الجدول والحاوية */
+.navbar-brand img:hover {
+    transform: scale(1.05);
+}
+
+/* ==================== الأزرار المخصصة ==================== */
+.btn-dark-blue {
+    background-color: #0f172a !important;
+    border: 1px solid #f59e0b !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.btn-dark-blue:hover {
+    background-color: #1e293b !important;
+    color: #f59e0b !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* زر الحفظ - مخفي افتراضياً */
+#save-all-btn {
+    display: none;
+    position: relative;
+}
+
+.edit-active #save-all-btn {
+    display: inline-block;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==================== الجداول ==================== */
 .card {
     border-radius: 15px;
-    overflow: hidden;
     border: none;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
 }
 
 .table thead th {
     background-color: #f8fafc;
-    font-weight: 700;
     color: #475569;
-    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
     border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+    padding: 1rem 0.5rem;
+    font-size: 0.9rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1f5f9;
+    transform: scale(1.001);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* تثبيت عمود الاسم */
+#client-table td:first-child,
+#client-table th:first-child {
+    min-width: 280px !important;
+    text-align: right !important;
+    padding-right: 20px;
+    position: sticky;
+    right: 0;
+    background-color: white;
+    z-index: 5;
+}
+
+#client-table thead th:first-child {
+    background-color: #f8fafc;
+    z-index: 15;
+}
+
+/* ==================== الأعمدة المالية ==================== */
+.col-finance {
+    background-color: #fef9c3 !important;
+    color: #854d0e !important;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid #fde68a !important;
+    font-size: 0.95rem;
+}
+
+.table th.col-finance {
+    background-color: #facc15 !important;
+    color: #451a03 !important;
+}
+
+/* ==================== حقول الإدخال ==================== */
+.edit-input {
+    width: 95%;
+    border: 1px solid #f59e0b;
+    font-weight: bold;
+    background-color: #fffcf5;
+    border-radius: 5px;
+    padding: 0.4rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.edit-input:focus {
+    outline: none;
+    border-color: #ea580c;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    transform: scale(1.02);
+}
+
+/* ==================== أزرار الحالات (Checkboxes & Tri-State) ==================== */
+.tri-state-toggle,
+.tick-input {
+    width: 24px !important;
+    height: 24px !important;
+    border: 2px solid #0d6efd !important;
+    border-radius: 4px !important;
+    cursor: pointer;
+    background-color: #fff;
+    margin: auto;
+    display: block;
+    opacity: 1 !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    transition: all 0.2s ease;
+}
+
+.tick-input:disabled,
+.tri-state-toggle {
+    opacity: 1 !important;
+    filter: none !important;
+    pointer-events: none;
+}
+
+.edit-active .tick-input,
+.edit-active .tri-state-toggle {
+    pointer-events: auto;
+}
+
+.tick-input:hover,
+.tri-state-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* حالة مدفوع (PAID) - أصفر */
+.state-paid {
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+}
+
+/* حالة مكتمل (TRUE) - أزرق */
+.state-done,
+.tick-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.tick-input {
+    appearance: none;
+}
+
+/* ==================== زر الترس (إعدادات الرسوم) ==================== */
+.fee-config-btn {
+    display: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    background: #fff;
+    border: 1px solid #f59e0b;
+    border-radius: 4px;
+    padding: 0 5px;
+    margin-right: 5px;
+    color: #b45309;
+    transition: all 0.2s ease;
+}
+
+.fee-config-btn:hover {
+    background-color: #fef3c7;
+    transform: rotate(90deg);
+}
+
+.edit-active .fee-config-btn {
+    display: inline-block;
+}
+
+/* ==================== شريط البحث ==================== */
+#searchInput {
+    height: 45px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #cbd5e1;
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+    transform: translateY(-2px);
+}
+
+/* ==================== المودالات ==================== */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+}
+
+.modal-header {
+    border-radius: 15px 15px 0 0;
+    padding: 1.25rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* ==================== Toast Notifications ==================== */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.custom-toast {
+    min-width: 350px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    pointer-events: auto;
+    animation: toastSlideIn 0.4s ease;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.toast-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+}
+
+.toast-error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+}
+
+.toast-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+}
+
+.toast-info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+}
+
+/* ==================== Loading Spinner ==================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.loader {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    border-top: 5px solid #f59e0b;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader-text {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1rem;
     text-align: center;
 }
 
-/* تأثير عند المرور على الصف */
-.table-hover tbody tr:hover {
-    background-color: #f1f5f9;
-    transition: 0.2s ease-in-out;
+/* ==================== Responsive Design ==================== */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.75rem 1rem;
+    }
+    
+    .brand-text {
+        font-size: 1rem;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    #client-table td:first-child,
+    #client-table th:first-child {
+        min-width: 200px !important;
+    }
+    
+    .custom-toast {
+        min-width: 90%;
+    }
 }
 
-/* --- نظام الصاحات (Switches) --- */
-.form-check-input {
-    width: 2.8em !important;
-    height: 1.4em !important;
-    cursor: pointer;
-    background-color: #cbd5e1; /* لون رمادي عند التعطيل */
-    border: none;
+/* ==================== تحسينات إضافية ==================== */
+.fade-in {
+    animation: fadeIn 0.5s ease;
 }
 
-.form-check-input:checked {
-    background-color: #10b981 !important; /* أخضر زاهي عند التفعيل */
-    border-color: #10b981 !important;
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-/* تمييز الصف الذي يتم تعديله حالياً */
-.table-warning {
-    background-color: #fef9c3 !important; /* أصفر فاتح جداً */
-    border-right: 5px solid #f59e0b; /* علامة جانبية برتقالية */
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
 }
 
-/* شريط البحث */
-.input-group-text {
-    border-radius: 0 8px 8px 0 !important;
+/* تحسين شكل Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
 }
 
-#searchInput {
-    border-radius: 8px 0 0 8px !important;
-    height: 45px;
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
 }
 
-/* أزرار الإجراءات */
-.edit-btn {
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 0.8rem;
-    transition: 0.3s;
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 5px;
 }
 
-.btn-success {
-    background-color: #10b981;
-    border: none;
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
