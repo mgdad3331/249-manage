@@ -1,7 +1,8 @@
 // ==================== متغيرات عامة ====================
 let activePass = "";
 let currentNoteInput = null;
-let feeDatabase = {};
+// feeDatabase يتم تعريفه في HTML من Backend
+// let feeDatabase = {}; // تم نقله للـ HTML
 let activeFeeCol = "";
 
 // ==================== نظام الإشعارات المحسّن ====================
