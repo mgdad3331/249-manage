@@ -167,7 +167,7 @@ def index():
 # =========================
 @app.route('/save', methods=['POST'])
 def save():
-    """حفظ جميع التعديلات (بيانات + رسوم)"""
+    """حفظ جميع التعديلات (بيانات + رسوم + رسوم مخصصة)"""
     try:
         data = request.get_json()
         password = data.get("password")
@@ -179,6 +179,7 @@ def save():
 
         updates_by_row = data.get("updates", {})
         new_fees = data.get("fees")
+        custom_fees = data.get("customFees", {})
         
         logger.info(f"💾 Starting save operation for {len(updates_by_row)} rows...")
 
@@ -190,26 +191,45 @@ def save():
             all_data = sheet.get_all_values()
             
             for row_index_str, updates in updates_by_row.items():
-                row_idx = int(row_index_str) + 1  # +1 لأن الصف الأول هو العناوين
+                row_idx = int(row_index_str) + 1
                 
                 for col_name, value in updates.items():
                     if col_name in headers:
                         col_idx = headers.index(col_name)
                         all_data[row_idx][col_idx] = value
             
-            # تحديث الـ Sheet دفعة واحدة (أسرع من التحديث صف بصف)
             sheet.update('A1', all_data)
             logger.info(f"✅ Updated {len(updates_by_row)} client records")
 
-        # 2. تحديث الرسوم في Settings
+        # 2. تحديث الرسوم العامة في Settings
         if new_fees and settings_sheet:
             fees_data = [["الخدمة", "المبلغ"]]
             for service_name, amount in new_fees.items():
                 fees_data.append([service_name, amount])
             
             settings_sheet.update('A1', fees_data)
-            clear_fees_cache()  # مسح الـ Cache
+            clear_fees_cache()
             logger.info(f"✅ Updated {len(new_fees)} fee records")
+        
+        # 3. حفظ الرسوم المخصصة (في ورقة منفصلة)
+        if custom_fees:
+            try:
+                try:
+                    custom_fees_sheet = spreadsheet.worksheet("CustomFees")
+                except gspread.exceptions.WorksheetNotFound:
+                    custom_fees_sheet = spreadsheet.add_worksheet(title="CustomFees", rows="100", cols="3")
+                
+                # تحويل البيانات لصيغة مناسبة
+                custom_data = [["الخدمة", "العميل", "المبلغ"]]
+                for service, clients in custom_fees.items():
+                    for client_name, amount in clients.items():
+                        custom_data.append([service, client_name, amount])
+                
+                custom_fees_sheet.clear()
+                custom_fees_sheet.update('A1', custom_data)
+                logger.info(f"✅ Saved custom fees")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to save custom fees: {str(e)}")
         
         return jsonify({"status": "success"})
         
