@@ -309,6 +309,25 @@ function loadClientNames() {
         });
 }
 
+// ==================== جلب الرسوم المخصصة المحفوظة ====================
+function loadCustomFees() {
+    fetch('/get_custom_fees')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                customFeesData = data.customFees || {};
+                console.log(`✅ تم تحميل الرسوم المخصصة`);
+                // إعادة حساب المبالغ بعد تحميل الرسوم المخصصة
+                calculateFinances();
+            } else {
+                console.error('❌ فشل تحميل الرسوم المخصصة');
+            }
+        })
+        .catch(err => {
+            console.error('❌ خطأ في تحميل الرسوم:', err);
+        });
+}
+
 // ==================== ملء قائمة العملاء في Modal ====================
 function populateClientSelect() {
     const select = document.getElementById('customClientSelect');
@@ -463,17 +482,73 @@ function calculateFinances() {
 }
 
 function toggleGlobalEdit() {
-    let pwd = prompt("أدخل كلمة السر:");
-    if (pwd && pwd.trim() !== "") {
-        activePass = pwd;
-        $('body').addClass('edit-active').removeClass('edit-locked');
-        $('.tick-input').prop('disabled', false); 
-        $('.view-text').addClass('d-none');
-        $('.edit-input').removeClass('d-none');
-        $('#main-edit-btn').removeClass('btn-dark-blue').addClass('btn-success').text('🔓 التعديل نشط');
-        calculateFinances();
-        ToastManager.success('تم فتح وضع التعديل بنجاح!');
+    if ($('body').hasClass('edit-active')) {
+        // إذا كان التعديل مفعّل، نطلب تأكيد الإغلاق
+        if (confirm('هل تريد إغلاق وضع التعديل؟ تأكد من حفظ التغييرات أولاً!')) {
+            closeEditMode();
+        }
+    } else {
+        // فتح وضع التعديل - التحقق من كلمة السر
+        const pwd = prompt("أدخل كلمة السر لفتح التعديل:");
+        
+        if (!pwd || pwd.trim() === "") {
+            return; // المستخدم ألغى أو لم يدخل شيء
+        }
+        
+        // عرض Loading
+        LoadingManager.show('جاري التحقق من كلمة السر...');
+        
+        // التحقق من كلمة السر عبر Backend
+        fetch('/verify_password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: pwd })
+        })
+        .then(res => res.json())
+        .then(res => {
+            LoadingManager.hide();
+            
+            if (res.status === 'success') {
+                // كلمة السر صحيحة
+                activePass = pwd;
+                openEditMode();
+                ToastManager.success('تم فتح وضع التعديل بنجاح! ✅', 2500);
+            } else {
+                // كلمة السر خاطئة
+                ToastManager.error('كلمة السر غير صحيحة! ❌', 3000);
+            }
+        })
+        .catch(err => {
+            LoadingManager.hide();
+            ToastManager.error('خطأ في الاتصال بالخادم!', 3000);
+            console.error('Error:', err);
+        });
     }
+}
+
+function openEditMode() {
+    $('body').addClass('edit-active').removeClass('edit-locked');
+    $('.tick-input').prop('disabled', false);
+    $('.view-text').addClass('d-none');
+    $('.edit-input').removeClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-dark-blue')
+        .addClass('btn-success')
+        .html('🔓 التعديل نشط - اضغط للإغلاق');
+    calculateFinances();
+}
+
+function closeEditMode() {
+    $('body').removeClass('edit-active').addClass('edit-locked');
+    $('.tick-input').prop('disabled', true);
+    $('.view-text').removeClass('d-none');
+    $('.edit-input').addClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-success')
+        .addClass('btn-dark-blue')
+        .html('🔓 فتح التعديل العام');
+    activePass = "";
+    ToastManager.info('تم إغلاق وضع التعديل', 2000);
 }
 
 function openFeeModal(col) { 
@@ -496,12 +571,14 @@ function applySmartFee() {
     
     bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
     calculateFinances(); 
+    
     ToastManager.info(`تم تحديث الرسوم الافتراضية لـ "${activeFeeCol}"`, 2500);
+    ToastManager.warning('⚠️ لا تنسَ حفظ التغييرات!', 3000);
 }
 
 function toggleTriState(el) {
     if (!activePass || activePass.trim() === "") { 
-        ToastManager.warning('يجب فتح وضع التعديل أولاً!'); 
+        ToastManager.warning('يجب فتح وضع التعديل أولاً!', 2000); 
         return; 
     }
     let val = $(el).attr('data-value');
@@ -630,10 +707,14 @@ $(document).ready(function() {
     // تحميل أسماء العملاء
     loadClientNames();
     
+    // تحميل الرسوم المخصصة المحفوظة
+    loadCustomFees();
+    
     calculateFinances();
     $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
     
     console.log('✅ النظام جاهز للاستخدام');
+    console.log('🔐 نظام الأمان: مفعّل');
 });
 </script>
 </body>
