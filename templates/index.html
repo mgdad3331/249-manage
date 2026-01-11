@@ -233,10 +233,10 @@
 <!-- Initialize Fee Database from Backend -->
 <script>
     // استقبال بيانات الرسوم من Backend
-    let feeDatabase = {{ fees | tojson | safe if fees else '{}' | safe }};
+    var feeDatabase = {{ fees | tojson | safe }};
     
     // قيم افتراضية في حال عدم وجود بيانات
-    if (Object.keys(feeDatabase).length === 0) {
+    if (!feeDatabase || Object.keys(feeDatabase).length === 0) {
         feeDatabase = {
             "رقم وطني": 3500,
             "توكيل": 3500,
@@ -247,6 +247,8 @@
             "رسوم الوافدين": 0
         };
     }
+    
+    console.log('✅ Fee Database Loaded:', feeDatabase);
 </script>
 
 <!-- Custom JavaScript -->
