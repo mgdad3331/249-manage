@@ -190,7 +190,39 @@ def index():
         return f"حدث خطأ في تحميل الصفحة: {str(e)}", 500
 
 # =========================
-# NEW: Get Client Names API
+# NEW: Verify Password API
+# =========================
+@app.route('/verify_password', methods=['POST'])
+def verify_password():
+    """API للتحقق من كلمة السر قبل فتح التعديل"""
+    try:
+        data = request.get_json()
+        password = data.get("password")
+        user_ip = request.remote_addr
+        
+        if SecurityManager.verify_password(password):
+            SecurityManager.log_action("PASSWORD_VERIFY_SUCCESS", user_ip, success=True)
+            logger.info(f"✅ Password verified successfully from IP: {user_ip}")
+            return jsonify({
+                "status": "success",
+                "message": "كلمة السر صحيحة"
+            })
+        else:
+            SecurityManager.log_action("PASSWORD_VERIFY_FAILED", user_ip, success=False)
+            logger.warning(f"⚠️ Failed password verification from IP: {user_ip}")
+            return jsonify({
+                "status": "failed",
+                "message": "كلمة السر خاطئة"
+            })
+    except Exception as e:
+        logger.error(f"❌ Error verifying password: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+# =========================
+# Get Client Names API
 # =========================
 @app.route('/get_clients', methods=['GET'])
 def get_clients():
@@ -207,6 +239,47 @@ def get_clients():
         })
     except Exception as e:
         logger.error(f"❌ Error retrieving clients: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+# =========================
+# Load Custom Fees API
+# =========================
+@app.route('/get_custom_fees', methods=['GET'])
+def get_custom_fees():
+    """API لجلب الرسوم المخصصة المحفوظة"""
+    try:
+        try:
+            custom_fees_sheet = spreadsheet.worksheet("CustomFees")
+            records = custom_fees_sheet.get_all_records()
+            
+            # تحويل البيانات لصيغة JavaScript
+            custom_fees = {}
+            for row in records:
+                service = row.get('الخدمة', '')
+                client = row.get('العميل', '')
+                amount = row.get('المبلغ', 0)
+                
+                if service and client:
+                    if service not in custom_fees:
+                        custom_fees[service] = {}
+                    custom_fees[service][client] = amount
+            
+            logger.info(f"✅ Loaded custom fees for {len(records)} entries")
+            return jsonify({
+                "status": "success",
+                "customFees": custom_fees
+            })
+        except gspread.exceptions.WorksheetNotFound:
+            logger.info("⚠️ CustomFees sheet not found, returning empty")
+            return jsonify({
+                "status": "success",
+                "customFees": {}
+            })
+    except Exception as e:
+        logger.error(f"❌ Error loading custom fees: {str(e)}")
         return jsonify({
             "status": "error",
             "message": str(e)
