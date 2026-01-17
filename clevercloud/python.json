@@ -1,0 +1,12 @@
+{
+  "deploy": {
+    "python_version": "3.11",
+    "build": {
+      "type": "pip",
+      "requirements": "requirements.txt"
+    }
+  },
+  "run": {
+    "command": "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+  }
+}
