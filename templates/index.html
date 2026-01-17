@@ -284,6 +284,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// =========================
+// Global Variables
+// =========================
 var activePass = "";
 var currentNoteInput = null;
 var feeDatabase = {{ fees | tojson | safe }};
@@ -292,6 +295,53 @@ var customFeesData = {};
 var allClientNames = [];
 var DOLLAR_RATE = 50;
 
+// =========================
+// Toast Manager
+// =========================
+const ToastManager = {
+    container: null,
+    init() {
+        if (!this.container) {
+            this.container = document.createElement('div');
+            this.container.className = 'toast-container';
+            document.body.appendChild(this.container);
+        }
+    },
+    show(message, type, duration) {
+        this.init();
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = `custom-toast toast-${type} p-3 mb-2`;
+        toast.innerHTML = `<div class="d-flex align-items-center gap-2"><span style="font-size:1.5rem;">${icons[type]}</span><strong>${message}</strong><button type="button" class="btn-close btn-close-white ms-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        this.container.appendChild(toast);
+        setTimeout(() => toast.remove(), duration || 3000);
+    },
+    success(m,d) { this.show(m,'success',d); },
+    error(m,d) { this.show(m,'error',d); },
+    warning(m,d) { this.show(m,'warning',d); },
+    info(m,d) { this.show(m,'info',d); }
+};
+
+// =========================
+// Loading Manager
+// =========================
+const LoadingManager = {
+    overlay: null,
+    init() {
+        if (!this.overlay) {
+            this.overlay = document.createElement('div');
+            this.overlay.className = 'loading-overlay';
+            this.overlay.innerHTML = '<div class="text-center"><div class="loader"></div><div class="loader-text" id="loader-text">جاري التحميل...</div></div>';
+            document.body.appendChild(this.overlay);
+        }
+    },
+    show(msg) { this.init(); document.getElementById('loader-text').textContent = msg || 'جاري التحميل...'; this.overlay.classList.add('active'); },
+    hide() { if (this.overlay) this.overlay.classList.remove('active'); }
+};
+
+// =========================
+// Client Names Management
+// =========================
 function loadClientNames() {
     fetch('/get_clients')
         .then(response => response.json())
@@ -308,6 +358,21 @@ function loadClientNames() {
         });
 }
 
+function populateClientSelect() {
+    const select = document.getElementById('customClientSelect');
+    select.innerHTML = '<option value="">-- اختر عميلاً --</option>';
+    
+    allClientNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    });
+}
+
+// =========================
+// Custom Fees Management
+// =========================
 function loadCustomFees() {
     fetch('/get_custom_fees')
         .then(response => response.json())
@@ -325,18 +390,6 @@ function loadCustomFees() {
         });
 }
 
-function populateClientSelect() {
-    const select = document.getElementById('customClientSelect');
-    select.innerHTML = '<option value="">-- اختر عميلاً --</option>';
-    
-    allClientNames.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        select.appendChild(option);
-    });
-}
-
 function addCustomFee() {
     const clientName = $('#customClientSelect').val();
     let amount = $('#customClientAmount').val().trim();
@@ -351,29 +404,17 @@ function addCustomFee() {
         return;
     }
     
-    // حفظ المبلغ كما هو (مع علامة $ إذا كانت موجودة)
-    let finalAmount = amount;
-    
-    // تهيئة البيانات
     if (!customFeesData[activeFeeCol]) {
         customFeesData[activeFeeCol] = {};
     }
     
-    customFeesData[activeFeeCol][clientName] = finalAmount;
+    customFeesData[activeFeeCol][clientName] = amount;
     
-    console.log('✅ تم إضافة رسم مخصص:');
-    console.log('الخدمة:', activeFeeCol);
-    console.log('العميل:', clientName);
-    console.log('المبلغ:', finalAmount);
-    console.log('جميع الرسوم المخصصة:', customFeesData);
+    console.log('✅ تم إضافة رسم مخصص:', activeFeeCol, clientName, amount);
     
-    // تحديث العرض
     displayCustomFees();
-    
-    // إعادة حساب المبالغ
     calculateFinances();
     
-    // تفريغ الحقول
     $('#customClientSelect').val('');
     $('#customClientAmount').val('');
     
@@ -421,48 +462,14 @@ function removeCustomFee(clientName) {
     if (customFeesData[activeFeeCol]) {
         delete customFeesData[activeFeeCol][clientName];
         displayCustomFees();
+        calculateFinances();
         ToastManager.info(`تم حذف الرسم المخصص لـ ${clientName}`, 2000);
     }
 }
 
-const ToastManager = {
-    container: null,
-    init() {
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.className = 'toast-container';
-            document.body.appendChild(this.container);
-        }
-    },
-    show(message, type, duration) {
-        this.init();
-        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-        const toast = document.createElement('div');
-        toast.className = `custom-toast toast-${type} p-3 mb-2`;
-        toast.innerHTML = `<div class="d-flex align-items-center gap-2"><span style="font-size:1.5rem;">${icons[type]}</span><strong>${message}</strong><button type="button" class="btn-close btn-close-white ms-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
-        this.container.appendChild(toast);
-        setTimeout(() => toast.remove(), duration || 3000);
-    },
-    success(m,d) { this.show(m,'success',d); },
-    error(m,d) { this.show(m,'error',d); },
-    warning(m,d) { this.show(m,'warning',d); },
-    info(m,d) { this.show(m,'info',d); }
-};
-
-const LoadingManager = {
-    overlay: null,
-    init() {
-        if (!this.overlay) {
-            this.overlay = document.createElement('div');
-            this.overlay.className = 'loading-overlay';
-            this.overlay.innerHTML = '<div class="text-center"><div class="loader"></div><div class="loader-text" id="loader-text">جاري التحميل...</div></div>';
-            document.body.appendChild(this.overlay);
-        }
-    },
-    show(msg) { this.init(); document.getElementById('loader-text').textContent = msg || 'جاري التحميل...'; this.overlay.classList.add('active'); },
-    hide() { if (this.overlay) this.overlay.classList.remove('active'); }
-};
-
+// =========================
+// Financial Calculations
+// =========================
 function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
@@ -476,14 +483,40 @@ function calculateFinances() {
             let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
             
             if (status === "PAID" || status === "TRUE") {
-                // التحقق من وجود رسم مخصص للعميل
                 let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) 
                     ? customFeesData[colName][clientName] 
                     : (feeDatabase[colName] || 0);
                 
-                // التحقق من نوع العملة
-                if (typeof customFee === 'string' && customFee.includes('
+                if (typeof customFee === 'string' && customFee.includes('$')) {
+                    let dollarAmount = parseFloat(customFee.replace('$', '').trim());
+                    if (!isNaN(dollarAmount)) {
+                        dollarTotal += dollarAmount;
+                        additionals += dollarAmount * DOLLAR_RATE;
+                    }
+                } else {
+                    let feeAmount = parseFloat(customFee) || 0;
+                    additionals += feeAmount;
+                }
+            }
+        });
 
+        let noteContent = row.find('.note-data').val() || "";
+        let extraMatch = noteContent.match(/EXTRA:(-?\d+)/);
+        if(extraMatch) additionals += parseFloat(extraMatch[1]);
+
+        let received = parseFloat(row.find('.received-amount-input').val()) || 0;
+        let totalRequired = baseFees + additionals;
+        
+        row.find('.total-dollar').text(dollarTotal > 0 ? dollarTotal.toFixed(2) + ' $' : '0.00 $');
+        row.find('.total-required').text(totalRequired.toLocaleString('en-US'));
+        row.find('.total-remaining').text((totalRequired - received).toLocaleString('en-US'));
+        row.find('.total-remaining').css('color', (totalRequired - received) > 0 ? '#dc3545' : '#198754');
+    });
+}
+
+// =========================
+// Edit Mode Management
+// =========================
 function toggleGlobalEdit() {
     if ($('body').hasClass('edit-active')) {
         if (confirm('هل تريد إغلاق وضع التعديل؟ تأكد من حفظ التغييرات أولاً!')) {
@@ -548,6 +581,9 @@ function closeEditMode() {
     ToastManager.info('تم إغلاق وضع التعديل', 2000);
 }
 
+// =========================
+// Fee Settings Modal
+// =========================
 function openFeeModal(col) { 
     activeFeeCol = col; 
     $('#currentFeeCol').text(col); 
@@ -570,6 +606,9 @@ function applySmartFee() {
     ToastManager.warning('⚠️ لا تنسَ حفظ التغييرات!', 3000);
 }
 
+// =========================
+// Tri-State Toggle
+// =========================
 function toggleTriState(el) {
     if (!activePass || activePass.trim() === "") { 
         ToastManager.warning('يجب فتح وضع التعديل أولاً!', 2000); 
@@ -581,6 +620,9 @@ function toggleTriState(el) {
     calculateFinances();
 }
 
+// =========================
+// Notes Management
+// =========================
 function showNote(btn) {
     currentNoteInput = $(btn).siblings('.note-data');
     $('#noteTextArea').val(currentNoteInput.val());
@@ -601,6 +643,9 @@ function updateNoteFromModal() {
     ToastManager.success('تم حفظ الملاحظة');
 }
 
+// =========================
+// Add Client
+// =========================
 function openAddModal() { 
     const pwd = prompt("كلمة السر للإضافة:");
     if (pwd && pwd.trim() !== "") { 
@@ -629,6 +674,9 @@ function executeAdd() {
     .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
 }
 
+// =========================
+// Save All Changes
+// =========================
 function saveAll() {
     if (!activePass || activePass.trim() === "") {
         activePass = prompt("أدخل كلمة السر للحفظ:");
@@ -689,11 +737,17 @@ function saveAll() {
     });
 }
 
+// =========================
+// Search Functionality
+// =========================
 $("#searchInput").on("keyup", function() {
     var v = $(this).val().toLowerCase();
     $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
 });
 
+// =========================
+// Document Ready
+// =========================
 $(document).ready(function() {
     ToastManager.init();
     LoadingManager.init();
