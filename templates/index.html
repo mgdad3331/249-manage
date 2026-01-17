@@ -470,7 +470,7 @@ function removeCustomFee(clientName) {
 // =========================
 // Financial Calculations
 // =========================
-function calculateFinances() {
+    function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
         let clientName = row.find('td:first span.view-text').text().trim();
@@ -488,12 +488,13 @@ function calculateFinances() {
                     : (feeDatabase[colName] || 0);
                 
                 if (typeof customFee === 'string' && customFee.includes('$')) {
+                    // المبلغ الدولاري يذهب فقط لإجمالي الدولار
                     let dollarAmount = parseFloat(customFee.replace('$', '').trim());
                     if (!isNaN(dollarAmount)) {
                         dollarTotal += dollarAmount;
-                        additionals += dollarAmount * DOLLAR_RATE;
                     }
                 } else {
+                    // المبلغ بالجنيه يذهب للإجمالي العادي
                     let feeAmount = parseFloat(customFee) || 0;
                     additionals += feeAmount;
                 }
