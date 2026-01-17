@@ -26,6 +26,14 @@
 
         .col-finance { background-color: #fef9c3 !important; color: #854d0e !important; font-weight: bold; text-align: center; border: 1px solid #fde68a !important; }
         .table th.col-finance { background-color: #facc15 !important; color: #451a03 !important; }
+        
+        /* Dollar column special styling */
+        .total-dollar {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
 
         .fee-config-btn {
             display: none; cursor: pointer; font-size: 0.9rem; background: #fff;
@@ -137,6 +145,7 @@
                             {% endfor %}
                             <th class="col-finance">جملة المطلوب</th>
                             <th class="col-finance">جملة المستلم</th>
+                            <th class="col-finance" style="background-color: #d1fae5 !important; color: #065f46 !important;">إجمالي دولار ($)</th>
                             <th class="col-finance">جملة المتبقي</th>
                             <th class="text-center">التفاصيل</th>
                         {% endif %}
@@ -173,6 +182,7 @@
                             <input type="number" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto received-amount-input" 
                                    value="{{ received_val }}" data-col="جملة المستلم">
                         </td>
+                        <td class="col-finance total-dollar" style="background-color: #d1fae5 !important; color: #065f46 !important; font-weight: bold;">0.00 $</td>
                         <td class="col-finance total-remaining">0</td>
 
                         <td class="text-center">
@@ -217,7 +227,8 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold small">المبلغ المخصص:</label>
-                            <input type="number" id="customClientAmount" class="form-control" placeholder="0">
+                            <input type="text" id="customClientAmount" class="form-control" placeholder="مثال: 5000 أو 100$">
+                            <small class="text-muted">💡 أضف $ للدولار (مثال: 100$) أو اترك رقم عادي للجنيه</small>
                         </div>
                         <div class="col-md-1 d-flex align-items-end">
                             <button class="btn btn-success w-100" onclick="addCustomFee()">+</button>
@@ -291,6 +302,7 @@ var feeDatabase = {{ fees | tojson | safe }};
 var activeFeeCol = "";
 var customFeesData = {}; // لتخزين الرسوم المخصصة
 var allClientNames = []; // قائمة جميع أسماء العملاء
+var DOLLAR_RATE = 50; // سعر الدولار مقابل الجنيه (يمكن تحديثه)
 
 // ==================== جلب أسماء العملاء عند تحميل الصفحة ====================
 function loadClientNames() {
@@ -344,19 +356,376 @@ function populateClientSelect() {
 // ==================== إضافة رسم مخصص ====================
 function addCustomFee() {
     const clientName = $('#customClientSelect').val();
-    const amount = parseFloat($('#customClientAmount').val()) || 0;
+    let amount = $('#customClientAmount').val().trim();
     
     if (!clientName) {
         ToastManager.warning('يرجى اختيار عميل أولاً!', 2000);
         return;
     }
     
-    if (amount === 0) {
+    if (!amount || amount === '') {
         ToastManager.warning('يرجى إدخال مبلغ صحيح!', 2000);
         return;
     }
     
-    // حفظ في البيانات
+    // التحقق من نوع العملة
+    let isDollar = amount.includes('
+
+// ==================== عرض الرسوم المخصصة ====================
+function displayCustomFees() {
+    const container = $('#customFeesList');
+    container.empty();
+    
+    const currentColFees = customFeesData[activeFeeCol] || {};
+    
+    if (Object.keys(currentColFees).length === 0) {
+        container.html('<p class="text-muted text-center small">لا توجد رسوم مخصصة بعد</p>');
+        return;
+    }
+    
+    for (const [clientName, amount] of Object.entries(currentColFees)) {
+        // التحقق من نوع العملة
+        let displayAmount;
+        let badgeClass = 'bg-primary';
+        
+        if (typeof amount === 'string' && amount.includes('
+
+// ==================== حذف رسم مخصص ====================
+function removeCustomFee(clientName) {
+    if (customFeesData[activeFeeCol]) {
+        delete customFeesData[activeFeeCol][clientName];
+        displayCustomFees();
+        ToastManager.info(`تم حذف الرسم المخصص لـ ${clientName}`, 2000);
+    }
+}
+
+// Toast Manager
+const ToastManager = {
+    container: null,
+    init() {
+        if (!this.container) {
+            this.container = document.createElement('div');
+            this.container.className = 'toast-container';
+            document.body.appendChild(this.container);
+        }
+    },
+    show(message, type, duration) {
+        this.init();
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = `custom-toast toast-${type} p-3 mb-2`;
+        toast.innerHTML = `<div class="d-flex align-items-center gap-2"><span style="font-size:1.5rem;">${icons[type]}</span><strong>${message}</strong><button type="button" class="btn-close btn-close-white ms-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        this.container.appendChild(toast);
+        setTimeout(() => toast.remove(), duration || 3000);
+    },
+    success(m,d) { this.show(m,'success',d); },
+    error(m,d) { this.show(m,'error',d); },
+    warning(m,d) { this.show(m,'warning',d); },
+    info(m,d) { this.show(m,'info',d); }
+};
+
+// Loading Manager
+const LoadingManager = {
+    overlay: null,
+    init() {
+        if (!this.overlay) {
+            this.overlay = document.createElement('div');
+            this.overlay.className = 'loading-overlay';
+            this.overlay.innerHTML = '<div class="text-center"><div class="loader"></div><div class="loader-text" id="loader-text">جاري التحميل...</div></div>';
+            document.body.appendChild(this.overlay);
+        }
+    },
+    show(msg) { this.init(); document.getElementById('loader-text').textContent = msg || 'جاري التحميل...'; this.overlay.classList.add('active'); },
+    hide() { if (this.overlay) this.overlay.classList.remove('active'); }
+};
+
+function calculateFinances() {
+    $('#client-table tbody tr').each(function() {
+        let row = $(this);
+        let clientName = row.find('td:first span.view-text').text().trim();
+        let baseFees = 26000;
+        let additionals = 0;
+        
+        row.find('.tick-input, .tri-state-toggle').each(function() {
+            let colName = $(this).data('col').toString().trim();
+            let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
+            
+            if (status === "PAID" || status === "TRUE") {
+                // التحقق من وجود رسم مخصص للعميل
+                let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) 
+                    ? customFeesData[colName][clientName] 
+                    : (feeDatabase[colName] || 0);
+                additionals += customFee;
+            }
+        });
+
+        let noteContent = row.find('.note-data').val() || "";
+        let extraMatch = noteContent.match(/EXTRA:(-?\d+)/);
+        if(extraMatch) additionals += parseFloat(extraMatch[1]);
+
+        let received = parseFloat(row.find('.received-amount-input').val()) || 0;
+        let totalRequired = baseFees + additionals;
+        row.find('.total-required').text(totalRequired.toLocaleString('en-US'));
+        row.find('.total-remaining').text((totalRequired - received).toLocaleString('en-US'));
+        row.find('.total-remaining').css('color', (totalRequired - received) > 0 ? '#dc3545' : '#198754');
+    });
+}
+
+function toggleGlobalEdit() {
+    if ($('body').hasClass('edit-active')) {
+        // إذا كان التعديل مفعّل، نطلب تأكيد الإغلاق
+        if (confirm('هل تريد إغلاق وضع التعديل؟ تأكد من حفظ التغييرات أولاً!')) {
+            closeEditMode();
+        }
+    } else {
+        // فتح وضع التعديل - التحقق من كلمة السر
+        const pwd = prompt("أدخل كلمة السر لفتح التعديل:");
+        
+        if (!pwd || pwd.trim() === "") {
+            return; // المستخدم ألغى أو لم يدخل شيء
+        }
+        
+        // عرض Loading
+        LoadingManager.show('جاري التحقق من كلمة السر...');
+        
+        // التحقق من كلمة السر عبر Backend
+        fetch('/verify_password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: pwd })
+        })
+        .then(res => res.json())
+        .then(res => {
+            LoadingManager.hide();
+            
+            if (res.status === 'success') {
+                // كلمة السر صحيحة
+                activePass = pwd;
+                openEditMode();
+                ToastManager.success('تم فتح وضع التعديل بنجاح! ✅', 2500);
+            } else {
+                // كلمة السر خاطئة
+                ToastManager.error('كلمة السر غير صحيحة! ❌', 3000);
+            }
+        })
+        .catch(err => {
+            LoadingManager.hide();
+            ToastManager.error('خطأ في الاتصال بالخادم!', 3000);
+            console.error('Error:', err);
+        });
+    }
+}
+
+function openEditMode() {
+    $('body').addClass('edit-active').removeClass('edit-locked');
+    $('.tick-input').prop('disabled', false);
+    $('.view-text').addClass('d-none');
+    $('.edit-input').removeClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-dark-blue')
+        .addClass('btn-success')
+        .html('🔓 التعديل نشط - اضغط للإغلاق');
+    calculateFinances();
+}
+
+function closeEditMode() {
+    $('body').removeClass('edit-active').addClass('edit-locked');
+    $('.tick-input').prop('disabled', true);
+    $('.view-text').removeClass('d-none');
+    $('.edit-input').addClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-success')
+        .addClass('btn-dark-blue')
+        .html('🔓 فتح التعديل العام');
+    activePass = "";
+    ToastManager.info('تم إغلاق وضع التعديل', 2000);
+}
+
+function openFeeModal(col) { 
+    activeFeeCol = col; 
+    $('#currentFeeCol').text(col); 
+    $('#newFeeAmount').val(feeDatabase[col] || 0);
+    
+    // ملء قائمة العملاء
+    populateClientSelect();
+    
+    // عرض الرسوم المخصصة الحالية
+    displayCustomFees();
+    
+    new bootstrap.Modal(document.getElementById('feeSettingsModal')).show(); 
+}
+
+function applySmartFee() { 
+    const newDefaultFee = parseFloat($('#newFeeAmount').val()) || 0;
+    feeDatabase[activeFeeCol] = newDefaultFee;
+    
+    bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
+    calculateFinances(); 
+    
+    ToastManager.info(`تم تحديث الرسوم الافتراضية لـ "${activeFeeCol}"`, 2500);
+    ToastManager.warning('⚠️ لا تنسَ حفظ التغييرات!', 3000);
+}
+
+function toggleTriState(el) {
+    if (!activePass || activePass.trim() === "") { 
+        ToastManager.warning('يجب فتح وضع التعديل أولاً!', 2000); 
+        return; 
+    }
+    let val = $(el).attr('data-value');
+    let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    calculateFinances();
+}
+
+function showNote(btn) {
+    currentNoteInput = $(btn).siblings('.note-data');
+    $('#noteTextArea').val(currentNoteInput.val());
+    if (activePass && activePass.trim() !== "") {
+        $('#noteTextArea').prop('readonly', false);
+        $('#saveNoteBtn').removeClass('d-none');
+    } else {
+        $('#noteTextArea').prop('readonly', true);
+        $('#saveNoteBtn').addClass('d-none');
+    }
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+
+function updateNoteFromModal() {
+    currentNoteInput.val($('#noteTextArea').val());
+    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+    calculateFinances();
+    ToastManager.success('تم حفظ الملاحظة');
+}
+
+function openAddModal() { 
+    const pwd = prompt("كلمة السر للإضافة:");
+    if (pwd && pwd.trim() !== "") { 
+        activePass = pwd; 
+        $('#newName, #newEmail, #newUni, #newPhone').val('');
+        new bootstrap.Modal(document.getElementById('addClientModal')).show(); 
+    }
+}
+
+function executeAdd() {
+    const name = $('#newName').val().trim();
+    if (!name) { ToastManager.warning('يرجى إدخال اسم العميل!'); return; }
+    
+    LoadingManager.show('جاري إضافة العميل...');
+    const data = { password: activePass, name: name, email: $('#newEmail').val(), uni: $('#newUni').val(), phone: $('#newPhone').val() };
+    
+    fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
+    .then(res => res.json())
+    .then(res => {
+        LoadingManager.hide();
+        if(res.status === "success") {
+            ToastManager.success('تم إضافة العميل بنجاح!');
+            setTimeout(() => location.reload(), 1500);
+        } else { ToastManager.error("فشل: " + res.message); }
+    })
+    .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
+}
+
+function saveAll() {
+    if (!activePass || activePass.trim() === "") {
+        activePass = prompt("أدخل كلمة السر للحفظ:");
+    }
+    
+    if (!activePass || activePass.trim() === "") { 
+        ToastManager.error('كلمة سر مطلوبة!'); 
+        return; 
+    }
+
+    LoadingManager.show('جاري الحفظ...');
+    $('#save-text').text('جاري الحفظ...');
+    $('#save-spinner').removeClass('d-none');
+    $('#save-all-btn').prop('disabled', true);
+
+    let updates = {};
+    $('#client-table tbody tr').each(function() {
+        let rowIdx = $(this).data('row');
+        updates[rowIdx] = {};
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
+            let col = $(this).data('col');
+            if (col) {
+                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                updates[rowIdx][col] = val;
+            }
+        });
+    });
+
+    fetch('/save', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ 
+            password: activePass, 
+            updates: updates, 
+            fees: feeDatabase,
+            customFees: customFeesData
+        }) 
+    })
+    .then(res => res.json())
+    .then(res => {
+        LoadingManager.hide();
+        if(res.status === "success") {
+            ToastManager.success('تم الحفظ بنجاح! ✅');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            ToastManager.error("فشل: " + res.message);
+            $('#save-text').text('💾 حفظ التغييرات');
+            $('#save-spinner').addClass('d-none');
+            $('#save-all-btn').prop('disabled', false);
+        }
+    })
+    .catch(() => {
+        LoadingManager.hide();
+        ToastManager.error('فشل الاتصال!');
+        $('#save-text').text('💾 حفظ التغييرات');
+        $('#save-spinner').addClass('d-none');
+        $('#save-all-btn').prop('disabled', false);
+    });
+}
+
+$("#searchInput").on("keyup", function() {
+    var v = $(this).val().toLowerCase();
+    $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
+});
+
+$(document).ready(function() {
+    ToastManager.init();
+    LoadingManager.init();
+    
+    // تحميل أسماء العملاء
+    loadClientNames();
+    
+    // تحميل الرسوم المخصصة المحفوظة
+    loadCustomFees();
+    
+    calculateFinances();
+    $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
+    
+    console.log('✅ النظام جاهز للاستخدام');
+    console.log('🔐 نظام الأمان: مفعّل');
+});
+</script>
+</body>
+</html>);
+    let displayAmount = amount;
+    
+    if (isDollar) {
+        // إزالة المسافات وترك علامة $
+        amount = amount.replace(/\s/g, '');
+        displayAmount = amount;
+    } else {
+        // تحويل لرقم عادي
+        let numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount === 0) {
+            ToastManager.warning('يرجى إدخال مبلغ صحيح!', 2000);
+            return;
+        }
+        displayAmount = numericAmount.toLocaleString('en-US') + ' جنيه';
+    }
+    
+    // حفظ في البيانات (نحتفظ بالقيمة الأصلية مع أو بدون $)
     if (!customFeesData[activeFeeCol]) {
         customFeesData[activeFeeCol] = {};
     }
@@ -369,7 +738,735 @@ function addCustomFee() {
     $('#customClientSelect').val('');
     $('#customClientAmount').val('');
     
-    ToastManager.success(`تم إضافة رسم مخصص لـ ${clientName}`, 2000);
+    let currency = isDollar ? 'دولار' : 'جنيه';
+    ToastManager.success(`تم إضافة رسم مخصص (${currency}) لـ ${clientName}`, 2500);
+    
+    // إعادة حساب المبالغ
+    calculateFinances();
+}
+
+// ==================== عرض الرسوم المخصصة ====================
+function displayCustomFees() {
+    const container = $('#customFeesList');
+    container.empty();
+    
+    const currentColFees = customFeesData[activeFeeCol] || {};
+    
+    if (Object.keys(currentColFees).length === 0) {
+        container.html('<p class="text-muted text-center small">لا توجد رسوم مخصصة بعد</p>');
+        return;
+    }
+    
+    for (const [clientName, amount] of Object.entries(currentColFees)) {
+        const item = $(`
+            <div class="custom-fee-item">
+                <div>
+                    <strong>${clientName}</strong>
+                    <span class="badge bg-primary ms-2">${amount.toLocaleString('en-US')} جنيه</span>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="removeCustomFee('${clientName}')">
+                    <i>🗑️</i>
+                </button>
+            </div>
+        `);
+        container.append(item);
+    }
+}
+
+// ==================== حذف رسم مخصص ====================
+function removeCustomFee(clientName) {
+    if (customFeesData[activeFeeCol]) {
+        delete customFeesData[activeFeeCol][clientName];
+        displayCustomFees();
+        ToastManager.info(`تم حذف الرسم المخصص لـ ${clientName}`, 2000);
+    }
+}
+
+// Toast Manager
+const ToastManager = {
+    container: null,
+    init() {
+        if (!this.container) {
+            this.container = document.createElement('div');
+            this.container.className = 'toast-container';
+            document.body.appendChild(this.container);
+        }
+    },
+    show(message, type, duration) {
+        this.init();
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = `custom-toast toast-${type} p-3 mb-2`;
+        toast.innerHTML = `<div class="d-flex align-items-center gap-2"><span style="font-size:1.5rem;">${icons[type]}</span><strong>${message}</strong><button type="button" class="btn-close btn-close-white ms-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        this.container.appendChild(toast);
+        setTimeout(() => toast.remove(), duration || 3000);
+    },
+    success(m,d) { this.show(m,'success',d); },
+    error(m,d) { this.show(m,'error',d); },
+    warning(m,d) { this.show(m,'warning',d); },
+    info(m,d) { this.show(m,'info',d); }
+};
+
+// Loading Manager
+const LoadingManager = {
+    overlay: null,
+    init() {
+        if (!this.overlay) {
+            this.overlay = document.createElement('div');
+            this.overlay.className = 'loading-overlay';
+            this.overlay.innerHTML = '<div class="text-center"><div class="loader"></div><div class="loader-text" id="loader-text">جاري التحميل...</div></div>';
+            document.body.appendChild(this.overlay);
+        }
+    },
+    show(msg) { this.init(); document.getElementById('loader-text').textContent = msg || 'جاري التحميل...'; this.overlay.classList.add('active'); },
+    hide() { if (this.overlay) this.overlay.classList.remove('active'); }
+};
+
+function calculateFinances() {
+    $('#client-table tbody tr').each(function() {
+        let row = $(this);
+        let clientName = row.find('td:first span.view-text').text().trim();
+        let baseFees = 26000;
+        let additionals = 0;
+        
+        row.find('.tick-input, .tri-state-toggle').each(function() {
+            let colName = $(this).data('col').toString().trim();
+            let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
+            
+            if (status === "PAID" || status === "TRUE") {
+                // التحقق من وجود رسم مخصص للعميل
+                let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) 
+                    ? customFeesData[colName][clientName] 
+                    : (feeDatabase[colName] || 0);
+                additionals += customFee;
+            }
+        });
+
+        let noteContent = row.find('.note-data').val() || "";
+        let extraMatch = noteContent.match(/EXTRA:(-?\d+)/);
+        if(extraMatch) additionals += parseFloat(extraMatch[1]);
+
+        let received = parseFloat(row.find('.received-amount-input').val()) || 0;
+        let totalRequired = baseFees + additionals;
+        row.find('.total-required').text(totalRequired.toLocaleString('en-US'));
+        row.find('.total-remaining').text((totalRequired - received).toLocaleString('en-US'));
+        row.find('.total-remaining').css('color', (totalRequired - received) > 0 ? '#dc3545' : '#198754');
+    });
+}
+
+function toggleGlobalEdit() {
+    if ($('body').hasClass('edit-active')) {
+        // إذا كان التعديل مفعّل، نطلب تأكيد الإغلاق
+        if (confirm('هل تريد إغلاق وضع التعديل؟ تأكد من حفظ التغييرات أولاً!')) {
+            closeEditMode();
+        }
+    } else {
+        // فتح وضع التعديل - التحقق من كلمة السر
+        const pwd = prompt("أدخل كلمة السر لفتح التعديل:");
+        
+        if (!pwd || pwd.trim() === "") {
+            return; // المستخدم ألغى أو لم يدخل شيء
+        }
+        
+        // عرض Loading
+        LoadingManager.show('جاري التحقق من كلمة السر...');
+        
+        // التحقق من كلمة السر عبر Backend
+        fetch('/verify_password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: pwd })
+        })
+        .then(res => res.json())
+        .then(res => {
+            LoadingManager.hide();
+            
+            if (res.status === 'success') {
+                // كلمة السر صحيحة
+                activePass = pwd;
+                openEditMode();
+                ToastManager.success('تم فتح وضع التعديل بنجاح! ✅', 2500);
+            } else {
+                // كلمة السر خاطئة
+                ToastManager.error('كلمة السر غير صحيحة! ❌', 3000);
+            }
+        })
+        .catch(err => {
+            LoadingManager.hide();
+            ToastManager.error('خطأ في الاتصال بالخادم!', 3000);
+            console.error('Error:', err);
+        });
+    }
+}
+
+function openEditMode() {
+    $('body').addClass('edit-active').removeClass('edit-locked');
+    $('.tick-input').prop('disabled', false);
+    $('.view-text').addClass('d-none');
+    $('.edit-input').removeClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-dark-blue')
+        .addClass('btn-success')
+        .html('🔓 التعديل نشط - اضغط للإغلاق');
+    calculateFinances();
+}
+
+function closeEditMode() {
+    $('body').removeClass('edit-active').addClass('edit-locked');
+    $('.tick-input').prop('disabled', true);
+    $('.view-text').removeClass('d-none');
+    $('.edit-input').addClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-success')
+        .addClass('btn-dark-blue')
+        .html('🔓 فتح التعديل العام');
+    activePass = "";
+    ToastManager.info('تم إغلاق وضع التعديل', 2000);
+}
+
+function openFeeModal(col) { 
+    activeFeeCol = col; 
+    $('#currentFeeCol').text(col); 
+    $('#newFeeAmount').val(feeDatabase[col] || 0);
+    
+    // ملء قائمة العملاء
+    populateClientSelect();
+    
+    // عرض الرسوم المخصصة الحالية
+    displayCustomFees();
+    
+    new bootstrap.Modal(document.getElementById('feeSettingsModal')).show(); 
+}
+
+function applySmartFee() { 
+    const newDefaultFee = parseFloat($('#newFeeAmount').val()) || 0;
+    feeDatabase[activeFeeCol] = newDefaultFee;
+    
+    bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
+    calculateFinances(); 
+    
+    ToastManager.info(`تم تحديث الرسوم الافتراضية لـ "${activeFeeCol}"`, 2500);
+    ToastManager.warning('⚠️ لا تنسَ حفظ التغييرات!', 3000);
+}
+
+function toggleTriState(el) {
+    if (!activePass || activePass.trim() === "") { 
+        ToastManager.warning('يجب فتح وضع التعديل أولاً!', 2000); 
+        return; 
+    }
+    let val = $(el).attr('data-value');
+    let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    calculateFinances();
+}
+
+function showNote(btn) {
+    currentNoteInput = $(btn).siblings('.note-data');
+    $('#noteTextArea').val(currentNoteInput.val());
+    if (activePass && activePass.trim() !== "") {
+        $('#noteTextArea').prop('readonly', false);
+        $('#saveNoteBtn').removeClass('d-none');
+    } else {
+        $('#noteTextArea').prop('readonly', true);
+        $('#saveNoteBtn').addClass('d-none');
+    }
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+
+function updateNoteFromModal() {
+    currentNoteInput.val($('#noteTextArea').val());
+    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+    calculateFinances();
+    ToastManager.success('تم حفظ الملاحظة');
+}
+
+function openAddModal() { 
+    const pwd = prompt("كلمة السر للإضافة:");
+    if (pwd && pwd.trim() !== "") { 
+        activePass = pwd; 
+        $('#newName, #newEmail, #newUni, #newPhone').val('');
+        new bootstrap.Modal(document.getElementById('addClientModal')).show(); 
+    }
+}
+
+function executeAdd() {
+    const name = $('#newName').val().trim();
+    if (!name) { ToastManager.warning('يرجى إدخال اسم العميل!'); return; }
+    
+    LoadingManager.show('جاري إضافة العميل...');
+    const data = { password: activePass, name: name, email: $('#newEmail').val(), uni: $('#newUni').val(), phone: $('#newPhone').val() };
+    
+    fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
+    .then(res => res.json())
+    .then(res => {
+        LoadingManager.hide();
+        if(res.status === "success") {
+            ToastManager.success('تم إضافة العميل بنجاح!');
+            setTimeout(() => location.reload(), 1500);
+        } else { ToastManager.error("فشل: " + res.message); }
+    })
+    .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
+}
+
+function saveAll() {
+    if (!activePass || activePass.trim() === "") {
+        activePass = prompt("أدخل كلمة السر للحفظ:");
+    }
+    
+    if (!activePass || activePass.trim() === "") { 
+        ToastManager.error('كلمة سر مطلوبة!'); 
+        return; 
+    }
+
+    LoadingManager.show('جاري الحفظ...');
+    $('#save-text').text('جاري الحفظ...');
+    $('#save-spinner').removeClass('d-none');
+    $('#save-all-btn').prop('disabled', true);
+
+    let updates = {};
+    $('#client-table tbody tr').each(function() {
+        let rowIdx = $(this).data('row');
+        updates[rowIdx] = {};
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
+            let col = $(this).data('col');
+            if (col) {
+                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                updates[rowIdx][col] = val;
+            }
+        });
+    });
+
+    fetch('/save', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ 
+            password: activePass, 
+            updates: updates, 
+            fees: feeDatabase,
+            customFees: customFeesData
+        }) 
+    })
+    .then(res => res.json())
+    .then(res => {
+        LoadingManager.hide();
+        if(res.status === "success") {
+            ToastManager.success('تم الحفظ بنجاح! ✅');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            ToastManager.error("فشل: " + res.message);
+            $('#save-text').text('💾 حفظ التغييرات');
+            $('#save-spinner').addClass('d-none');
+            $('#save-all-btn').prop('disabled', false);
+        }
+    })
+    .catch(() => {
+        LoadingManager.hide();
+        ToastManager.error('فشل الاتصال!');
+        $('#save-text').text('💾 حفظ التغييرات');
+        $('#save-spinner').addClass('d-none');
+        $('#save-all-btn').prop('disabled', false);
+    });
+}
+
+$("#searchInput").on("keyup", function() {
+    var v = $(this).val().toLowerCase();
+    $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
+});
+
+$(document).ready(function() {
+    ToastManager.init();
+    LoadingManager.init();
+    
+    // تحميل أسماء العملاء
+    loadClientNames();
+    
+    // تحميل الرسوم المخصصة المحفوظة
+    loadCustomFees();
+    
+    calculateFinances();
+    $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
+    
+    console.log('✅ النظام جاهز للاستخدام');
+    console.log('🔐 نظام الأمان: مفعّل');
+});
+</script>
+</body>
+</html>)) {
+            displayAmount = amount;
+            badgeClass = 'bg-success';
+        } else {
+            displayAmount = parseFloat(amount).toLocaleString('en-US') + ' جنيه';
+            badgeClass = 'bg-primary';
+        }
+        
+        const item = $(`
+            <div class="custom-fee-item">
+                <div>
+                    <strong>${clientName}</strong>
+                    <span class="badge ${badgeClass} ms-2">${displayAmount}</span>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="removeCustomFee('${clientName}')">
+                    <i>🗑️</i>
+                </button>
+            </div>
+        `);
+        container.append(item);
+    }
+}
+
+// ==================== حذف رسم مخصص ====================
+function removeCustomFee(clientName) {
+    if (customFeesData[activeFeeCol]) {
+        delete customFeesData[activeFeeCol][clientName];
+        displayCustomFees();
+        ToastManager.info(`تم حذف الرسم المخصص لـ ${clientName}`, 2000);
+    }
+}
+
+// Toast Manager
+const ToastManager = {
+    container: null,
+    init() {
+        if (!this.container) {
+            this.container = document.createElement('div');
+            this.container.className = 'toast-container';
+            document.body.appendChild(this.container);
+        }
+    },
+    show(message, type, duration) {
+        this.init();
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = `custom-toast toast-${type} p-3 mb-2`;
+        toast.innerHTML = `<div class="d-flex align-items-center gap-2"><span style="font-size:1.5rem;">${icons[type]}</span><strong>${message}</strong><button type="button" class="btn-close btn-close-white ms-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        this.container.appendChild(toast);
+        setTimeout(() => toast.remove(), duration || 3000);
+    },
+    success(m,d) { this.show(m,'success',d); },
+    error(m,d) { this.show(m,'error',d); },
+    warning(m,d) { this.show(m,'warning',d); },
+    info(m,d) { this.show(m,'info',d); }
+};
+
+// Loading Manager
+const LoadingManager = {
+    overlay: null,
+    init() {
+        if (!this.overlay) {
+            this.overlay = document.createElement('div');
+            this.overlay.className = 'loading-overlay';
+            this.overlay.innerHTML = '<div class="text-center"><div class="loader"></div><div class="loader-text" id="loader-text">جاري التحميل...</div></div>';
+            document.body.appendChild(this.overlay);
+        }
+    },
+    show(msg) { this.init(); document.getElementById('loader-text').textContent = msg || 'جاري التحميل...'; this.overlay.classList.add('active'); },
+    hide() { if (this.overlay) this.overlay.classList.remove('active'); }
+};
+
+function calculateFinances() {
+    $('#client-table tbody tr').each(function() {
+        let row = $(this);
+        let clientName = row.find('td:first span.view-text').text().trim();
+        let baseFees = 26000;
+        let additionals = 0;
+        
+        row.find('.tick-input, .tri-state-toggle').each(function() {
+            let colName = $(this).data('col').toString().trim();
+            let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
+            
+            if (status === "PAID" || status === "TRUE") {
+                // التحقق من وجود رسم مخصص للعميل
+                let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) 
+                    ? customFeesData[colName][clientName] 
+                    : (feeDatabase[colName] || 0);
+                additionals += customFee;
+            }
+        });
+
+        let noteContent = row.find('.note-data').val() || "";
+        let extraMatch = noteContent.match(/EXTRA:(-?\d+)/);
+        if(extraMatch) additionals += parseFloat(extraMatch[1]);
+
+        let received = parseFloat(row.find('.received-amount-input').val()) || 0;
+        let totalRequired = baseFees + additionals;
+        row.find('.total-required').text(totalRequired.toLocaleString('en-US'));
+        row.find('.total-remaining').text((totalRequired - received).toLocaleString('en-US'));
+        row.find('.total-remaining').css('color', (totalRequired - received) > 0 ? '#dc3545' : '#198754');
+    });
+}
+
+function toggleGlobalEdit() {
+    if ($('body').hasClass('edit-active')) {
+        // إذا كان التعديل مفعّل، نطلب تأكيد الإغلاق
+        if (confirm('هل تريد إغلاق وضع التعديل؟ تأكد من حفظ التغييرات أولاً!')) {
+            closeEditMode();
+        }
+    } else {
+        // فتح وضع التعديل - التحقق من كلمة السر
+        const pwd = prompt("أدخل كلمة السر لفتح التعديل:");
+        
+        if (!pwd || pwd.trim() === "") {
+            return; // المستخدم ألغى أو لم يدخل شيء
+        }
+        
+        // عرض Loading
+        LoadingManager.show('جاري التحقق من كلمة السر...');
+        
+        // التحقق من كلمة السر عبر Backend
+        fetch('/verify_password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: pwd })
+        })
+        .then(res => res.json())
+        .then(res => {
+            LoadingManager.hide();
+            
+            if (res.status === 'success') {
+                // كلمة السر صحيحة
+                activePass = pwd;
+                openEditMode();
+                ToastManager.success('تم فتح وضع التعديل بنجاح! ✅', 2500);
+            } else {
+                // كلمة السر خاطئة
+                ToastManager.error('كلمة السر غير صحيحة! ❌', 3000);
+            }
+        })
+        .catch(err => {
+            LoadingManager.hide();
+            ToastManager.error('خطأ في الاتصال بالخادم!', 3000);
+            console.error('Error:', err);
+        });
+    }
+}
+
+function openEditMode() {
+    $('body').addClass('edit-active').removeClass('edit-locked');
+    $('.tick-input').prop('disabled', false);
+    $('.view-text').addClass('d-none');
+    $('.edit-input').removeClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-dark-blue')
+        .addClass('btn-success')
+        .html('🔓 التعديل نشط - اضغط للإغلاق');
+    calculateFinances();
+}
+
+function closeEditMode() {
+    $('body').removeClass('edit-active').addClass('edit-locked');
+    $('.tick-input').prop('disabled', true);
+    $('.view-text').removeClass('d-none');
+    $('.edit-input').addClass('d-none');
+    $('#main-edit-btn')
+        .removeClass('btn-success')
+        .addClass('btn-dark-blue')
+        .html('🔓 فتح التعديل العام');
+    activePass = "";
+    ToastManager.info('تم إغلاق وضع التعديل', 2000);
+}
+
+function openFeeModal(col) { 
+    activeFeeCol = col; 
+    $('#currentFeeCol').text(col); 
+    $('#newFeeAmount').val(feeDatabase[col] || 0);
+    
+    // ملء قائمة العملاء
+    populateClientSelect();
+    
+    // عرض الرسوم المخصصة الحالية
+    displayCustomFees();
+    
+    new bootstrap.Modal(document.getElementById('feeSettingsModal')).show(); 
+}
+
+function applySmartFee() { 
+    const newDefaultFee = parseFloat($('#newFeeAmount').val()) || 0;
+    feeDatabase[activeFeeCol] = newDefaultFee;
+    
+    bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
+    calculateFinances(); 
+    
+    ToastManager.info(`تم تحديث الرسوم الافتراضية لـ "${activeFeeCol}"`, 2500);
+    ToastManager.warning('⚠️ لا تنسَ حفظ التغييرات!', 3000);
+}
+
+function toggleTriState(el) {
+    if (!activePass || activePass.trim() === "") { 
+        ToastManager.warning('يجب فتح وضع التعديل أولاً!', 2000); 
+        return; 
+    }
+    let val = $(el).attr('data-value');
+    let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    calculateFinances();
+}
+
+function showNote(btn) {
+    currentNoteInput = $(btn).siblings('.note-data');
+    $('#noteTextArea').val(currentNoteInput.val());
+    if (activePass && activePass.trim() !== "") {
+        $('#noteTextArea').prop('readonly', false);
+        $('#saveNoteBtn').removeClass('d-none');
+    } else {
+        $('#noteTextArea').prop('readonly', true);
+        $('#saveNoteBtn').addClass('d-none');
+    }
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+
+function updateNoteFromModal() {
+    currentNoteInput.val($('#noteTextArea').val());
+    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+    calculateFinances();
+    ToastManager.success('تم حفظ الملاحظة');
+}
+
+function openAddModal() { 
+    const pwd = prompt("كلمة السر للإضافة:");
+    if (pwd && pwd.trim() !== "") { 
+        activePass = pwd; 
+        $('#newName, #newEmail, #newUni, #newPhone').val('');
+        new bootstrap.Modal(document.getElementById('addClientModal')).show(); 
+    }
+}
+
+function executeAdd() {
+    const name = $('#newName').val().trim();
+    if (!name) { ToastManager.warning('يرجى إدخال اسم العميل!'); return; }
+    
+    LoadingManager.show('جاري إضافة العميل...');
+    const data = { password: activePass, name: name, email: $('#newEmail').val(), uni: $('#newUni').val(), phone: $('#newPhone').val() };
+    
+    fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
+    .then(res => res.json())
+    .then(res => {
+        LoadingManager.hide();
+        if(res.status === "success") {
+            ToastManager.success('تم إضافة العميل بنجاح!');
+            setTimeout(() => location.reload(), 1500);
+        } else { ToastManager.error("فشل: " + res.message); }
+    })
+    .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
+}
+
+function saveAll() {
+    if (!activePass || activePass.trim() === "") {
+        activePass = prompt("أدخل كلمة السر للحفظ:");
+    }
+    
+    if (!activePass || activePass.trim() === "") { 
+        ToastManager.error('كلمة سر مطلوبة!'); 
+        return; 
+    }
+
+    LoadingManager.show('جاري الحفظ...');
+    $('#save-text').text('جاري الحفظ...');
+    $('#save-spinner').removeClass('d-none');
+    $('#save-all-btn').prop('disabled', true);
+
+    let updates = {};
+    $('#client-table tbody tr').each(function() {
+        let rowIdx = $(this).data('row');
+        updates[rowIdx] = {};
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
+            let col = $(this).data('col');
+            if (col) {
+                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                updates[rowIdx][col] = val;
+            }
+        });
+    });
+
+    fetch('/save', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ 
+            password: activePass, 
+            updates: updates, 
+            fees: feeDatabase,
+            customFees: customFeesData
+        }) 
+    })
+    .then(res => res.json())
+    .then(res => {
+        LoadingManager.hide();
+        if(res.status === "success") {
+            ToastManager.success('تم الحفظ بنجاح! ✅');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            ToastManager.error("فشل: " + res.message);
+            $('#save-text').text('💾 حفظ التغييرات');
+            $('#save-spinner').addClass('d-none');
+            $('#save-all-btn').prop('disabled', false);
+        }
+    })
+    .catch(() => {
+        LoadingManager.hide();
+        ToastManager.error('فشل الاتصال!');
+        $('#save-text').text('💾 حفظ التغييرات');
+        $('#save-spinner').addClass('d-none');
+        $('#save-all-btn').prop('disabled', false);
+    });
+}
+
+$("#searchInput").on("keyup", function() {
+    var v = $(this).val().toLowerCase();
+    $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
+});
+
+$(document).ready(function() {
+    ToastManager.init();
+    LoadingManager.init();
+    
+    // تحميل أسماء العملاء
+    loadClientNames();
+    
+    // تحميل الرسوم المخصصة المحفوظة
+    loadCustomFees();
+    
+    calculateFinances();
+    $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
+    
+    console.log('✅ النظام جاهز للاستخدام');
+    console.log('🔐 نظام الأمان: مفعّل');
+});
+</script>
+</body>
+</html>);
+    let displayAmount = amount;
+    
+    if (isDollar) {
+        // إزالة المسافات وترك علامة $
+        amount = amount.replace(/\s/g, '');
+        displayAmount = amount;
+    } else {
+        // تحويل لرقم عادي
+        let numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount === 0) {
+            ToastManager.warning('يرجى إدخال مبلغ صحيح!', 2000);
+            return;
+        }
+        displayAmount = numericAmount.toLocaleString('en-US') + ' جنيه';
+    }
+    
+    // حفظ في البيانات (نحتفظ بالقيمة الأصلية مع أو بدون $)
+    if (!customFeesData[activeFeeCol]) {
+        customFeesData[activeFeeCol] = {};
+    }
+    customFeesData[activeFeeCol][clientName] = amount;
+    
+    // عرض في القائمة
+    displayCustomFees();
+    
+    // إعادة تعيين الحقول
+    $('#customClientSelect').val('');
+    $('#customClientAmount').val('');
+    
+    let currency = isDollar ? 'دولار' : 'جنيه';
+    ToastManager.success(`تم إضافة رسم مخصص (${currency}) لـ ${clientName}`, 2500);
+    
+    // إعادة حساب المبالغ
+    calculateFinances();
 }
 
 // ==================== عرض الرسوم المخصصة ====================
