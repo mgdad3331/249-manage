@@ -351,17 +351,29 @@ function addCustomFee() {
         return;
     }
     
-    let isDollar = amount.includes('$');
+    // حفظ المبلغ كما هو (مع علامة $ إذا كانت موجودة)
     let finalAmount = amount;
     
+    // تهيئة البيانات
     if (!customFeesData[activeFeeCol]) {
         customFeesData[activeFeeCol] = {};
     }
     
     customFeesData[activeFeeCol][clientName] = finalAmount;
     
+    console.log('✅ تم إضافة رسم مخصص:');
+    console.log('الخدمة:', activeFeeCol);
+    console.log('العميل:', clientName);
+    console.log('المبلغ:', finalAmount);
+    console.log('جميع الرسوم المخصصة:', customFeesData);
+    
+    // تحديث العرض
     displayCustomFees();
     
+    // إعادة حساب المبالغ
+    calculateFinances();
+    
+    // تفريغ الحقول
     $('#customClientSelect').val('');
     $('#customClientAmount').val('');
     
@@ -464,33 +476,13 @@ function calculateFinances() {
             let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
             
             if (status === "PAID" || status === "TRUE") {
+                // التحقق من وجود رسم مخصص للعميل
                 let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) 
                     ? customFeesData[colName][clientName] 
                     : (feeDatabase[colName] || 0);
                 
-                if (typeof customFee === 'string' && customFee.includes('$')) {
-                    let dollarAmount = parseFloat(customFee.replace('$', '').trim());
-                    dollarTotal += dollarAmount;
-                    additionals += dollarAmount * DOLLAR_RATE;
-                } else {
-                    additionals += parseFloat(customFee) || 0;
-                }
-            }
-        });
-
-        let noteContent = row.find('.note-data').val() || "";
-        let extraMatch = noteContent.match(/EXTRA:(-?\d+)/);
-        if(extraMatch) additionals += parseFloat(extraMatch[1]);
-
-        let received = parseFloat(row.find('.received-amount-input').val()) || 0;
-        let totalRequired = baseFees + additionals;
-        
-        row.find('.total-dollar').text(dollarTotal.toFixed(2) + ' $');
-        row.find('.total-required').text(totalRequired.toLocaleString('en-US'));
-        row.find('.total-remaining').text((totalRequired - received).toLocaleString('en-US'));
-        row.find('.total-remaining').css('color', (totalRequired - received) > 0 ? '#dc3545' : '#198754');
-    });
-}
+                // التحقق من نوع العملة
+                if (typeof customFee === 'string' && customFee.includes('
 
 function toggleGlobalEdit() {
     if ($('body').hasClass('edit-active')) {
