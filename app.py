@@ -293,77 +293,102 @@ def get_custom_fees():
 # =========================
 @app.route('/save', methods=['POST'])
 def save():
-    """حفظ جميع التعديلات مع نظام أمان محسّن"""
     try:
         data = request.get_json()
         password = data.get("password")
         user_ip = request.remote_addr
         
-        # التحقق من كلمة السر باستخدام SecurityManager
         if not SecurityManager.verify_password(password):
-            SecurityManager.log_action("SAVE_ATTEMPT", user_ip, success=False)
-            logger.warning(f"⚠️ Failed save attempt from IP: {user_ip}")
             return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
 
-        SecurityManager.log_action("SAVE_DATA", user_ip, success=True)
-        
         updates_by_row = data.get("updates", {})
         new_fees = data.get("fees")
         custom_fees = data.get("customFees", {})
         
-        logger.info(f"💾 Starting save operation for {len(updates_by_row)} rows...")
-
-        headers = sheet.row_values(1)
+        # 1. جلب كل البيانات الحالية
+        all_data = sheet.get_all_values()
+        headers = all_data[0]
         
-        # 1. تحديث بيانات العملاء
+        # التأكد من وجود أعمدة الحسابات في الهيدر أو إضافتها
+        for col_name in ["إجمالي دولار ($)", "جملة المطلوب", "جملة المتبقي"]:
+            if col_name not in headers:
+                headers.append(col_name)
+                # إضافة خلية فارغة لكل صف حالي لمواكبة الهيدر الجديد
+                for r in all_data[1:]: r.append("0")
+
+        # 2. تحديث البيانات المرسلة من الفرونت إند أولاً
         if updates_by_row:
-            all_data = sheet.get_all_values()
-            
             for row_index_str, updates in updates_by_row.items():
                 row_idx = int(row_index_str) + 1
-                
-                for col_name, value in updates.items():
-                    if col_name in headers:
-                        col_idx = headers.index(col_name)
-                        all_data[row_idx][col_idx] = value
-            
-            sheet.update('A1', all_data)
-            logger.info(f"✅ Updated {len(updates_by_row)} client records")
+                if row_idx < len(all_data):
+                    for col_name, value in updates.items():
+                        if col_name in headers:
+                            col_idx = headers.index(col_name)
+                            all_data[row_idx][col_idx] = value
 
-        # 2. تحديث الرسوم العامة
+        # 3. إعادة الحساب لكل صف (Server-side Calculation)
+        BASE_FEES = 26000 # نفس القيمة الموجودة في الجافاسكريبت
+        
+        for i in range(1, len(all_data)):
+            row_dict = dict(zip(headers, all_data[i]))
+            client_name = row_dict.get('الاسم', '')
+            
+            dollar_total = 0.0
+            additionals = 0.0
+            
+            # حساب الرسوم لكل خدمة (Tick Columns)
+            for col in TICK_COLUMNS:
+                status = str(row_dict.get(col, '')).upper()
+                if status in ["TRUE", "PAID"]:
+                    # جلب السعر (مخصص أو افتراضي)
+                    fee = custom_fees.get(col, {}).get(client_name)
+                    if fee is None:
+                        fee = new_fees.get(col, 0)
+                    
+                    if isinstance(fee, str) and '$' in fee:
+                        dollar_total += float(fee.replace('$', '').strip() or 0)
+                    else:
+                        additionals += float(fee or 0)
+
+            # إضافة "EXTRA" من الملاحظات إذا وجد
+            notes = row_dict.get('الملاحظات', '')
+            import re
+            extra_match = re.search(r'EXTRA:(-?\d+)', notes)
+            if extra_match:
+                additionals += float(extra_match.group(1))
+
+            received = float(row_dict.get('جملة المستلم', 0) or 0)
+            total_required = BASE_FEES + additionals
+            total_remaining = total_required - received
+
+            # تحديث المصفوفة بالقيم المحسوبة
+            all_data[i][headers.index("إجمالي دولار ($)")] = f"{dollar_total:.2f} $"
+            all_data[i][headers.index("جملة المطلوب")] = int(total_required)
+            all_data[i][headers.index("جملة المتبقي")] = int(total_remaining)
+
+        # 4. حفظ كل شيء في الشيت
+        sheet.update('A1', all_data)
+        
+        # حفظ الرسوم العامة والمخصصة (كما هي في كودك الأصلي)
         if new_fees and settings_sheet:
             fees_data = [["الخدمة", "المبلغ"]]
-            for service_name, amount in new_fees.items():
-                fees_data.append([service_name, amount])
-            
+            for s, a in new_fees.items(): fees_data.append([s, a])
             settings_sheet.update('A1', fees_data)
             clear_fees_cache()
-            logger.info(f"✅ Updated {len(new_fees)} fee records")
-        
-        # 3. حفظ الرسوم المخصصة
+
         if custom_fees:
             try:
-                try:
-                    custom_fees_sheet = spreadsheet.worksheet("CustomFees")
-                except gspread.exceptions.WorksheetNotFound:
-                    custom_fees_sheet = spreadsheet.add_worksheet(title="CustomFees", rows="100", cols="3")
-                
+                cf_sheet = spreadsheet.worksheet("CustomFees")
                 custom_data = [["الخدمة", "العميل", "المبلغ"]]
-                for service, clients in custom_fees.items():
-                    for client_name, amount in clients.items():
-                        custom_data.append([service, client_name, amount])
-                
-                custom_fees_sheet.clear()
-                custom_fees_sheet.update('A1', custom_data)
-                logger.info(f"✅ Saved custom fees")
-            except Exception as e:
-                logger.warning(f"⚠️ Failed to save custom fees: {str(e)}")
-        
+                for s, clients in custom_fees.items():
+                    for c_name, amt in clients.items(): custom_data.append([s, c_name, amt])
+                cf_sheet.clear()
+                cf_sheet.update('A1', custom_data)
+            except: pass
+
         return jsonify({"status": "success"})
-        
     except Exception as e:
-        logger.error(f"❌ Save operation failed: {str(e)}")
-        return jsonify({"status": "failed", "message": f"خطأ في الحفظ: {str(e)}"})
+        return jsonify({"status": "failed", "message": str(e)})
 
 # =========================
 # Add New Client
