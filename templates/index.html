@@ -129,27 +129,23 @@
                 <thead>
     <tr>
         {% if clients %}
-            {# 1. عرض الأعمدة الأساسية وأعمدة الخدمات فقط #}
+            {# عرض العناوين الأساسية من الشيت مباشرة #}
             {% for col in clients[0].keys() %}
-                {# نستثني الملاحظات والأعمدة المالية لأننا سنضيفها يدوياً بتنسيق خاص في النهاية #}
-                {% if col not in ["الملاحظات", "جملة المستلم", "إجمالي دولار ($)", "جملة المطلوب", "جملة المتبقي"] %}
+                {# نستثني الملاحظات فقط لأننا نريد وضعها في آخر الجدول دائماً #}
+                {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" %}
                     <th>
                         {{ col }}
-                        {# إضافة زر الإعدادات للخدمات التي تتطلب رسوم فقط #}
                         {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
                             <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
                         {% endif %}
                     </th>
                 {% endif %}
             {% endfor %}
-
-            {# 2. إضافة الأعمدة المالية يدوياً لضمان الترتيب والتنسيق اللوني #}
+            {# إضافة العناوين المالية يدوياً لضمان التنسيق #}
             <th class="col-finance" style="background-color: #d1fae5 !important; color: #065f46 !important;">إجمالي دولار ($)</th>
             <th class="col-finance">جملة المطلوب</th>
             <th class="col-finance">جملة المستلم</th>
             <th class="col-finance">جملة المتبقي</th>
-            
-            {# 3. عمود التفاصيل (الملاحظات) #}
             <th class="text-center">التفاصيل</th>
         {% endif %}
     </tr>
@@ -157,20 +153,14 @@
                 <tbody>
     {% for client in clients %}
     <tr data-row="{{ loop.index0 }}">
-        {# 1. عرض الأعمدة الأساسية وأعمدة الخدمات (صح/خطأ) #}
+        {# عرض البيانات الأساسية والخدمات #}
         {% for col, val in client.items() %}
-            {# استثناء الأعمدة المالية والملاحظات من هذا اللوب ليتم عرضها بتنسيق خاص لاحقاً #}
-            {% if col not in ["الملاحظات", "جملة المستلم", "إجمالي دولار ($)", "جملة المطلوب", "جملة المتبقي"] %}
+            {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" %}
             <td class="text-center">
                 {% if col in tick_columns %}
-                    {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
-                        <div class="tri-state-toggle {{ 'state-paid' if val|string|upper == 'PAID' else ('state-done' if val|string|upper == 'TRUE' else '') }}" 
-                             data-col="{{ col }}" data-value="{{ val|string|upper }}" onclick="toggleTriState(this)">
-                        </div>
-                    {% else %}
-                        <input type="checkbox" class="form-check-input tick-input shadow-none" 
-                               data-col="{{ col }}" {% if val|string|upper == "TRUE" %}checked{% endif %} disabled>
-                    {% endif %}
+                    <div class="tri-state-toggle {{ 'state-paid' if val|string|upper == 'PAID' else ('state-done' if val|string|upper == 'TRUE' else '') }}" 
+                         data-col="{{ col }}" data-value="{{ val|string|upper }}" onclick="toggleTriState(this)">
+                    </div>
                 {% else %}
                     <span class="view-text fw-bold text-dark">{{ val }}</span>
                     <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
@@ -180,19 +170,15 @@
             {% endif %}
         {% endfor %}
 
-        {# 2. عرض الأعمدة المالية (يتم قراءتها الآن من قاعدة البيانات مباشرة) #}
-        
-        {# عمود إجمالي دولار #}
+        {# عرض المبالغ المالية من الشيت مباشرة (Database Values) #}
         <td class="col-finance total-dollar" style="background-color: #d1fae5 !important; color: #065f46 !important; font-weight: bold;">
             {{ client.get('إجمالي دولار ($)', '0.00 $') }}
         </td>
-
-        {# عمود جملة المطلوب #}
+        
         <td class="col-finance total-required">
             {{ client.get('جملة المطلوب', '0') }}
         </td>
 
-        {# عمود جملة المستلم (قابل للتعديل) #}
         <td class="col-finance">
             {% set received_val = client.get('جملة المستلم', '0') %}
             <span class="view-text">{{ received_val }}</span>
@@ -200,12 +186,10 @@
                    value="{{ received_val }}" data-col="جملة المستلم">
         </td>
 
-        {# عمود جملة المتبقي #}
         <td class="col-finance total-remaining">
             {{ client.get('جملة المتبقي', '0') }}
         </td>
 
-        {# 3. عمود الملاحظات #}
         <td class="text-center">
             <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showNote(this)">👁️ ملاحظة</button>
