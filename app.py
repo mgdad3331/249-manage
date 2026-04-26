@@ -327,7 +327,7 @@ def save():
                             all_data[row_idx][col_idx] = value
 
         # 3. إعادة الحساب لكل صف (Server-side Calculation)
-        BASE_FEES = 26000 # نفس القيمة الموجودة في الجافاسكريبت
+        BASE_FEES = 28500 # نفس القيمة الموجودة في الجافاسكريبت
         
         for i in range(1, len(all_data)):
             row_dict = dict(zip(headers, all_data[i]))
