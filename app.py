@@ -188,7 +188,6 @@ def delete_client():
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "failed", "message": str(e)})
-
 @app.route('/')
 def index():
     """الصفحة الرئيسية - عرض الجدول"""
