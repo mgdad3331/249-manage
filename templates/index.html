@@ -400,7 +400,7 @@ function loadCustomFees() {
 }
 
 function addCustomFee() {
-    const clientName = $('#customClientSelect').val();
+    const clientName = $('#customClientSelect').val.trim();
     let amount = $('#customClientAmount').val().trim();
     
     if (!clientName) {
