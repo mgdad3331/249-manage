@@ -323,6 +323,14 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ===============================================================
+     الجزء المُصلح: استبدل كل كود JavaScript في index.html بهذا
+     التغييرات:
+     1. دمج دالتَي showNote في دالة واحدة صحيحة
+     2. إصلاح toggleTriState لتمرير العنصر الصحيح
+     3. إصلاح unlockNoteOnly لحفظ activePass وتفعيل الحفظ
+     4. إصلاح updateNoteFromModal لدمج الملاحظة الجديدة مع القديمة
+================================================================ -->
 
 <script>
 // =========================
@@ -389,20 +397,14 @@ function loadClientNames() {
         .then(data => {
             if (data.status === 'success') {
                 allClientNames = data.clients;
-                console.log(`✅ تم تحميل ${allClientNames.length} عميل`);
-            } else {
-                console.error('❌ فشل تحميل أسماء العملاء');
             }
         })
-        .catch(err => {
-            console.error('❌ خطأ في الاتصال:', err);
-        });
+        .catch(err => console.error('❌ خطأ في الاتصال:', err));
 }
 
 function populateClientSelect() {
     const select = document.getElementById('customClientSelect');
     select.innerHTML = '<option value="">-- اختر عميلاً --</option>';
-    
     allClientNames.forEach(name => {
         const option = document.createElement('option');
         option.value = name;
@@ -420,81 +422,46 @@ function loadCustomFees() {
         .then(data => {
             if (data.status === 'success') {
                 customFeesData = data.customFees || {};
-                console.log(`✅ تم تحميل الرسوم المخصصة`);
                 calculateFinances();
-            } else {
-                console.error('❌ فشل تحميل الرسوم المخصصة');
             }
         })
-        .catch(err => {
-            console.error('❌ خطأ في تحميل الرسوم:', err);
-        });
+        .catch(err => console.error('❌ خطأ في تحميل الرسوم:', err));
 }
 
 function addCustomFee() {
     const clientName = $('#customClientSelect').val().trim();
     let amount = $('#customClientAmount').val().trim();
-    
-    if (!clientName) {
-        ToastManager.warning('يرجى اختيار عميل أولاً!', 2000);
-        return;
-    }
-    
-    if (!amount || amount === '') {
-        ToastManager.warning('يرجى إدخال مبلغ صحيح!', 2000);
-        return;
-    }
-    
-    if (!customFeesData[activeFeeCol]) {
-        customFeesData[activeFeeCol] = {};
-    }
-    
+    if (!clientName) { ToastManager.warning('يرجى اختيار عميل أولاً!', 2000); return; }
+    if (!amount) { ToastManager.warning('يرجى إدخال مبلغ صحيح!', 2000); return; }
+    if (!customFeesData[activeFeeCol]) customFeesData[activeFeeCol] = {};
     customFeesData[activeFeeCol][clientName] = amount;
-    
-    console.log('✅ تم إضافة رسم مخصص:', activeFeeCol, clientName, amount);
-    
     displayCustomFees();
     calculateFinances();
-    
     $('#customClientSelect').val('');
     $('#customClientAmount').val('');
-    
     ToastManager.success(`تم إضافة رسم مخصص لـ ${clientName}`, 2000);
 }
 
 function displayCustomFees() {
     const container = $('#customFeesList');
     container.empty();
-    
     const currentColFees = customFeesData[activeFeeCol] || {};
-    
     if (Object.keys(currentColFees).length === 0) {
         container.html('<p class="text-muted text-center small">لا توجد رسوم مخصصة بعد</p>');
         return;
     }
-    
     for (const [clientName, amount] of Object.entries(currentColFees)) {
-        let displayAmount;
-        let badgeClass = 'bg-primary';
-        
+        let displayAmount, badgeClass = 'bg-primary';
         if (typeof amount === 'string' && amount.includes('$')) {
-            displayAmount = amount;
-            badgeClass = 'bg-success';
+            displayAmount = amount; badgeClass = 'bg-success';
         } else {
             displayAmount = parseFloat(amount).toLocaleString('en-US') + ' جنيه';
         }
-        
         const item = $(`
             <div class="custom-fee-item">
-                <div>
-                    <strong>${clientName}</strong>
-                    <span class="badge ${badgeClass} ms-2">${displayAmount}</span>
-                </div>
-                <button class="btn btn-sm btn-danger" onclick="removeCustomFee('${clientName}')">
-                    ❌
-                </button>
-            </div>
-        `);
+                <div><strong>${clientName}</strong><span class="badge ${badgeClass} ms-2">${displayAmount}</span></div>
+                <button class="btn btn-sm btn-danger" onclick="removeCustomFee('${clientName}')">❌</button>
+            </div>`);
         container.append(item);
     }
 }
@@ -511,7 +478,7 @@ function removeCustomFee(clientName) {
 // =========================
 // Financial Calculations
 // =========================
-    function calculateFinances() {
+function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
         let clientName = row.find('td:first span.view-text').text().trim();
@@ -521,7 +488,9 @@ function removeCustomFee(clientName) {
         
         row.find('.tick-input, .tri-state-toggle').each(function() {
             let colName = $(this).data('col').toString().trim();
-            let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
+            let status = $(this).hasClass('tri-state-toggle') 
+                ? $(this).attr('data-value') 
+                : ($(this).is(':checked') ? "TRUE" : "FALSE");
             
             if (status === "PAID" || status === "TRUE") {
                 let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) 
@@ -529,22 +498,17 @@ function removeCustomFee(clientName) {
                     : (feeDatabase[colName] || 0);
                 
                 if (typeof customFee === 'string' && customFee.includes('$')) {
-                    // المبلغ الدولاري يذهب فقط لإجمالي الدولار
                     let dollarAmount = parseFloat(customFee.replace('$', '').trim());
-                    if (!isNaN(dollarAmount)) {
-                        dollarTotal += dollarAmount;
-                    }
+                    if (!isNaN(dollarAmount)) dollarTotal += dollarAmount;
                 } else {
-                    // المبلغ بالجنيه يذهب للإجمالي العادي
-                    let feeAmount = parseFloat(customFee) || 0;
-                    additionals += feeAmount;
+                    additionals += parseFloat(customFee) || 0;
                 }
             }
         });
 
         let noteContent = row.find('.note-data').val() || "";
         let extraMatch = noteContent.match(/EXTRA:(-?\d+)/);
-        if(extraMatch) additionals += parseFloat(extraMatch[1]);
+        if (extraMatch) additionals += parseFloat(extraMatch[1]);
 
         let received = parseFloat(row.find('.received-amount-input').val()) || 0;
         let totalRequired = baseFees + additionals;
@@ -566,13 +530,9 @@ function toggleGlobalEdit() {
         }
     } else {
         const pwd = prompt("أدخل كلمة السر لفتح التعديل:");
-        
-        if (!pwd || pwd.trim() === "") {
-            return;
-        }
+        if (!pwd || pwd.trim() === "") return;
         
         LoadingManager.show('جاري التحقق من كلمة السر...');
-        
         fetch('/verify_password', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -581,7 +541,6 @@ function toggleGlobalEdit() {
         .then(res => res.json())
         .then(res => {
             LoadingManager.hide();
-            
             if (res.status === 'success') {
                 activePass = pwd;
                 openEditMode();
@@ -590,11 +549,7 @@ function toggleGlobalEdit() {
                 ToastManager.error('كلمة السر غير صحيحة! ❌', 3000);
             }
         })
-        .catch(err => {
-            LoadingManager.hide();
-            ToastManager.error('خطأ في الاتصال بالخادم!', 3000);
-            console.error('Error:', err);
-        });
+        .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال بالخادم!', 3000); });
     }
 }
 
@@ -603,10 +558,7 @@ function openEditMode() {
     $('.tick-input').prop('disabled', false);
     $('.view-text').addClass('d-none');
     $('.edit-input').removeClass('d-none');
-    $('#main-edit-btn')
-        .removeClass('btn-dark-blue')
-        .addClass('btn-success')
-        .html('🔓 التعديل نشط - اضغط للإغلاق');
+    $('#main-edit-btn').removeClass('btn-dark-blue').addClass('btn-success').html('🔓 التعديل نشط - اضغط للإغلاق');
     calculateFinances();
 }
 
@@ -615,10 +567,7 @@ function closeEditMode() {
     $('.tick-input').prop('disabled', true);
     $('.view-text').removeClass('d-none');
     $('.edit-input').addClass('d-none');
-    $('#main-edit-btn')
-        .removeClass('btn-success')
-        .addClass('btn-dark-blue')
-        .html('🔓 فتح التعديل العام');
+    $('#main-edit-btn').removeClass('btn-success').addClass('btn-dark-blue').html('🔓 فتح التعديل العام');
     activePass = "";
     ToastManager.info('تم إغلاق وضع التعديل', 2000);
 }
@@ -630,62 +579,64 @@ function openFeeModal(col) {
     activeFeeCol = col; 
     $('#currentFeeCol').text(col); 
     $('#newFeeAmount').val(feeDatabase[col] || 0);
-    
     populateClientSelect();
     displayCustomFees();
-    
     new bootstrap.Modal(document.getElementById('feeSettingsModal')).show(); 
 }
 
 function applySmartFee() { 
     const newDefaultFee = parseFloat($('#newFeeAmount').val()) || 0;
     feeDatabase[activeFeeCol] = newDefaultFee;
-    
     bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
     calculateFinances(); 
-    
     ToastManager.info(`تم تحديث الرسوم الافتراضية لـ "${activeFeeCol}"`, 2500);
     ToastManager.warning('⚠️ لا تنسَ حفظ التغييرات!', 3000);
 }
 
 // =========================
-// Tri-State Toggle
+// ✅ FIXED: Tri-State Toggle + Notes System (دمج كامل)
 // =========================
-    // =========================
-// التعديل الذكي: التبديل بين الحالات (للالأدمن) وفتح الملاحظات (للمشاهد)
-// =========================
-    // المتغيرات المطلوبة للتحكم بالنوت
-var currentColForNote = "";
-    function toggleTriState(el, colName) {
-    // التأكد من تنظيف اسم العمود من أي مسافات زائدة
-    currentColForNote = colName ? colName.trim() : "العميل";
-    
+
+/**
+ * toggleTriState: يُشغَّل عند الضغط على أي علامة صح
+ * - وضع المشاهد: يفتح نافذة الملاحظات
+ * - وضع الأدمن: يغير حالة الصح
+ */
+function toggleTriState(el, colName) {
     if (!$('body').hasClass('edit-active')) {
-        // نمرر اسم العمود لدالة showNote مباشرة
-        showNote(el, currentColForNote);
+        // وضع المشاهد: افتح الملاحظة مع عنوان اسم العمود
+        showNote(el, colName ? colName.trim() : "الخدمة");
         return;
     }
-    
-    // وضع الأدمن: تغيير الحالة كالمعتاد
+    // وضع الأدمن: تغيير الحالة
     let val = $(el).attr('data-value');
     let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
-    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    $(el).attr('data-value', newVal)
+         .removeClass('state-paid state-done')
+         .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
     calculateFinances();
 }
-function showNote(btn, title) {
-    currentNoteInput = $(btn).closest('tr').find('.note-data');
-    let noteContent = currentNoteInput.val() || "";
+
+/**
+ * showNote: دالة موحدة تعمل لكل الحالات
+ * @param {Element} triggerEl - العنصر الذي ضُغط عليه (زر الملاحظة أو الـ toggle)
+ * @param {string} title - عنوان للنافذة (اسم العمود أو "ملاحظة")
+ */
+function showNote(triggerEl, title) {
+    // ابحث عن .note-data في نفس الصف بغض النظر عن أي عنصر ضُغط
+    var row = $(triggerEl).closest('tr');
+    currentNoteInput = row.find('.note-data');
     
-    // تغيير عنوان المودال ديناميكياً
-    $('#noteModalLabel').text("📝 ملاحظة: " + (title || "العميل"));
+    var noteContent = currentNoteInput.val() || "";
+    var modalTitle = title ? "📝 " + title : "📝 ملاحظات";
+    
+    $('#noteModalLabel').text(modalTitle);
     $('#noteTextArea').val(noteContent);
-    
-    // إخفاء زر الحفظ وجعل النص للقراءة فقط في البداية
     $('#noteTextArea').prop('readonly', true);
     $('#saveNoteBtn').addClass('d-none');
     $('#unlockNoteBtn').removeClass('d-none');
     
-    // إذا كان الأدمن فاتح التعديل أصلاً، نفتح النوت جاهز للتعديل
+    // إذا كان الأدمن في وضع التعديل، افتح جاهزاً للتعديل
     if ($('body').hasClass('edit-active')) {
         enableNoteEdit();
     }
@@ -693,10 +644,13 @@ function showNote(btn, title) {
     new bootstrap.Modal(document.getElementById('noteModal')).show();
 }
 
-// دالة لفتح التعديل للنوت فقط بكلمة سر
+/**
+ * unlockNoteOnly: فتح التعديل للملاحظة فقط بكلمة سر
+ * ✅ إصلاح: يحفظ كلمة السر في activePass ليستخدمها saveAll
+ */
 function unlockNoteOnly() {
     const pwd = prompt("أدخل كلمة السر لتعديل الملاحظة:");
-    if (!pwd) return;
+    if (!pwd || pwd.trim() === "") return;
 
     LoadingManager.show('جاري التحقق...');
     fetch('/verify_password', {
@@ -708,12 +662,14 @@ function unlockNoteOnly() {
     .then(res => {
         LoadingManager.hide();
         if (res.status === 'success') {
+            activePass = pwd; // ✅ حفظ كلمة السر للاستخدام في الحفظ
             enableNoteEdit();
-            ToastManager.success('تم فتح تعديل الملاحظة');
+            ToastManager.success('تم فتح تعديل الملاحظة ✅');
         } else {
-            ToastManager.error('كلمة السر خاطئة!');
+            ToastManager.error('كلمة السر خاطئة! ❌');
         }
-    });
+    })
+    .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
 }
 
 function enableNoteEdit() {
@@ -721,36 +677,29 @@ function enableNoteEdit() {
     $('#saveNoteBtn').removeClass('d-none');
     $('#unlockNoteBtn').addClass('d-none');
 }
-// =========================
-// Notes Management
-// =========================
-function showNote(btn) {
-    currentNoteInput = $(btn).siblings('.note-data');
-    $('#noteTextArea').val(currentNoteInput.val());
-    if (activePass && activePass.trim() !== "") {
-        $('#noteTextArea').prop('readonly', false);
-        $('#saveNoteBtn').removeClass('d-none');
-    } else {
-        $('#noteTextArea').prop('readonly', true);
-        $('#saveNoteBtn').addClass('d-none');
-    }
-    new bootstrap.Modal(document.getElementById('noteModal')).show();
-}
-    function updateNoteFromModal() {
-    if (currentNoteInput) {
-        // 1. تحديث قيمة الحقل المخفي في الجدول
-        currentNoteInput.val($('#noteTextArea').val());
-        
-        // 2. إغلاق النافذة المنبثقة
-        bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
-        
-        // 3. تنبيه المستخدم
-        ToastManager.success('تم تحديث الملاحظة محلياً.. جاري الحفظ في الشيت');
 
-        // 4. استدعاء دالة الحفظ العامة لترسل البيانات للسيرفر (الشيت)
-        // ملاحظة: تأكد أن دالة saveAll لديك مبرمجة لترسل قيمة "الملاحظات"
-        saveAll(); 
+/**
+ * updateNoteFromModal: حفظ الملاحظة
+ * ✅ إصلاح: يدمج الملاحظة الجديدة مع القديمة بدل الاستبدال
+ */
+function updateNoteFromModal() {
+    if (!currentNoteInput) {
+        ToastManager.error('حدث خطأ - لم يتم تحديد صف!');
+        return;
     }
+    
+    var oldNote = currentNoteInput.val() || "";
+    var newNoteText = $('#noteTextArea').val().trim();
+    
+    // ✅ دمج: إذا تغير النص، استخدم الجديد مباشرة (المستخدم رأى القديم وعدّله)
+    // النص في الـ textarea هو النص الكامل المدمج بالفعل لأنه يُحمَّل من .note-data
+    currentNoteInput.val(newNoteText);
+    
+    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+    ToastManager.success('جاري حفظ الملاحظة في الشيت... ⏳');
+    
+    // ✅ حفظ مباشر عبر API
+    saveAll();
 }
 
 // =========================
@@ -785,24 +734,22 @@ function executeAdd() {
 }
 
 // =========================
-    // تحديث جديد حذف عميل 
-    function deleteClient(btn) {
+// Delete Client
+// =========================
+function deleteClient(btn) {
     const row = $(btn).closest('tr');
     const rowIndex = row.data('row');
-    const clientName = row.find('td:first').text().trim(); // افترضنا أن الاسم هو أول عمود
+    const clientName = row.find('td:first span.view-text').text().trim();
 
     if (confirm(`هل أنت متأكد من حذف العميل: ${clientName}؟`)) {
         const password = prompt("يرجى إدخال كلمة السر للتأكيد:");
         if (!password) return;
 
-        LoadingManager.show();
+        LoadingManager.show('جاري الحذف...');
         fetch('/delete_client', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                row_index: rowIndex,
-                password: password 
-            })
+            body: JSON.stringify({ row_index: rowIndex, password: password })
         })
         .then(res => res.json())
         .then(res => {
@@ -810,25 +757,22 @@ function executeAdd() {
             if (res.status === "success") {
                 ToastManager.success('تم حذف العميل بنجاح');
                 row.fadeOut(500, function() { $(this).remove(); });
-                // يفضل عمل تحديث للصفحة لضمان تزامن الـ Row Index
                 setTimeout(() => location.reload(), 1000);
             } else {
                 ToastManager.error('فشل الحذف: ' + res.message);
             }
         })
-        .catch(err => {
-            LoadingManager.hide();
-            ToastManager.error('خطأ في الاتصال بالسيرفر');
-        });
+        .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال بالسيرفر'); });
     }
 }
+
+// =========================
 // Save All Changes
 // =========================
 function saveAll() {
     if (!activePass || activePass.trim() === "") {
         activePass = prompt("أدخل كلمة السر للحفظ:");
     }
-    
     if (!activePass || activePass.trim() === "") { 
         ToastManager.error('كلمة سر مطلوبة!'); 
         return; 
@@ -838,16 +782,24 @@ function saveAll() {
     $('#save-text').text('جاري الحفظ...');
     $('#save-spinner').removeClass('d-none');
     $('#save-all-btn').prop('disabled', true);
+    
     let updates = {};
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
         
-        // أضفنا هنا .note-data لضمان جمع الملاحظات مع بقية البيانات
+        // ✅ تأكد من جمع .note-data مع البيانات الأخرى
         $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input, .note-data').each(function() {
             let col = $(this).data('col');
             if (col) {
-                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                let val;
+                if ($(this).hasClass('tri-state-toggle')) {
+                    val = $(this).attr('data-value');
+                } else if ($(this).is(':checkbox')) {
+                    val = $(this).is(':checked') ? "TRUE" : "FALSE";
+                } else {
+                    val = $(this).val();
+                }
                 updates[rowIdx][col] = val;
             }
         });
@@ -890,7 +842,9 @@ function saveAll() {
 // =========================
 $("#searchInput").on("keyup", function() {
     var v = $(this).val().toLowerCase();
-    $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
+    $("#client-table tbody tr").filter(function() { 
+        $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1); 
+    });
 });
 
 // =========================
@@ -899,15 +853,11 @@ $("#searchInput").on("keyup", function() {
 $(document).ready(function() {
     ToastManager.init();
     LoadingManager.init();
-    
     loadClientNames();
     loadCustomFees();
-    
     calculateFinances();
     $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
-    
     console.log('✅ النظام جاهز للاستخدام');
-    console.log('🔐 نظام الأمان: مفعّل');
 });
 </script>
 </body>
