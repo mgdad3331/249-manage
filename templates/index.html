@@ -656,13 +656,12 @@ function applySmartFee() {
 // =========================
     // المتغيرات المطلوبة للتحكم بالنوت
 var currentColForNote = "";
-
-function toggleTriState(el, colName) {
-    // حفظ اسم العمود الحالي لاستخدامه في العنوان
-    currentColForNote = colName || "العميل";
+    function toggleTriState(el, colName) {
+    // التأكد من تنظيف اسم العمود من أي مسافات زائدة
+    currentColForNote = colName ? colName.trim() : "العميل";
     
     if (!$('body').hasClass('edit-active')) {
-        // إذا كان وضع المشاهد، نفتح النوت بالعنوان المخصص
+        // نمرر اسم العمود لدالة showNote مباشرة
         showNote(el, currentColForNote);
         return;
     }
@@ -673,7 +672,6 @@ function toggleTriState(el, colName) {
     $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
     calculateFinances();
 }
-
 function showNote(btn, title) {
     currentNoteInput = $(btn).closest('tr').find('.note-data');
     let noteContent = currentNoteInput.val() || "";
@@ -738,12 +736,21 @@ function showNote(btn) {
     }
     new bootstrap.Modal(document.getElementById('noteModal')).show();
 }
+    function updateNoteFromModal() {
+    if (currentNoteInput) {
+        // 1. تحديث قيمة الحقل المخفي في الجدول
+        currentNoteInput.val($('#noteTextArea').val());
+        
+        // 2. إغلاق النافذة المنبثقة
+        bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+        
+        // 3. تنبيه المستخدم
+        ToastManager.success('تم تحديث الملاحظة محلياً.. جاري الحفظ في الشيت');
 
-function updateNoteFromModal() {
-    currentNoteInput.val($('#noteTextArea').val());
-    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
-    calculateFinances();
-    ToastManager.success('تم حفظ الملاحظة');
+        // 4. استدعاء دالة الحفظ العامة لترسل البيانات للسيرفر (الشيت)
+        // ملاحظة: تأكد أن دالة saveAll لديك مبرمجة لترسل قيمة "الملاحظات"
+        saveAll(); 
+    }
 }
 
 // =========================
