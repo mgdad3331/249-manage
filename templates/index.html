@@ -627,19 +627,14 @@ function toggleTriState(el, colName) {
     }
 
     // ====== وضع الأدمن ======
-    if (hasNote) {
-        // الأعمدة ذات الملاحظات: افتح modal الإجراءات (للقراءة/التعديل) - لا تغير الحالة
-        openProcedureNoteModal(el, col);
-    } else {
-        // باقي الأعمدة: غيّر الحالة فقط
-        var val = $(el).attr('data-value');
-        var newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
-        $(el).attr('data-value', newVal)
-             .removeClass('state-paid state-done')
-             .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
-        calculateFinances();
-    }
-}
+    // ====== وضع الأدمن ======
+// كل الأعمدة (سواء بها ملاحظات أو لا) تغير الحالة فقط
+var val = $(el).attr('data-value');
+var newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+$(el).attr('data-value', newVal)
+     .removeClass('state-paid state-done')
+     .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+calculateFinances();
 
 // =========================
 // ✅ Procedure Note Modal
