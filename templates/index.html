@@ -302,22 +302,20 @@
 </div>
 
 <!-- Modal: Note -->
-<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title">📝 ملاحظات العميل</h5>
+                <h5 class="modal-title" id="noteModalLabel">📝 ملاحظات</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <textarea id="noteTextArea" class="form-control" rows="6" readonly placeholder="لا توجد ملاحظات حالياً..."></textarea>
-                <div class="mt-2 alert alert-info p-2 small">
-                    💡 <strong>ملاحظة:</strong> لتخصيص رسوم إضافية للعميل، استخدم زر الترس ⚙️ في عمود الخدمة المطلوبة
-                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                <button id="saveNoteBtn" class="btn btn-warning d-none fw-bold" onclick="updateNoteFromModal()">حفظ</button>
+                <button type="button" id="unlockNoteBtn" class="btn btn-sm btn-outline-primary" onclick="unlockNoteOnly()">🔓 تعديل هذه الملاحظة</button>
+                <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <button id="saveNoteBtn" class="btn btn-sm btn-warning d-none fw-bold" onclick="updateNoteFromModal()">حفظ التغييرات</button>
             </div>
         </div>
     </div>
@@ -656,63 +654,74 @@ function applySmartFee() {
     // =========================
 // التعديل الذكي: التبديل بين الحالات (للالأدمن) وفتح الملاحظات (للمشاهد)
 // =========================
-    function toggleTriState(el, colName) {
-    // 1. إذا كان التعديل مغلق (واجهة المشاهد)
+    // المتغيرات المطلوبة للتحكم بالنوت
+var currentColForNote = "";
+
+function toggleTriState(el, colName) {
+    // حفظ اسم العمود الحالي لاستخدامه في العنوان
+    currentColForNote = colName || "العميل";
+    
     if (!$('body').hasClass('edit-active')) {
-        const row = $(el).closest('tr');
-        const allNotes = row.find('.note-data').val() || "";
-        
-        // استخراج الملاحظة الخاصة بهذا العمود فقط باستخدام Regex
-        const regex = new RegExp(`\\[${colName}\\]:(.*?)\\[\\/${colName}\\]`, "s");
-        const match = allNotes.match(regex);
-        const specificNote = match ? match[1].trim() : "";
-
-        // عرض المودال مع العنوان المخصص والمحتوى
-        $('#noteModalLabel').text("ملاحظة " + colName); // تغيير عنوان المودال
-        $('#noteTextArea').val(specificNote);
-        
-        // جعل الزر يظهر للأدمن فقط للحفظ في هذا الجزء المخصص
-        if (activePass) {
-            $('#saveNoteBtn').attr('onclick', `saveSpecificNote('${colName}')`).removeClass('d-none');
-            $('#noteTextArea').prop('readonly', false);
-        } else {
-            $('#saveNoteBtn').addClass('d-none');
-            $('#noteTextArea').prop('readonly', true);
-        }
-
-        new bootstrap.Modal(document.getElementById('noteModal')).show();
+        // إذا كان وضع المشاهد، نفتح النوت بالعنوان المخصص
+        showNote(el, currentColForNote);
         return;
     }
-
-    // 2. إذا كان التعديل مفتوح (واجهة الأدمن) - تغيير الحالة كالمعتاد
+    
+    // وضع الأدمن: تغيير الحالة كالمعتاد
     let val = $(el).attr('data-value');
     let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
     $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
     calculateFinances();
 }
 
-// دالة جديدة لحفظ الملاحظة داخل جزء مخصص
-function saveSpecificNote(colName) {
-    if (!currentNoteInput) return;
+function showNote(btn, title) {
+    currentNoteInput = $(btn).closest('tr').find('.note-data');
+    let noteContent = currentNoteInput.val() || "";
     
-    let allNotes = currentNoteInput.val();
-    const newText = $('#noteTextArea').val().trim();
-    const tagStart = `[${colName}]`;
-    const tagEnd = `[/${colName}]`;
+    // تغيير عنوان المودال ديناميكياً
+    $('#noteModalLabel').text("📝 ملاحظة: " + (title || "العميل"));
+    $('#noteTextArea').val(noteContent);
     
-    const regex = new RegExp(`\\[${colName}\\](.*?)\\[\\/${colName}\\]`, "s");
+    // إخفاء زر الحفظ وجعل النص للقراءة فقط في البداية
+    $('#noteTextArea').prop('readonly', true);
+    $('#saveNoteBtn').addClass('d-none');
+    $('#unlockNoteBtn').removeClass('d-none');
     
-    if (allNotes.match(regex)) {
-        // تحديث النص الموجود
-        allNotes = allNotes.replace(regex, `${tagStart}${newText}${tagEnd}`);
-    } else {
-        // إضافة نص جديد
-        allNotes += `\n${tagStart}${newText}${tagEnd}`;
+    // إذا كان الأدمن فاتح التعديل أصلاً، نفتح النوت جاهز للتعديل
+    if ($('body').hasClass('edit-active')) {
+        enableNoteEdit();
     }
     
-    currentNoteInput.val(allNotes);
-    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
-    ToastManager.success(`تم حفظ ملاحظة ${colName}`);
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+
+// دالة لفتح التعديل للنوت فقط بكلمة سر
+function unlockNoteOnly() {
+    const pwd = prompt("أدخل كلمة السر لتعديل الملاحظة:");
+    if (!pwd) return;
+
+    LoadingManager.show('جاري التحقق...');
+    fetch('/verify_password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ password: pwd })
+    })
+    .then(res => res.json())
+    .then(res => {
+        LoadingManager.hide();
+        if (res.status === 'success') {
+            enableNoteEdit();
+            ToastManager.success('تم فتح تعديل الملاحظة');
+        } else {
+            ToastManager.error('كلمة السر خاطئة!');
+        }
+    });
+}
+
+function enableNoteEdit() {
+    $('#noteTextArea').prop('readonly', false).focus();
+    $('#saveNoteBtn').removeClass('d-none');
+    $('#unlockNoteBtn').addClass('d-none');
 }
 // =========================
 // Notes Management
