@@ -19,6 +19,16 @@
             color: white !important;
             transition: all 0.3s ease;
         }
+        table th:first-child, 
+        table td:first-child {
+            width: 15% !important; 
+            max-width: 180px !important;
+            min-width: 130px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-left: 2px solid #e2e8f0; /* اختياري: لتمييز عمود الاسم */
+        }
         .btn-dark-blue:hover { background-color: #1e293b !important; color: #f59e0b !important; }
 
         #save-all-btn { display: none; }
