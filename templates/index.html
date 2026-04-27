@@ -19,20 +19,22 @@
             color: white !important;
             transition: all 0.3s ease;
         }
-        table th:first-child, 
-        table td:first-child {
-            width: 6% !important; 
-            max-width: 180px !important;
-            min-width: 130px !important;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border-left: 3px solid #e2e8f0;
-            table th:nth-child(2), 
-table td:nth-child(2) {
-    border-left: 2px solid #e2e8f0 !important;
-}
-            
+        /* 1. تصغير عمود الاسم */
+        #client-table th:first-child, 
+        #client-table td:first-child {
+            width: 1px !important; /* سيتقلص لأقل حجم ممكن */
+            white-space: nowrap !important;
+            padding-right: 15px !important;
+            padding-left: 15px !important;
+            text-align: right !important;
+            border-left: 3px solid #e2e8f0; /* الخط الفاصل الذي طلبته */
+        }
+
+        /* 2. عمود البريد مع خط فاصل */
+        #client-table th:nth-child(2), 
+        #client-table td:nth-child(2) {
+            border-left: 2px solid #e2e8f0 !important;
+            padding-right: 10px !important;
         }
         .btn-dark-blue:hover { background-color: #1e293b !important; color: #f59e0b !important; }
 
@@ -55,7 +57,7 @@ table td:nth-child(2) {
         }
         .edit-active .fee-config-btn { display: inline-block; }
 
-        #client-table td:first-child, #client-table th:first-child { min-width: 280px !important; text-align: right !important; padding-right: 20px; }
+    
         .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .table thead th { background-color: #f8fafc; color: #475569; font-weight: 700; text-align: center; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
 
