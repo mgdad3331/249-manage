@@ -8,15 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* تجربة المستخدم: تحويل الأيقونات لأزرار في وضع القراءة */
-.edit-locked .tri-state-toggle, .edit-locked .state-done, .edit-locked .state-paid {
-    cursor: pointer !important;
-    transition: transform 0.2s;
-}
-.edit-locked .tri-state-toggle:hover {
-    transform: scale(1.2); /* تكبير بسيط عند الوقوف بالماوس */
-}
-        /* ==================== الخطوط والإعدادات الأساسية ==================== */
         body { font-family: 'Tajawal', sans-serif; background-color: #f4f7fa; direction: rtl; }
         .navbar { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 4px solid #f59e0b; padding: 1rem 2rem; }
         .brand-text { color: white; font-weight: bold; font-size: 1.3rem; }
@@ -27,23 +18,23 @@
             color: white !important;
             transition: all 0.3s ease;
         }
-        /* 1. تصغير عمود الاسم */
+
         #client-table th:first-child, 
         #client-table td:first-child {
-            width: 1px !important; /* سيتقلص لأقل حجم ممكن */
+            width: 1px !important;
             white-space: nowrap !important;
             padding-right: 15px !important;
             padding-left: 15px !important;
             text-align: right !important;
-            border-left: 3px solid #e2e8f0; /* الخط الفاصل الذي طلبته */
+            border-left: 3px solid #e2e8f0;
         }
 
-        /* 2. عمود البريد مع خط فاصل */
         #client-table th:nth-child(2), 
         #client-table td:nth-child(2) {
             border-left: 2px solid #e2e8f0 !important;
             padding-right: 10px !important;
         }
+
         .btn-dark-blue:hover { background-color: #1e293b !important; color: #f59e0b !important; }
 
         #save-all-btn { display: none; }
@@ -65,7 +56,6 @@
         }
         .edit-active .fee-config-btn { display: inline-block; }
 
-    
         .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .table thead th { background-color: #f8fafc; color: #475569; font-weight: 700; text-align: center; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
 
@@ -79,6 +69,27 @@
 
         .state-paid { background-color: #ffc107 !important; border-color: #ffc107 !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important; }
         .state-done, .tick-input:checked { background-color: #0d6efd !important; border-color: #0d6efd !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important; }
+
+        /* ✅ تمييز بصري للأعمدة التي بها ملاحظات إجراءات */
+        .has-procedure-note {
+            position: relative;
+        }
+        .has-procedure-note::after {
+            content: '📋';
+            font-size: 10px;
+            position: absolute;
+            top: 1px;
+            left: 1px;
+        }
+        /* ✅ نوت إجراء: أيقونة صغيرة تدل على وجود ملاحظة */
+        .procedure-note-indicator {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: #f59e0b;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px; left: 2px;
+        }
 
         .tick-input { appearance: none; }
         .edit-input { width: 95%; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5; border-radius: 5px; }
@@ -110,25 +121,34 @@
         .loader-text { color: white; font-size: 1.1rem; font-weight: 600; margin-top: 1rem; }
 
         .custom-fee-item {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;
+            padding: 0.75rem; margin-bottom: 0.5rem;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .custom-fee-item:hover {
-            background: #e9ecef;
+        .custom-fee-item:hover { background: #e9ecef; }
+
+        /* ✅ تنسيق modal الإجراءات */
+        .procedure-modal-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-bottom: 3px solid #f59e0b;
         }
-        /* تحسين تجربة المشاهد عند الوقوف على علامات الصح */
+        .procedure-col-badge {
+            background: #f59e0b;
+            color: #1e293b;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* hover على الصح في وضع القراءة */
         .edit-locked .tri-state-toggle {
             cursor: pointer !important;
             transition: transform 0.2s;
         }
         .edit-locked .tri-state-toggle:hover {
-            transform: scale(1.15); /* تكبير بسيط عند المرور بالماوس */
+            transform: scale(1.15);
             filter: brightness(0.9);
         }
     </style>
@@ -161,81 +181,146 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="client-table">
                 <thead>
-    <tr>
-        {% if clients %}
-            {# عرض العناوين الأساسية من الشيت مباشرة #}
-            {% for col in clients[0].keys() %}
-                {# نستثني الملاحظات فقط لأننا نريد وضعها في آخر الجدول دائماً #}
-                {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" %}
-                    <th>
-                        {{ col }}
-                        {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
-                            <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
+                    <tr>
+                        {% if clients %}
+                            {% for col in clients[0].keys() %}
+                                {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
+                                    <th>
+                                        {{ col }}
+                                        {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
+                                            <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
+                                        {% endif %}
+                                    </th>
+                                {% endif %}
+                            {% endfor %}
+                            <th class="col-finance" style="background-color: #d1fae5 !important; color: #065f46 !important;">إجمالي دولار ($)</th>
+                            <th class="col-finance">جملة المطلوب</th>
+                            <th class="col-finance">جملة المستلم</th>
+                            <th class="col-finance">جملة المتبقي</th>
+                            <th class="text-center">التفاصيل</th>
                         {% endif %}
-                    </th>
-                {% endif %}
-            {% endfor %}
-            {# إضافة العناوين المالية يدوياً لضمان التنسيق #}
-            <th class="col-finance" style="background-color: #d1fae5 !important; color: #065f46 !important;">إجمالي دولار ($)</th>
-            <th class="col-finance">جملة المطلوب</th>
-            <th class="col-finance">جملة المستلم</th>
-            <th class="col-finance">جملة المتبقي</th>
-            <th class="text-center">التفاصيل</th>
-        {% endif %}
-    </tr>
-</thead>
+                    </tr>
+                </thead>
                 <tbody>
-    {% for client in clients %}
-    <tr data-row="{{ loop.index0 }}">
-        {# عرض البيانات الأساسية والخدمات #}
-        {% for col, val in client.items() %}
-            {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" %}
-            <td class="text-center">
-                {% if col in tick_columns %}
-                    <div class="tri-state-toggle {{ 'state-paid' if val|string|upper == 'PAID' else ('state-done' if val|string|upper == 'TRUE' else '') }}" 
-                         data-col="{{ col }}" data-value="{{ val|string|upper }}" onclick="toggleTriState(this, '{{ col }}')">
-                    </div>
-                {% else %}
-                    <span class="view-text fw-bold text-dark">{{ val }}</span>
-                    <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
-                           value="{{ val }}" data-col="{{ col }}">
-                {% endif %}
-            </td>
-            {% endif %}
-        {% endfor %}
+                    {% for client in clients %}
+                    <tr data-row="{{ loop.index0 }}">
+                        {% for col, val in client.items() %}
+                            {# تخطي الأعمدة المخفية #}
+                            {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
+                            <td class="text-center" style="position:relative;">
+                                {% if col in tick_columns %}
+                                    {# ✅ الأعمدة ذات الملاحظات: data-has-note="true" #}
+                                    {% set has_note_col = col in procedure_note_columns %}
+                                    <div class="tri-state-toggle {{ 'state-paid' if val|string|upper == 'PAID' else ('state-done' if val|string|upper == 'TRUE' else '') }}" 
+                                         data-col="{{ col }}"
+                                         data-value="{{ val|string|upper }}"
+                                         data-has-note="{{ 'true' if has_note_col else 'false' }}"
+                                         onclick="toggleTriState(this, '{{ col }}')">
+                                    </div>
+                                    {# مؤشر بصري صغير إذا كان لهذا العمود ملاحظات إجراء #}
+                                    {% if has_note_col %}
+                                    {% set note_key = "ملاحظات_" + col %}
+                                    {% if client.get(note_key, '') %}
+                                        <span class="procedure-note-indicator" title="يوجد ملاحظة"></span>
+                                    {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <span class="view-text fw-bold text-dark">{{ val }}</span>
+                                    <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
+                                           value="{{ val }}" data-col="{{ col }}">
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        {% endfor %}
 
-        {# عرض المبالغ المالية من الشيت مباشرة (Database Values) #}
-        <td class="col-finance total-dollar" style="background-color: #d1fae5 !important; color: #065f46 !important; font-weight: bold;">
-            {{ client.get('إجمالي دولار ($)', '0.00 $') }}
-        </td>
-        
-        <td class="col-finance total-required">
-            {{ client.get('جملة المطلوب', '0') }}
-        </td>
-
-        <td class="col-finance">
-            {% set received_val = client.get('جملة المستلم', '0') %}
-            <span class="view-text">{{ received_val }}</span>
-            <input type="number" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto received-amount-input" 
-                   value="{{ received_val }}" data-col="جملة المستلم">
-        </td>
-
-        <td class="col-finance total-remaining">
-            {{ client.get('جملة المتبقي', '0') }}
-        </td>
-
-        <td class="text-center">
-            <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
-            <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showNote(this)">👁️ ملاحظة</button>
-            <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
+                        <td class="col-finance total-dollar" style="background-color: #d1fae5 !important; color: #065f46 !important; font-weight: bold;">
+                            {{ client.get('إجمالي دولار ($)', '0.00 $') }}
+                        </td>
+                        <td class="col-finance total-required">
+                            {{ client.get('جملة المطلوب', '0') }}
+                        </td>
+                        <td class="col-finance">
+                            {% set received_val = client.get('جملة المستلم', '0') %}
+                            <span class="view-text">{{ received_val }}</span>
+                            <input type="number" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto received-amount-input" 
+                                   value="{{ received_val }}" data-col="جملة المستلم">
+                        </td>
+                        <td class="col-finance total-remaining">
+                            {{ client.get('جملة المتبقي', '0') }}
+                        </td>
+                        <td class="text-center">
+                            <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
+                            <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showGeneralNote(this)">👁️ ملاحظة</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>
 </main>
+
+<!-- ✅ Modal: ملاحظات الإجراءات (استلام الملف / توثيقات / معادلة) -->
+<div class="modal fade" id="procedureNoteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header procedure-modal-header">
+                <div>
+                    <div class="text-white fw-bold mb-1" style="font-size:0.85rem;">📋 ملاحظات الإجراء</div>
+                    <span class="procedure-col-badge" id="procedureColLabel">استلام الملف</span>
+                    <span class="text-white-50 mx-2">|</span>
+                    <span class="text-white fw-bold" id="procedureClientLabel" style="font-size:0.9rem;"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <textarea id="procedureNoteTextArea" class="form-control" rows="6" 
+                          readonly 
+                          placeholder="لا توجد ملاحظات بعد... اضغط 'تعديل' لإضافة ملاحظة"></textarea>
+                <div class="mt-2 text-muted small" id="procedureSaveHint" style="display:none;">
+                    💡 الملاحظة ستُحفظ في عمود مخصص لهذا الإجراء في قاعدة البيانات
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <div>
+                    <button type="button" id="unlockProcedureNoteBtn" class="btn btn-sm btn-outline-warning fw-bold" onclick="unlockProcedureNote()">
+                        🔓 تعديل الملاحظة
+                    </button>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <button id="saveProcedureNoteBtn" class="btn btn-sm btn-warning fw-bold d-none" onclick="saveProcedureNote()">
+                        <span id="procSaveText">💾 حفظ في قاعدة البيانات</span>
+                        <span id="procSaveSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: ملاحظات عامة -->
+<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="noteModalLabel">📝 ملاحظات عامة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <textarea id="noteTextArea" class="form-control" rows="6" readonly placeholder="لا توجد ملاحظات حالياً..."></textarea>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" id="unlockNoteBtn" class="btn btn-sm btn-outline-primary" onclick="unlockNoteOnly()">🔓 تعديل هذه الملاحظة</button>
+                <div>
+                    <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <button id="saveNoteBtn" class="btn btn-sm btn-warning d-none fw-bold" onclick="updateNoteFromModal()">حفظ التغييرات</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal: Fee Settings -->
 <div class="modal fade" id="feeSettingsModal" tabindex="-1" aria-hidden="true">
@@ -251,10 +336,8 @@
                     <input type="number" id="newFeeAmount" class="form-control form-control-lg text-center fw-bold border-warning" placeholder="0">
                     <small class="text-muted">هذا المبلغ سيُطبق على جميع العملاء الجدد تلقائياً</small>
                 </div>
-
                 <div class="border-top pt-3">
                     <h6 class="fw-bold mb-3">👥 تخصيص رسوم لعملاء محددين (اختياري):</h6>
-                    
                     <div class="row mb-3">
                         <div class="col-md-7">
                             <label class="form-label fw-bold small">اختر العميل:</label>
@@ -265,13 +348,12 @@
                         <div class="col-md-4">
                             <label class="form-label fw-bold small">المبلغ المخصص:</label>
                             <input type="text" id="customClientAmount" class="form-control" placeholder="مثال: 5000 أو 100$">
-                            <small class="text-muted">💡 أضف $ للدولار (مثال: 100$) أو اترك رقم عادي للجنيه</small>
+                            <small class="text-muted">💡 أضف $ للدولار (مثال: 100$)</small>
                         </div>
                         <div class="col-md-1 d-flex align-items-end">
                             <button class="btn btn-success w-100" onclick="addCustomFee()">+</button>
                         </div>
                     </div>
-
                     <div id="customFeesList" class="mt-2"></div>
                 </div>
             </div>
@@ -301,36 +383,8 @@
     </div>
 </div>
 
-<!-- Modal: Note -->
-    <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="noteModalLabel">📝 ملاحظات</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <textarea id="noteTextArea" class="form-control" rows="6" readonly placeholder="لا توجد ملاحظات حالياً..."></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="unlockNoteBtn" class="btn btn-sm btn-outline-primary" onclick="unlockNoteOnly()">🔓 تعديل هذه الملاحظة</button>
-                <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                <button id="saveNoteBtn" class="btn btn-sm btn-warning d-none fw-bold" onclick="updateNoteFromModal()">حفظ التغييرات</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- ===============================================================
-     الجزء المُصلح: استبدل كل كود JavaScript في index.html بهذا
-     التغييرات:
-     1. دمج دالتَي showNote في دالة واحدة صحيحة
-     2. إصلاح toggleTriState لتمرير العنصر الصحيح
-     3. إصلاح unlockNoteOnly لحفظ activePass وتفعيل الحفظ
-     4. إصلاح updateNoteFromModal لدمج الملاحظة الجديدة مع القديمة
-================================================================ -->
 
 <script>
 // =========================
@@ -343,6 +397,17 @@ var activeFeeCol = "";
 var customFeesData = {};
 var allClientNames = [];
 var DOLLAR_RATE = 50;
+
+// ✅ الأعمدة التي لها ملاحظات إجراءات منفصلة (تأتي من الباك)
+var PROCEDURE_NOTE_COLUMNS = {{ procedure_note_columns | tojson | safe }};
+
+// ✅ بيانات الـ modal الحالي للإجراءات
+var currentProcedure = {
+    rowIndex: null,
+    colName: "",
+    clientName: "",
+    passForSave: ""
+};
 
 // =========================
 // Toast Manager
@@ -389,43 +454,33 @@ const LoadingManager = {
 };
 
 // =========================
-// Client Names Management
+// Client Names
 // =========================
 function loadClientNames() {
     fetch('/get_clients')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                allClientNames = data.clients;
-            }
-        })
-        .catch(err => console.error('❌ خطأ في الاتصال:', err));
+        .then(r => r.json())
+        .then(data => { if (data.status === 'success') allClientNames = data.clients; })
+        .catch(err => console.error('❌', err));
 }
 
 function populateClientSelect() {
     const select = document.getElementById('customClientSelect');
     select.innerHTML = '<option value="">-- اختر عميلاً --</option>';
     allClientNames.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        select.appendChild(option);
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        select.appendChild(opt);
     });
 }
 
 // =========================
-// Custom Fees Management
+// Custom Fees
 // =========================
 function loadCustomFees() {
     fetch('/get_custom_fees')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                customFeesData = data.customFees || {};
-                calculateFinances();
-            }
-        })
-        .catch(err => console.error('❌ خطأ في تحميل الرسوم:', err));
+        .then(r => r.json())
+        .then(data => { if (data.status === 'success') { customFeesData = data.customFees || {}; calculateFinances(); } })
+        .catch(err => console.error('❌', err));
 }
 
 function addCustomFee() {
@@ -435,10 +490,8 @@ function addCustomFee() {
     if (!amount) { ToastManager.warning('يرجى إدخال مبلغ صحيح!', 2000); return; }
     if (!customFeesData[activeFeeCol]) customFeesData[activeFeeCol] = {};
     customFeesData[activeFeeCol][clientName] = amount;
-    displayCustomFees();
-    calculateFinances();
-    $('#customClientSelect').val('');
-    $('#customClientAmount').val('');
+    displayCustomFees(); calculateFinances();
+    $('#customClientSelect').val(''); $('#customClientAmount').val('');
     ToastManager.success(`تم إضافة رسم مخصص لـ ${clientName}`, 2000);
 }
 
@@ -447,30 +500,20 @@ function displayCustomFees() {
     container.empty();
     const currentColFees = customFeesData[activeFeeCol] || {};
     if (Object.keys(currentColFees).length === 0) {
-        container.html('<p class="text-muted text-center small">لا توجد رسوم مخصصة بعد</p>');
-        return;
+        container.html('<p class="text-muted text-center small">لا توجد رسوم مخصصة بعد</p>'); return;
     }
     for (const [clientName, amount] of Object.entries(currentColFees)) {
         let displayAmount, badgeClass = 'bg-primary';
-        if (typeof amount === 'string' && amount.includes('$')) {
-            displayAmount = amount; badgeClass = 'bg-success';
-        } else {
-            displayAmount = parseFloat(amount).toLocaleString('en-US') + ' جنيه';
-        }
-        const item = $(`
-            <div class="custom-fee-item">
-                <div><strong>${clientName}</strong><span class="badge ${badgeClass} ms-2">${displayAmount}</span></div>
-                <button class="btn btn-sm btn-danger" onclick="removeCustomFee('${clientName}')">❌</button>
-            </div>`);
-        container.append(item);
+        if (typeof amount === 'string' && amount.includes('$')) { displayAmount = amount; badgeClass = 'bg-success'; }
+        else { displayAmount = parseFloat(amount).toLocaleString('en-US') + ' جنيه'; }
+        container.append(`<div class="custom-fee-item"><div><strong>${clientName}</strong><span class="badge ${badgeClass} ms-2">${displayAmount}</span></div><button class="btn btn-sm btn-danger" onclick="removeCustomFee('${clientName}')">❌</button></div>`);
     }
 }
 
 function removeCustomFee(clientName) {
     if (customFeesData[activeFeeCol]) {
         delete customFeesData[activeFeeCol][clientName];
-        displayCustomFees();
-        calculateFinances();
+        displayCustomFees(); calculateFinances();
         ToastManager.info(`تم حذف الرسم المخصص لـ ${clientName}`, 2000);
     }
 }
@@ -482,27 +525,17 @@ function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
         let clientName = row.find('td:first span.view-text').text().trim();
-        let baseFees = 28500;
-        let additionals = 0;
-        let dollarTotal = 0;
+        let baseFees = 28500, additionals = 0, dollarTotal = 0;
         
         row.find('.tick-input, .tri-state-toggle').each(function() {
             let colName = $(this).data('col').toString().trim();
-            let status = $(this).hasClass('tri-state-toggle') 
-                ? $(this).attr('data-value') 
-                : ($(this).is(':checked') ? "TRUE" : "FALSE");
-            
+            let status = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checked') ? "TRUE" : "FALSE");
             if (status === "PAID" || status === "TRUE") {
-                let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) 
-                    ? customFeesData[colName][clientName] 
-                    : (feeDatabase[colName] || 0);
-                
+                let customFee = (customFeesData[colName] && customFeesData[colName][clientName]) ? customFeesData[colName][clientName] : (feeDatabase[colName] || 0);
                 if (typeof customFee === 'string' && customFee.includes('$')) {
-                    let dollarAmount = parseFloat(customFee.replace('$', '').trim());
-                    if (!isNaN(dollarAmount)) dollarTotal += dollarAmount;
-                } else {
-                    additionals += parseFloat(customFee) || 0;
-                }
+                    let d = parseFloat(customFee.replace('$', '').trim());
+                    if (!isNaN(d)) dollarTotal += d;
+                } else { additionals += parseFloat(customFee) || 0; }
             }
         });
 
@@ -512,7 +545,6 @@ function calculateFinances() {
 
         let received = parseFloat(row.find('.received-amount-input').val()) || 0;
         let totalRequired = baseFees + additionals;
-        
         row.find('.total-dollar').text(dollarTotal > 0 ? dollarTotal.toFixed(2) + ' $' : '0.00 $');
         row.find('.total-required').text(totalRequired.toLocaleString('en-US'));
         row.find('.total-remaining').text((totalRequired - received).toLocaleString('en-US'));
@@ -521,33 +553,21 @@ function calculateFinances() {
 }
 
 // =========================
-// Edit Mode Management
+// Edit Mode
 // =========================
 function toggleGlobalEdit() {
     if ($('body').hasClass('edit-active')) {
-        if (confirm('هل تريد إغلاق وضع التعديل؟ تأكد من حفظ التغييرات أولاً!')) {
-            closeEditMode();
-        }
+        if (confirm('هل تريد إغلاق وضع التعديل؟ تأكد من حفظ التغييرات أولاً!')) closeEditMode();
     } else {
         const pwd = prompt("أدخل كلمة السر لفتح التعديل:");
         if (!pwd || pwd.trim() === "") return;
-        
         LoadingManager.show('جاري التحقق من كلمة السر...');
-        fetch('/verify_password', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ password: pwd })
-        })
-        .then(res => res.json())
+        fetch('/verify_password', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ password: pwd }) })
+        .then(r => r.json())
         .then(res => {
             LoadingManager.hide();
-            if (res.status === 'success') {
-                activePass = pwd;
-                openEditMode();
-                ToastManager.success('تم فتح وضع التعديل بنجاح! ✅', 2500);
-            } else {
-                ToastManager.error('كلمة السر غير صحيحة! ❌', 3000);
-            }
+            if (res.status === 'success') { activePass = pwd; openEditMode(); ToastManager.success('تم فتح وضع التعديل بنجاح! ✅', 2500); }
+            else { ToastManager.error('كلمة السر غير صحيحة! ❌', 3000); }
         })
         .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال بالخادم!', 3000); });
     }
@@ -573,20 +593,16 @@ function closeEditMode() {
 }
 
 // =========================
-// Fee Settings Modal
+// Fee Modal
 // =========================
 function openFeeModal(col) { 
-    activeFeeCol = col; 
-    $('#currentFeeCol').text(col); 
-    $('#newFeeAmount').val(feeDatabase[col] || 0);
-    populateClientSelect();
-    displayCustomFees();
+    activeFeeCol = col; $('#currentFeeCol').text(col); $('#newFeeAmount').val(feeDatabase[col] || 0);
+    populateClientSelect(); displayCustomFees();
     new bootstrap.Modal(document.getElementById('feeSettingsModal')).show(); 
 }
 
 function applySmartFee() { 
-    const newDefaultFee = parseFloat($('#newFeeAmount').val()) || 0;
-    feeDatabase[activeFeeCol] = newDefaultFee;
+    feeDatabase[activeFeeCol] = parseFloat($('#newFeeAmount').val()) || 0;
     bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
     calculateFinances(); 
     ToastManager.info(`تم تحديث الرسوم الافتراضية لـ "${activeFeeCol}"`, 2500);
@@ -594,62 +610,97 @@ function applySmartFee() {
 }
 
 // =========================
-// ✅ FIXED: Tri-State Toggle + Notes System (دمج كامل)
+// ✅ toggleTriState: المنطق الجديد الكامل
 // =========================
-
-/**
- * toggleTriState: يُشغَّل عند الضغط على أي علامة صح
- * - وضع المشاهد: يفتح نافذة الملاحظات
- * - وضع الأدمن: يغير حالة الصح
- */
 function toggleTriState(el, colName) {
+    var col = colName ? colName.trim() : "";
+    var hasNote = $(el).data('has-note') === true || $(el).attr('data-has-note') === 'true';
+
     if (!$('body').hasClass('edit-active')) {
-        // وضع المشاهد: افتح الملاحظة مع عنوان اسم العمود
-        showNote(el, colName ? colName.trim() : "الخدمة");
+        // ====== وضع المشاهد ======
+        if (hasNote) {
+            // هذا العمود له ملاحظات إجراء → افتح modal الإجراءات
+            openProcedureNoteModal(el, col);
+        }
+        // باقي الأعمدة: لا شيء يحدث عند الضغط في وضع المشاهد
         return;
     }
-    // وضع الأدمن: تغيير الحالة
-    let val = $(el).attr('data-value');
-    let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
-    $(el).attr('data-value', newVal)
-         .removeClass('state-paid state-done')
-         .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
-    calculateFinances();
-}
 
-/**
- * showNote: دالة موحدة تعمل لكل الحالات
- * @param {Element} triggerEl - العنصر الذي ضُغط عليه (زر الملاحظة أو الـ toggle)
- * @param {string} title - عنوان للنافذة (اسم العمود أو "ملاحظة")
- */
-function showNote(triggerEl, title) {
-    // ابحث عن .note-data في نفس الصف بغض النظر عن أي عنصر ضُغط
-    var row = $(triggerEl).closest('tr');
-    currentNoteInput = row.find('.note-data');
-    
-    var noteContent = currentNoteInput.val() || "";
-    var modalTitle = title ? "📝 " + title : "📝 ملاحظات";
-    
-    $('#noteModalLabel').text(modalTitle);
-    $('#noteTextArea').val(noteContent);
-    $('#noteTextArea').prop('readonly', true);
-    $('#saveNoteBtn').addClass('d-none');
-    $('#unlockNoteBtn').removeClass('d-none');
-    
-    // إذا كان الأدمن في وضع التعديل، افتح جاهزاً للتعديل
-    if ($('body').hasClass('edit-active')) {
-        enableNoteEdit();
+    // ====== وضع الأدمن ======
+    if (hasNote) {
+        // الأعمدة ذات الملاحظات: افتح modal الإجراءات (للقراءة/التعديل) - لا تغير الحالة
+        openProcedureNoteModal(el, col);
+    } else {
+        // باقي الأعمدة: غيّر الحالة فقط
+        var val = $(el).attr('data-value');
+        var newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+        $(el).attr('data-value', newVal)
+             .removeClass('state-paid state-done')
+             .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+        calculateFinances();
     }
-    
-    new bootstrap.Modal(document.getElementById('noteModal')).show();
 }
 
-/**
- * unlockNoteOnly: فتح التعديل للملاحظة فقط بكلمة سر
- * ✅ إصلاح: يحفظ كلمة السر في activePass ليستخدمها saveAll
- */
-function unlockNoteOnly() {
-    const pwd = prompt("أدخل كلمة السر لتعديل الملاحظة:");
+// =========================
+// ✅ Procedure Note Modal
+// =========================
+function openProcedureNoteModal(toggleEl, colName) {
+    var row = $(toggleEl).closest('tr');
+    var rowIndex = parseInt(row.data('row'));
+    var clientName = row.find('td:first span.view-text').text().trim();
+    if (!clientName) clientName = row.find('td:first .edit-input').val().trim();
+
+    // حفظ البيانات الحالية
+    currentProcedure.rowIndex = rowIndex;
+    currentProcedure.colName = colName;
+    currentProcedure.clientName = clientName;
+    currentProcedure.passForSave = "";
+
+    // تحديث الـ modal
+    $('#procedureColLabel').text(colName);
+    $('#procedureClientLabel').text(clientName);
+    $('#procedureNoteTextArea').val('').prop('readonly', true);
+    $('#saveProcedureNoteBtn').addClass('d-none');
+    $('#unlockProcedureNoteBtn').removeClass('d-none');
+    $('#procedureSaveHint').hide();
+
+    // إذا كان الأدمن مفتوح، افتح مباشرة للتعديل
+    if ($('body').hasClass('edit-active')) {
+        currentProcedure.passForSave = activePass;
+    }
+
+    // جلب الملاحظة من الباك
+    LoadingManager.show('جاري تحميل الملاحظة...');
+    fetch('/get_procedure_note', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ row_index: rowIndex, col_name: colName })
+    })
+    .then(r => r.json())
+    .then(res => {
+        LoadingManager.hide();
+        if (res.status === 'success') {
+            $('#procedureNoteTextArea').val(res.note || '');
+        } else {
+            ToastManager.warning('تعذر تحميل الملاحظة: ' + (res.message || ''));
+        }
+
+        // إذا أدمن: افتح للتعديل مباشرة
+        if ($('body').hasClass('edit-active')) {
+            enableProcedureNoteEdit();
+        }
+
+        new bootstrap.Modal(document.getElementById('procedureNoteModal')).show();
+    })
+    .catch(() => {
+        LoadingManager.hide();
+        ToastManager.error('خطأ في الاتصال!');
+        new bootstrap.Modal(document.getElementById('procedureNoteModal')).show();
+    });
+}
+
+function unlockProcedureNote() {
+    var pwd = prompt("أدخل كلمة السر لتعديل ملاحظة " + currentProcedure.colName + ":");
     if (!pwd || pwd.trim() === "") return;
 
     LoadingManager.show('جاري التحقق...');
@@ -658,13 +709,13 @@ function unlockNoteOnly() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ password: pwd })
     })
-    .then(res => res.json())
+    .then(r => r.json())
     .then(res => {
         LoadingManager.hide();
         if (res.status === 'success') {
-            activePass = pwd; // ✅ حفظ كلمة السر للاستخدام في الحفظ
-            enableNoteEdit();
-            ToastManager.success('تم فتح تعديل الملاحظة ✅');
+            currentProcedure.passForSave = pwd;
+            enableProcedureNoteEdit();
+            ToastManager.success('تم فتح التعديل ✅');
         } else {
             ToastManager.error('كلمة السر خاطئة! ❌');
         }
@@ -672,192 +723,190 @@ function unlockNoteOnly() {
     .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
 }
 
-function enableNoteEdit() {
+function enableProcedureNoteEdit() {
+    $('#procedureNoteTextArea').prop('readonly', false).focus();
+    $('#saveProcedureNoteBtn').removeClass('d-none');
+    $('#unlockProcedureNoteBtn').addClass('d-none');
+    $('#procedureSaveHint').show();
+}
+
+function saveProcedureNote() {
+    var noteText = $('#procedureNoteTextArea').val();
+
+    if (!currentProcedure.passForSave) {
+        ToastManager.error('كلمة السر مطلوبة!'); return;
+    }
+    if (currentProcedure.rowIndex === null) {
+        ToastManager.error('خطأ: لم يتم تحديد الصف!'); return;
+    }
+
+    // إظهار spinner
+    $('#procSaveText').text('جاري الحفظ...');
+    $('#procSaveSpinner').removeClass('d-none');
+    $('#saveProcedureNoteBtn').prop('disabled', true);
+
+    fetch('/save_procedure_note', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            password: currentProcedure.passForSave,
+            row_index: currentProcedure.rowIndex,
+            col_name: currentProcedure.colName,
+            note: noteText
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        $('#procSaveText').text('💾 حفظ في قاعدة البيانات');
+        $('#procSaveSpinner').addClass('d-none');
+        $('#saveProcedureNoteBtn').prop('disabled', false);
+
+        if (res.status === 'success') {
+            ToastManager.success(`✅ تم حفظ ملاحظة "${currentProcedure.colName}" للعميل ${currentProcedure.clientName}`);
+            bootstrap.Modal.getInstance(document.getElementById('procedureNoteModal')).hide();
+        } else {
+            ToastManager.error('فشل الحفظ: ' + (res.message || ''));
+        }
+    })
+    .catch(() => {
+        $('#procSaveText').text('💾 حفظ في قاعدة البيانات');
+        $('#procSaveSpinner').addClass('d-none');
+        $('#saveProcedureNoteBtn').prop('disabled', false);
+        ToastManager.error('خطأ في الاتصال!');
+    });
+}
+
+// =========================
+// General Note (زر الملاحظة العادي)
+// =========================
+function showGeneralNote(btn) {
+    currentNoteInput = $(btn).closest('tr').find('.note-data');
+    var noteContent = currentNoteInput.val() || "";
+    $('#noteModalLabel').text('📝 ملاحظات عامة');
+    $('#noteTextArea').val(noteContent);
+    $('#noteTextArea').prop('readonly', true);
+    $('#saveNoteBtn').addClass('d-none');
+    $('#unlockNoteBtn').removeClass('d-none');
+    if ($('body').hasClass('edit-active')) enableGeneralNoteEdit();
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+
+function unlockNoteOnly() {
+    var pwd = prompt("أدخل كلمة السر لتعديل الملاحظة:");
+    if (!pwd || pwd.trim() === "") return;
+    LoadingManager.show('جاري التحقق...');
+    fetch('/verify_password', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ password: pwd }) })
+    .then(r => r.json())
+    .then(res => {
+        LoadingManager.hide();
+        if (res.status === 'success') { activePass = pwd; enableGeneralNoteEdit(); ToastManager.success('تم فتح تعديل الملاحظة ✅'); }
+        else { ToastManager.error('كلمة السر خاطئة! ❌'); }
+    })
+    .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
+}
+
+function enableGeneralNoteEdit() {
     $('#noteTextArea').prop('readonly', false).focus();
     $('#saveNoteBtn').removeClass('d-none');
     $('#unlockNoteBtn').addClass('d-none');
 }
 
-/**
- * updateNoteFromModal: حفظ الملاحظة
- * ✅ إصلاح: يدمج الملاحظة الجديدة مع القديمة بدل الاستبدال
- */
 function updateNoteFromModal() {
-    if (!currentNoteInput) {
-        ToastManager.error('حدث خطأ - لم يتم تحديد صف!');
-        return;
+    if (currentNoteInput) {
+        currentNoteInput.val($('#noteTextArea').val());
+        bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+        ToastManager.success('جاري حفظ الملاحظة... ⏳');
+        saveAll();
     }
-    
-    var oldNote = currentNoteInput.val() || "";
-    var newNoteText = $('#noteTextArea').val().trim();
-    
-    // ✅ دمج: إذا تغير النص، استخدم الجديد مباشرة (المستخدم رأى القديم وعدّله)
-    // النص في الـ textarea هو النص الكامل المدمج بالفعل لأنه يُحمَّل من .note-data
-    currentNoteInput.val(newNoteText);
-    
-    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
-    ToastManager.success('جاري حفظ الملاحظة في الشيت... ⏳');
-    
-    // ✅ حفظ مباشر عبر API
-    saveAll();
 }
 
 // =========================
-// Add Client
+// Add / Delete Client
 // =========================
 function openAddModal() { 
     const pwd = prompt("كلمة السر للإضافة:");
-    if (pwd && pwd.trim() !== "") { 
-        activePass = pwd; 
-        $('#newName, #newEmail, #newUni, #newPhone').val('');
-        new bootstrap.Modal(document.getElementById('addClientModal')).show(); 
-    }
+    if (pwd && pwd.trim() !== "") { activePass = pwd; $('#newName, #newEmail, #newUni').val(''); new bootstrap.Modal(document.getElementById('addClientModal')).show(); }
 }
 
 function executeAdd() {
     const name = $('#newName').val().trim();
     if (!name) { ToastManager.warning('يرجى إدخال اسم العميل!'); return; }
-    
     LoadingManager.show('جاري إضافة العميل...');
-    const data = { password: activePass, name: name, email: $('#newEmail').val(), uni: $('#newUni').val(), phone: $('#newPhone').val() };
-    
-    fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
-    .then(res => res.json())
-    .then(res => {
-        LoadingManager.hide();
-        if(res.status === "success") {
-            ToastManager.success('تم إضافة العميل بنجاح!');
-            setTimeout(() => location.reload(), 1500);
-        } else { ToastManager.error("فشل: " + res.message); }
-    })
+    fetch('/add_client', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ password: activePass, name: name, email: $('#newEmail').val(), uni: $('#newUni').val() }) })
+    .then(r => r.json())
+    .then(res => { LoadingManager.hide(); if(res.status === "success") { ToastManager.success('تم إضافة العميل بنجاح!'); setTimeout(() => location.reload(), 1500); } else { ToastManager.error("فشل: " + res.message); } })
     .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
 }
 
-// =========================
-// Delete Client
-// =========================
 function deleteClient(btn) {
     const row = $(btn).closest('tr');
     const rowIndex = row.data('row');
     const clientName = row.find('td:first span.view-text').text().trim();
-
     if (confirm(`هل أنت متأكد من حذف العميل: ${clientName}؟`)) {
         const password = prompt("يرجى إدخال كلمة السر للتأكيد:");
         if (!password) return;
-
         LoadingManager.show('جاري الحذف...');
-        fetch('/delete_client', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ row_index: rowIndex, password: password })
-        })
-        .then(res => res.json())
-        .then(res => {
-            LoadingManager.hide();
-            if (res.status === "success") {
-                ToastManager.success('تم حذف العميل بنجاح');
-                row.fadeOut(500, function() { $(this).remove(); });
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                ToastManager.error('فشل الحذف: ' + res.message);
-            }
-        })
-        .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال بالسيرفر'); });
+        fetch('/delete_client', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ row_index: rowIndex, password: password }) })
+        .then(r => r.json())
+        .then(res => { LoadingManager.hide(); if (res.status === "success") { ToastManager.success('تم حذف العميل بنجاح'); row.fadeOut(500, () => row.remove()); setTimeout(() => location.reload(), 1000); } else { ToastManager.error('فشل الحذف: ' + res.message); } })
+        .catch(() => { LoadingManager.hide(); ToastManager.error('خطأ في الاتصال!'); });
     }
 }
 
 // =========================
-// Save All Changes
+// Save All
 // =========================
 function saveAll() {
-    if (!activePass || activePass.trim() === "") {
-        activePass = prompt("أدخل كلمة السر للحفظ:");
-    }
-    if (!activePass || activePass.trim() === "") { 
-        ToastManager.error('كلمة سر مطلوبة!'); 
-        return; 
-    }
+    if (!activePass || activePass.trim() === "") activePass = prompt("أدخل كلمة السر للحفظ:");
+    if (!activePass || activePass.trim() === "") { ToastManager.error('كلمة سر مطلوبة!'); return; }
 
     LoadingManager.show('جاري الحفظ...');
     $('#save-text').text('جاري الحفظ...');
     $('#save-spinner').removeClass('d-none');
     $('#save-all-btn').prop('disabled', true);
-    
+
     let updates = {};
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
-        
-        // ✅ تأكد من جمع .note-data مع البيانات الأخرى
         $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input, .note-data').each(function() {
             let col = $(this).data('col');
             if (col) {
                 let val;
-                if ($(this).hasClass('tri-state-toggle')) {
-                    val = $(this).attr('data-value');
-                } else if ($(this).is(':checkbox')) {
-                    val = $(this).is(':checked') ? "TRUE" : "FALSE";
-                } else {
-                    val = $(this).val();
-                }
+                if ($(this).hasClass('tri-state-toggle')) val = $(this).attr('data-value');
+                else if ($(this).is(':checkbox')) val = $(this).is(':checked') ? "TRUE" : "FALSE";
+                else val = $(this).val();
                 updates[rowIdx][col] = val;
             }
         });
     });
 
-    fetch('/save', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ 
-            password: activePass, 
-            updates: updates, 
-            fees: feeDatabase,
-            customFees: customFeesData
-        }) 
-    })
-    .then(res => res.json())
+    fetch('/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ password: activePass, updates: updates, fees: feeDatabase, customFees: customFeesData }) })
+    .then(r => r.json())
     .then(res => {
         LoadingManager.hide();
-        if(res.status === "success") {
-            ToastManager.success('تم الحفظ بنجاح! ✅');
-            setTimeout(() => location.reload(), 2000);
-        } else {
-            ToastManager.error("فشل: " + res.message);
-            $('#save-text').text('💾 حفظ التغييرات');
-            $('#save-spinner').addClass('d-none');
-            $('#save-all-btn').prop('disabled', false);
-        }
+        if(res.status === "success") { ToastManager.success('تم الحفظ بنجاح! ✅'); setTimeout(() => location.reload(), 2000); }
+        else { ToastManager.error("فشل: " + res.message); $('#save-text').text('💾 حفظ التغييرات'); $('#save-spinner').addClass('d-none'); $('#save-all-btn').prop('disabled', false); }
     })
-    .catch(() => {
-        LoadingManager.hide();
-        ToastManager.error('فشل الاتصال!');
-        $('#save-text').text('💾 حفظ التغييرات');
-        $('#save-spinner').addClass('d-none');
-        $('#save-all-btn').prop('disabled', false);
-    });
+    .catch(() => { LoadingManager.hide(); ToastManager.error('فشل الاتصال!'); $('#save-text').text('💾 حفظ التغييرات'); $('#save-spinner').addClass('d-none'); $('#save-all-btn').prop('disabled', false); });
 }
 
 // =========================
-// Search Functionality
+// Search
 // =========================
 $("#searchInput").on("keyup", function() {
     var v = $(this).val().toLowerCase();
-    $("#client-table tbody tr").filter(function() { 
-        $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1); 
-    });
+    $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1); });
 });
 
 // =========================
 // Document Ready
 // =========================
 $(document).ready(function() {
-    ToastManager.init();
-    LoadingManager.init();
-    loadClientNames();
-    loadCustomFees();
-    calculateFinances();
+    ToastManager.init(); LoadingManager.init();
+    loadClientNames(); loadCustomFees(); calculateFinances();
     $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
-    console.log('✅ النظام جاهز للاستخدام');
+    console.log('✅ النظام جاهز | أعمدة الملاحظات:', PROCEDURE_NOTE_COLUMNS);
 });
 </script>
 </body>
