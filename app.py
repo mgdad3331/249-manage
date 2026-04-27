@@ -371,6 +371,10 @@ def save():
             notes = row_dict.get('الملاحظات', '')
             import re
             extra_match = re.search(r'EXTRA:(-?\d+)', notes)
+            # تأمين بقاء الملاحظة في مصفوفة البيانات قبل الحفظ النهائي
+            col_idx_notes = headers.index("الملاحظات") if "الملاحظات" in headers else -1
+            if col_idx_notes != -1:
+                all_data[i][col_idx_notes] = notes # تأكيد كتابتها في المصفوفة
             if extra_match:
                 additionals += float(extra_match.group(1))
 
