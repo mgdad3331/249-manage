@@ -838,12 +838,13 @@ function saveAll() {
     $('#save-text').text('جاري الحفظ...');
     $('#save-spinner').removeClass('d-none');
     $('#save-all-btn').prop('disabled', true);
-
     let updates = {};
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
-        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
+        
+        // أضفنا هنا .note-data لضمان جمع الملاحظات مع بقية البيانات
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input, .note-data').each(function() {
             let col = $(this).data('col');
             if (col) {
                 let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
