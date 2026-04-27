@@ -825,7 +825,11 @@ function executeAdd() {
 }
 // Save All Changes
 // =========================
+    // =========================
+// Save All Changes Function
+// =========================
 function saveAll() {
+    // التأكد من وجود كلمة السر
     if (!activePass || activePass.trim() === "") {
         activePass = prompt("أدخل كلمة السر للحفظ:");
     }
@@ -835,33 +839,47 @@ function saveAll() {
         return; 
     }
 
+    // إظهار حالة التحميل
     LoadingManager.show('جاري الحفظ...');
     $('#save-text').text('جاري الحفظ...');
     $('#save-spinner').removeClass('d-none');
     $('#save-all-btn').prop('disabled', true);
+
     let updates = {};
+
+    // تكرار على كل صف في الجدول
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
         
-        // أضفنا هنا .note-data لضمان جمع الملاحظات مع بقية البيانات
-        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input, .note-data').each(function() {
+        // 1. جمع البيانات من المدخلات الظاهرة (الصح، المبالغ، التوجل)
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
             let col = $(this).data('col');
             if (col) {
-                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                let val = $(this).hasClass('tri-state-toggle') ? 
+                          $(this).attr('data-value') : 
+                          ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
                 updates[rowIdx][col] = val;
             }
         });
+
+        // 2. ضمان جمع الملاحظات بشكل صريح (العمود القديم: الملاحظات)
+        let noteField = $(this).find('.note-data');
+        if (noteField.length > 0) {
+            // نرسلها تحت اسم "الملاحظات" لضمان المطابقة مع الشيت
+            updates[rowIdx]["الملاحظات"] = noteField.val() || "";
+        }
     });
 
+    // إرسال البيانات للسيرفر
     fetch('/save', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({ 
             password: activePass, 
             updates: updates, 
-            fees: feeDatabase,
-            customFees: customFeesData
+            fees: typeof feeDatabase !== 'undefined' ? feeDatabase : {},
+            customFees: typeof customFeesData !== 'undefined' ? customFeesData : {}
         }) 
     })
     .then(res => res.json())
@@ -869,21 +887,26 @@ function saveAll() {
         LoadingManager.hide();
         if(res.status === "success") {
             ToastManager.success('تم الحفظ بنجاح! ✅');
-            setTimeout(() => location.reload(), 2000);
+            // إعادة تحميل الصفحة لتحديث البيانات من الشيت
+            setTimeout(() => location.reload(), 1500);
         } else {
             ToastManager.error("فشل: " + res.message);
-            $('#save-text').text('💾 حفظ التغييرات');
-            $('#save-spinner').addClass('d-none');
-            $('#save-all-btn').prop('disabled', false);
+            resetSaveBtn();
         }
     })
-    .catch(() => {
+    .catch(err => {
+        console.error("Save error:", err);
         LoadingManager.hide();
-        ToastManager.error('فشل الاتصال!');
-        $('#save-text').text('💾 حفظ التغييرات');
-        $('#save-spinner').addClass('d-none');
-        $('#save-all-btn').prop('disabled', false);
+        ToastManager.error('فشل الاتصال بالسيرفر!');
+        resetSaveBtn();
     });
+}
+
+// دالة مساعدة لإعادة شكل الزر عند الخطأ
+function resetSaveBtn() {
+    $('#save-text').text('💾 حفظ التغييرات');
+    $('#save-spinner').addClass('d-none');
+    $('#save-all-btn').prop('disabled', false);
 }
 
 // =========================
@@ -891,24 +914,30 @@ function saveAll() {
 // =========================
 $("#searchInput").on("keyup", function() {
     var v = $(this).val().toLowerCase();
-    $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
+    $("#client-table tbody tr").filter(function() { 
+        $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) 
+    });
 });
 
 // =========================
 // Document Ready
 // =========================
 $(document).ready(function() {
-    ToastManager.init();
-    LoadingManager.init();
+    // التأكد من وجود الكلاسات المساعدة
+    if (typeof ToastManager !== 'undefined') ToastManager.init();
+    if (typeof LoadingManager !== 'undefined') LoadingManager.init();
     
-    loadClientNames();
-    loadCustomFees();
+    // تحميل البيانات الأولية
+    if (typeof loadClientNames === 'function') loadClientNames();
+    if (typeof loadCustomFees === 'function') loadCustomFees();
     
-    calculateFinances();
-    $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
+    // تفعيل الحسابات المالية التلقائية
+    if (typeof calculateFinances === 'function') {
+        calculateFinances();
+        $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
+    }
     
-    console.log('✅ النظام جاهز للاستخدام');
-    console.log('🔐 نظام الأمان: مفعّل');
+    console.log('✅ النظام جاهز ومحدث لعمود الملاحظات');
 });
 </script>
 </body>
