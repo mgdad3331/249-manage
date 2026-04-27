@@ -170,6 +170,24 @@ DOLLAR_RATE = 50  # 1 دولار = 50 جنيه (تقريبي)
 # =========================
 # Routes
 # =========================
+@app.route('/delete_client', methods=['POST'])
+def delete_client():
+    try:
+        data = request.get_json()
+        row_index = data.get("row_index")
+        password = data.get("password")
+
+        # التحقق من كلمة السر (نفس طريقتك في الـ save)
+        if not SecurityManager.verify_password(password):
+            return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
+
+        # حذف السطر من الشيت
+        # +2 لأن row_index يبدأ من 0 والهيدر في الشيت هو السطر 1
+        sheet.delete_rows(int(row_index) + 2)
+        
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "failed", "message": str(e)})
 
 @app.route('/')
 def index():
