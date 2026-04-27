@@ -193,6 +193,7 @@
         <td class="text-center">
             <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showNote(this)">👁️ ملاحظة</button>
+            <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
         </td>
     </tr>
     {% endfor %}
@@ -685,6 +686,43 @@ function executeAdd() {
 }
 
 // =========================
+    // تحديث جديد حذف عميل 
+    function deleteClient(btn) {
+    const row = $(btn).closest('tr');
+    const rowIndex = row.data('row');
+    const clientName = row.find('td:first').text().trim(); // افترضنا أن الاسم هو أول عمود
+
+    if (confirm(`هل أنت متأكد من حذف العميل: ${clientName}؟`)) {
+        const password = prompt("يرجى إدخال كلمة السر للتأكيد:");
+        if (!password) return;
+
+        LoadingManager.show();
+        fetch('/delete_client', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                row_index: rowIndex,
+                password: password 
+            })
+        })
+        .then(res => res.json())
+        .then(res => {
+            LoadingManager.hide();
+            if (res.status === "success") {
+                ToastManager.success('تم حذف العميل بنجاح');
+                row.fadeOut(500, function() { $(this).remove(); });
+                // يفضل عمل تحديث للصفحة لضمان تزامن الـ Row Index
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                ToastManager.error('فشل الحذف: ' + res.message);
+            }
+        })
+        .catch(err => {
+            LoadingManager.hide();
+            ToastManager.error('خطأ في الاتصال بالسيرفر');
+        });
+    }
+}
 // Save All Changes
 // =========================
 function saveAll() {
