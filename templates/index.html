@@ -225,8 +225,7 @@
         </td>
 
         <td class="text-center">
-            <input type="hidden" class="note-data edit-input" data-col="ملاحظات" 
-       value="{{ client.get('الملاحظات', '') }}{{ client.get('ملاحظات', '') }}">
+            <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showNote(this)">👁️ ملاحظة</button>
             <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
         </td>
@@ -316,7 +315,8 @@
             <div class="modal-footer">
                 <button type="button" id="unlockNoteBtn" class="btn btn-sm btn-outline-primary" onclick="unlockNoteOnly()">🔓 تعديل هذه الملاحظة</button>
                 <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                <button type="button" class="btn btn-primary" onclick="updateNoteInTable()">حفظ الملاحظة</button>
+                <button id="saveNoteBtn" class="btn btn-sm btn-warning d-none fw-bold" onclick="updateNoteFromModal()">حفظ التغييرات</button>
+            </div>
         </div>
     </div>
 </div>
@@ -381,21 +381,6 @@ const LoadingManager = {
 };
 
 // =========================
-    //جسر حفظ نص الملاحظات الجزئية
-    // دالة لتحديث الملاحظة في الحقل المخفي فور كتابتها في النافذة
-function updateNoteInTable() {
-    const rowIdx = $('#noteModal').data('row-idx'); // نجلب رقم الصف
-    const noteContent = $('#noteTextarea').val(); // نجلب ما كتبته الآن
-    
-    // نضع النص داخل الحقل المخفي الموجود في الصف المحدد
-    $(`tr[data-row="${rowIdx}"]`).find('.note-data').val(noteContent);
-    
-    // إغلاق النافذة
-    const modal = bootstrap.Modal.getInstance(document.getElementById('noteModal'));
-    modal.hide();
-    
-    ToastManager.success('تم تجهيز الملاحظة للحفظ.. لا تنسى الضغط على حفظ التغييرات العام');
-}
 // Client Names Management
 // =========================
 function loadClientNames() {
@@ -670,108 +655,45 @@ function applySmartFee() {
 // التعديل الذكي: التبديل بين الحالات (للالأدمن) وفتح الملاحظات (للمشاهد)
 // =========================
     // المتغيرات المطلوبة للتحكم بالنوت
-    // ==========================================
-// إدارة الملاحظات الجزئية (الجسر البرمجي)
-// ==========================================
-
-let currentNoteInput = null; // المتغير العالمي لربط النافذة بالصف المطلوب
-
-/**
- * 1. دالة فتح الملاحظة
- * تُستدعى عند الضغط على اسم العميل أو من خلال دالة toggleTriState
- */
-function openNote(rowIdx, name) {
-    // تحديد الحقل المخفي في الصف الصحيح بناءً على الـ Index
-    currentNoteInput = $(`tr[data-row="${rowIdx}"]`).find('.note-data');
+var currentColForNote = "";
+    function toggleTriState(el, colName) {
+    // التأكد من تنظيف اسم العمود من أي مسافات زائدة
+    currentColForNote = colName ? colName.trim() : "العميل";
     
-    if (currentNoteInput.length === 0) {
-        console.error("خطأ: لم يتم العثور على حقل الملاحظات لهذا الصف.");
+    if (!$('body').hasClass('edit-active')) {
+        // نمرر اسم العمود لدالة showNote مباشرة
+        showNote(el, currentColForNote);
         return;
     }
-
+    
+    // وضع الأدمن: تغيير الحالة كالمعتاد
+    let val = $(el).attr('data-value');
+    let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    calculateFinances();
+}
+function showNote(btn, title) {
+    currentNoteInput = $(btn).closest('tr').find('.note-data');
     let noteContent = currentNoteInput.val() || "";
     
-    // إعداد محتوى النافذة المنبثقة
-    $('#noteModalLabel').text("📝 ملاحظة العميل: " + name);
+    // تغيير عنوان المودال ديناميكياً
+    $('#noteModalLabel').text("📝 ملاحظة: " + (title || "العميل"));
     $('#noteTextArea').val(noteContent);
     
-    // فحص صلاحية التعديل (إذا كان وضع الأدمن مفعلاً)
-    if ($('body').hasClass('edit-active') || (typeof activePass !== 'undefined' && activePass)) {
+    // إخفاء زر الحفظ وجعل النص للقراءة فقط في البداية
+    $('#noteTextArea').prop('readonly', true);
+    $('#saveNoteBtn').addClass('d-none');
+    $('#unlockNoteBtn').removeClass('d-none');
+    
+    // إذا كان الأدمن فاتح التعديل أصلاً، نفتح النوت جاهز للتعديل
+    if ($('body').hasClass('edit-active')) {
         enableNoteEdit();
-    } else {
-        // وضع القراءة فقط للمستخدم العادي
-        $('#noteTextArea').prop('readonly', true);
-        $('#saveNoteBtn').addClass('d-none');
-        $('#unlockNoteBtn').removeClass('d-none');
     }
     
-    // إظهار النافذة
     new bootstrap.Modal(document.getElementById('noteModal')).show();
 }
 
-/**
- * 2. دالة الجسر والتحديث
- * تأخذ النص من النافذة وتضعه في الجدول ثم تستدعي الحفظ الشامل
- */
-function updateNoteFromModal() {
-    if (currentNoteInput && currentNoteInput.length > 0) {
-        // أ. سحب النص من النافذة
-        let newContent = $('#noteTextArea').val();
-        
-        // ب. حقن النص في الحقل المخفي داخل الجدول (هذا هو الجسر)
-        currentNoteInput.val(newContent);
-        
-        // ج. إغلاق النافذة
-        let modalEl = document.getElementById('noteModal');
-        let modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) modalInstance.hide();
-        
-        // د. تنبيه المستخدم والبدء في الحفظ النهائي
-        ToastManager.success('تم التحديث.. جاري المزامنة مع جوجل شيت');
-        
-        // هـ. استدعاء دالة الحفظ الشاملة لترسل البيانات فوراً للسيرفر
-        saveAll(); 
-    } else {
-        ToastManager.error('خطأ في الوصول لبيانات الصف، يرجى إعادة المحاولة');
-    }
-}
-
-/**
- * 3. دالة تفعيل التعديل
- */
-function enableNoteEdit() {
-    $('#noteTextArea').prop('readonly', false).focus();
-    $('#saveNoteBtn').removeClass('d-none');
-    $('#unlockNoteBtn').addClass('d-none');
-}
-
-/**
- * 4. دالة تبديل الحالات (معدلة لتتوافق مع openNote)
- */
-function toggleTriState(el, colName) {
-    let row = $(el).closest('tr');
-    let name = row.find('td:first').text().trim(); 
-    let rowIdx = row.data('row');
-
-    if (!$('body').hasClass('edit-active')) {
-        // استدعاء دالة فتح الملاحظة بدلاً من شو نوت القديمة
-        openNote(rowIdx, name);
-        return;
-    }
-    
-    // تنفيذ منطق التبديل (PAID, TRUE, FALSE)
-    let val = $(el).attr('data-value');
-    let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
-    $(el).attr('data-value', newVal)
-         .removeClass('state-paid state-done')
-         .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
-    
-    calculateFinances();
-}
-
-/**
- * 5. دالة فك قفل الملاحظة بكلمة سر
- */
+// دالة لفتح التعديل للنوت فقط بكلمة سر
 function unlockNoteOnly() {
     const pwd = prompt("أدخل كلمة السر لتعديل الملاحظة:");
     if (!pwd) return;
@@ -787,16 +709,50 @@ function unlockNoteOnly() {
         LoadingManager.hide();
         if (res.status === 'success') {
             enableNoteEdit();
-            ToastManager.success('تم فتح صلاحية التعديل');
+            ToastManager.success('تم فتح تعديل الملاحظة');
         } else {
             ToastManager.error('كلمة السر خاطئة!');
         }
-    })
-    .catch(() => {
-        LoadingManager.hide();
-        ToastManager.error('فشل الاتصال بالسيرفر');
     });
 }
+
+function enableNoteEdit() {
+    $('#noteTextArea').prop('readonly', false).focus();
+    $('#saveNoteBtn').removeClass('d-none');
+    $('#unlockNoteBtn').addClass('d-none');
+}
+// =========================
+// Notes Management
+// =========================
+function showNote(btn) {
+    currentNoteInput = $(btn).siblings('.note-data');
+    $('#noteTextArea').val(currentNoteInput.val());
+    if (activePass && activePass.trim() !== "") {
+        $('#noteTextArea').prop('readonly', false);
+        $('#saveNoteBtn').removeClass('d-none');
+    } else {
+        $('#noteTextArea').prop('readonly', true);
+        $('#saveNoteBtn').addClass('d-none');
+    }
+    new bootstrap.Modal(document.getElementById('noteModal')).show();
+}
+    function updateNoteFromModal() {
+    if (currentNoteInput) {
+        // 1. تحديث قيمة الحقل المخفي في الجدول
+        currentNoteInput.val($('#noteTextArea').val());
+        
+        // 2. إغلاق النافذة المنبثقة
+        bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+        
+        // 3. تنبيه المستخدم
+        ToastManager.success('تم تحديث الملاحظة محلياً.. جاري الحفظ في الشيت');
+
+        // 4. استدعاء دالة الحفظ العامة لترسل البيانات للسيرفر (الشيت)
+        // ملاحظة: تأكد أن دالة saveAll لديك مبرمجة لترسل قيمة "الملاحظات"
+        saveAll(); 
+    }
+}
+
 // =========================
 // Add Client
 // =========================
@@ -868,11 +824,7 @@ function executeAdd() {
 }
 // Save All Changes
 // =========================
-    // =========================
-// Save All Changes Function
-// =========================
 function saveAll() {
-    // التأكد من وجود كلمة السر
     if (!activePass || activePass.trim() === "") {
         activePass = prompt("أدخل كلمة السر للحفظ:");
     }
@@ -882,47 +834,33 @@ function saveAll() {
         return; 
     }
 
-    // إظهار حالة التحميل
     LoadingManager.show('جاري الحفظ...');
     $('#save-text').text('جاري الحفظ...');
     $('#save-spinner').removeClass('d-none');
     $('#save-all-btn').prop('disabled', true);
-
     let updates = {};
-
-    // تكرار على كل صف في الجدول
     $('#client-table tbody tr').each(function() {
         let rowIdx = $(this).data('row');
         updates[rowIdx] = {};
         
-        // 1. جمع البيانات من المدخلات الظاهرة (الصح، المبالغ، التوجل)
-        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input').each(function() {
+        // أضفنا هنا .note-data لضمان جمع الملاحظات مع بقية البيانات
+        $(this).find('.tick-input, .edit-input, .tri-state-toggle, .received-amount-input, .note-data').each(function() {
             let col = $(this).data('col');
             if (col) {
-                let val = $(this).hasClass('tri-state-toggle') ? 
-                          $(this).attr('data-value') : 
-                          ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
+                let val = $(this).hasClass('tri-state-toggle') ? $(this).attr('data-value') : ($(this).is(':checkbox') ? ($(this).is(':checked') ? "TRUE" : "FALSE") : $(this).val());
                 updates[rowIdx][col] = val;
             }
         });
-
-        // 2. ضمان جمع الملاحظات بشكل صريح (العمود القديم: الملاحظات)
-        let noteField = $(this).find('.note-data');
-        if (noteField.length > 0) {
-            // نرسلها تحت اسم "الملاحظات" لضمان المطابقة مع الشيت
-            updates[rowIdx]["الملاحظات"] = noteField.val() || "";
-        }
     });
 
-    // إرسال البيانات للسيرفر
     fetch('/save', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({ 
             password: activePass, 
             updates: updates, 
-            fees: typeof feeDatabase !== 'undefined' ? feeDatabase : {},
-            customFees: typeof customFeesData !== 'undefined' ? customFeesData : {}
+            fees: feeDatabase,
+            customFees: customFeesData
         }) 
     })
     .then(res => res.json())
@@ -930,26 +868,21 @@ function saveAll() {
         LoadingManager.hide();
         if(res.status === "success") {
             ToastManager.success('تم الحفظ بنجاح! ✅');
-            // إعادة تحميل الصفحة لتحديث البيانات من الشيت
-            setTimeout(() => location.reload(), 1500);
+            setTimeout(() => location.reload(), 2000);
         } else {
             ToastManager.error("فشل: " + res.message);
-            resetSaveBtn();
+            $('#save-text').text('💾 حفظ التغييرات');
+            $('#save-spinner').addClass('d-none');
+            $('#save-all-btn').prop('disabled', false);
         }
     })
-    .catch(err => {
-        console.error("Save error:", err);
+    .catch(() => {
         LoadingManager.hide();
-        ToastManager.error('فشل الاتصال بالسيرفر!');
-        resetSaveBtn();
+        ToastManager.error('فشل الاتصال!');
+        $('#save-text').text('💾 حفظ التغييرات');
+        $('#save-spinner').addClass('d-none');
+        $('#save-all-btn').prop('disabled', false);
     });
-}
-
-// دالة مساعدة لإعادة شكل الزر عند الخطأ
-function resetSaveBtn() {
-    $('#save-text').text('💾 حفظ التغييرات');
-    $('#save-spinner').addClass('d-none');
-    $('#save-all-btn').prop('disabled', false);
 }
 
 // =========================
@@ -957,30 +890,24 @@ function resetSaveBtn() {
 // =========================
 $("#searchInput").on("keyup", function() {
     var v = $(this).val().toLowerCase();
-    $("#client-table tbody tr").filter(function() { 
-        $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) 
-    });
+    $("#client-table tbody tr").filter(function() { $(this).toggle($(this).text().toLowerCase().indexOf(v) > -1) });
 });
 
 // =========================
 // Document Ready
 // =========================
 $(document).ready(function() {
-    // التأكد من وجود الكلاسات المساعدة
-    if (typeof ToastManager !== 'undefined') ToastManager.init();
-    if (typeof LoadingManager !== 'undefined') LoadingManager.init();
+    ToastManager.init();
+    LoadingManager.init();
     
-    // تحميل البيانات الأولية
-    if (typeof loadClientNames === 'function') loadClientNames();
-    if (typeof loadCustomFees === 'function') loadCustomFees();
+    loadClientNames();
+    loadCustomFees();
     
-    // تفعيل الحسابات المالية التلقائية
-    if (typeof calculateFinances === 'function') {
-        calculateFinances();
-        $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
-    }
+    calculateFinances();
+    $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
     
-    console.log('✅ النظام جاهز ومحدث لعمود الملاحظات');
+    console.log('✅ النظام جاهز للاستخدام');
+    console.log('🔐 نظام الأمان: مفعّل');
 });
 </script>
 </body>
