@@ -308,6 +308,9 @@ def get_custom_fees():
 # =========================
 # Save All Changes
 # =========================
+# =========================
+# Save All Changes
+# =========================
 @app.route('/save', methods=['POST'])
 def save():
     try:
@@ -321,29 +324,22 @@ def save():
         new_fees = data.get("fees", {})
         custom_fees = data.get("customFees", {})
         
-        # 1. جلب البيانات الحالية من الشيت
+        # 1. جلب البيانات من الشيت
         all_data = sheet.get_all_values()
-        if not all_data:
-            return jsonify({"status": "failed", "message": "لا توجد بيانات في الشيت"})
-            
         headers = all_data[0]
         
-        # 2. تحديث المصفوفة بالبيانات القادمة (بما فيها الملاحظات)
+        # 2. تحديث المصفوفة بالبيانات القادمة
         if updates_by_row:
             for row_index_str, updates in updates_by_row.items():
-                try:
-                    # row_index_str هو رقم السطر القادم من data-row في الـ HTML
-                    row_idx = int(row_index_str) + 1 
-                    if row_idx < len(all_data):
-                        for col_name, value in updates.items():
-                            if col_name in headers:
-                                col_idx = headers.index(col_name)
-                                all_data[row_idx][col_idx] = value
-                except:
-                    continue
+                row_idx = int(row_index_str) + 1 
+                if row_idx < len(all_data):
+                    for col_name, value in updates.items():
+                        # سيبحث الكود هنا عن عمود "ملاحظات" الذي أرسلته الجافاسكريبت
+                        if col_name in headers:
+                            col_idx = headers.index(col_name)
+                            all_data[row_idx][col_idx] = value
 
-        # 3. منطق الحسابات المالية (Server-side) لضمان دقة الشيت
-        # ملاحظة: هذا الجزء سيقرأ الملاحظات المحدثة للتو للبحث عن EXTRA
+        # 3. الحسابات المالية (نفس كودك السابق)
         BASE_FEES = 28500
         import re
         
@@ -359,22 +355,20 @@ def save():
                 if status in ["TRUE", "PAID"]:
                     fee = custom_fees.get(col, {}).get(client_name)
                     if fee is None: fee = new_fees.get(col, 0)
-                    
                     if isinstance(fee, str) and '$' in fee:
                         dollar_total += float(fee.replace('$', '').strip() or 0)
                     else:
                         additionals += float(fee or 0)
 
-            # فحص EXTRA من الملاحظات المحدثة
-            notes = row_dict.get('الملاحظات', '')
-            extra_match = re.search(r'EXTRA:(-?\d+)', str(notes))
+            # فحص EXTRA من عمود "ملاحظات" الجديد
+            current_notes = row_dict.get('ملاحظات', '')
+            extra_match = re.search(r'EXTRA:(-?\d+)', str(current_notes))
             if extra_match:
                 additionals += float(extra_match.group(1))
 
             received = float(row_dict.get('جملة المستلم', 0) or 0)
             total_required = BASE_FEES + additionals
             
-            # تحديث أعمدة الإجماليات في المصفوفة قبل الحفظ
             if "إجمالي دولار ($)" in headers:
                 all_data[i][headers.index("إجمالي دولار ($)")] = f"{dollar_total:.2f} $"
             if "جملة المطلوب" in headers:
@@ -382,10 +376,9 @@ def save():
             if "جملة المتبقي" in headers:
                 all_data[i][headers.index("جملة المتبقي")] = int(total_required - received)
 
-        # 4. الحفظ النهائي في قوقل شيت
+        # 4. الحفظ النهائي
         sheet.update('A1', all_data)
         
-        # تحديث الإعدادات والـ Cache
         if new_fees and settings_sheet:
             fees_data = [["الخدمة", "المبلغ"]]
             for s, a in new_fees.items(): fees_data.append([s, a])
@@ -394,7 +387,6 @@ def save():
 
         return jsonify({"status": "success"})
     except Exception as e:
-        logger.error(f"Save error: {str(e)}")
         return jsonify({"status": "failed", "message": str(e)})
 # =========================
 # Add New Client
