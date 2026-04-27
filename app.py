@@ -308,9 +308,6 @@ def get_custom_fees():
 # =========================
 # Save All Changes
 # =========================
-# =========================
-# Save All Changes
-# =========================
 @app.route('/save', methods=['POST'])
 def save():
     try:
@@ -321,74 +318,25 @@ def save():
             return jsonify({"status": "failed", "message": "كلمة السر خاطئة"})
 
         updates_by_row = data.get("updates", {})
-        new_fees = data.get("fees", {})
-        custom_fees = data.get("customFees", {})
-        
-        # 1. جلب البيانات من الشيت
         all_data = sheet.get_all_values()
         headers = all_data[0]
         
-        # 2. تحديث المصفوفة بالبيانات القادمة
         if updates_by_row:
             for row_index_str, updates in updates_by_row.items():
-                row_idx = int(row_index_str) + 1 
+                row_idx = int(row_index_str) + 1
                 if row_idx < len(all_data):
                     for col_name, value in updates.items():
-                        # سيبحث الكود هنا عن عمود "ملاحظات" الذي أرسلته الجافاسكريبت
+                        # سيبحث عن اسم "الملاحظات" في الهيدر ويضع القيمة فيه
                         if col_name in headers:
-                            col_idx = headers.index(col_name)
-                            all_data[row_idx][col_idx] = value
+                            c_idx = headers.index(col_name)
+                            all_data[row_idx][c_idx] = value
 
-        # 3. الحسابات المالية (نفس كودك السابق)
-        BASE_FEES = 28500
-        import re
-        
-        for i in range(1, len(all_data)):
-            row_dict = dict(zip(headers, all_data[i]))
-            client_name = row_dict.get('الاسم', '')
-            
-            dollar_total = 0.0
-            additionals = 0.0
-            
-            for col in TICK_COLUMNS:
-                status = str(row_dict.get(col, '')).upper()
-                if status in ["TRUE", "PAID"]:
-                    fee = custom_fees.get(col, {}).get(client_name)
-                    if fee is None: fee = new_fees.get(col, 0)
-                    if isinstance(fee, str) and '$' in fee:
-                        dollar_total += float(fee.replace('$', '').strip() or 0)
-                    else:
-                        additionals += float(fee or 0)
-
-            # فحص EXTRA من عمود "ملاحظات" الجديد
-            current_notes = row_dict.get('ملاحظات', '')
-            extra_match = re.search(r'EXTRA:(-?\d+)', str(current_notes))
-            if extra_match:
-                additionals += float(extra_match.group(1))
-
-            received = float(row_dict.get('جملة المستلم', 0) or 0)
-            total_required = BASE_FEES + additionals
-            
-            if "إجمالي دولار ($)" in headers:
-                all_data[i][headers.index("إجمالي دولار ($)")] = f"{dollar_total:.2f} $"
-            if "جملة المطلوب" in headers:
-                all_data[i][headers.index("جملة المطلوب")] = int(total_required)
-            if "جملة المتبقي" in headers:
-                all_data[i][headers.index("جملة المتبقي")] = int(total_required - received)
-
-        # 4. الحفظ النهائي
         sheet.update('A1', all_data)
-        
-        if new_fees and settings_sheet:
-            fees_data = [["الخدمة", "المبلغ"]]
-            for s, a in new_fees.items(): fees_data.append([s, a])
-            settings_sheet.update('A1', fees_data)
-            clear_fees_cache()
-
+        logger.info("✅ تم تحديث جوجل شيت بنجاح")
         return jsonify({"status": "success"})
     except Exception as e:
+        logger.error(f"❌ خطأ في الحفظ: {str(e)}")
         return jsonify({"status": "failed", "message": str(e)})
-# =========================
 # Add New Client
 # =========================
 @app.route('/add_client', methods=['POST'])
