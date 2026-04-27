@@ -225,7 +225,8 @@
         </td>
 
         <td class="text-center">
-            <input type="hidden" class="note-data edit-input" data-col="ملاحظات" value="{{ client.get('ملاحظات', '') }}">
+            <input type="hidden" class="note-data edit-input" data-col="ملاحظات" 
+       value="{{ client.get('الملاحظات', '') }}{{ client.get('ملاحظات', '') }}">
             <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showNote(this)">👁️ ملاحظة</button>
             <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
         </td>
