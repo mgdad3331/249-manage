@@ -8,6 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
+        /* تجربة المستخدم: تحويل الأيقونات لأزرار في وضع القراءة */
+.edit-locked .tri-state-toggle, .edit-locked .state-done, .edit-locked .state-paid {
+    cursor: pointer !important;
+    transition: transform 0.2s;
+}
+.edit-locked .tri-state-toggle:hover {
+    transform: scale(1.2); /* تكبير بسيط عند الوقوف بالماوس */
+}
         /* ==================== الخطوط والإعدادات الأساسية ==================== */
         body { font-family: 'Tajawal', sans-serif; background-color: #f4f7fa; direction: rtl; }
         .navbar { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 4px solid #f59e0b; padding: 1rem 2rem; }
@@ -66,7 +74,7 @@
             border-radius: 4px !important; cursor: pointer; background-color: #fff; margin: auto; display: block;
             opacity: 1 !important; background-size: 100% 100% !important; background-repeat: no-repeat !important;
         }
-        .tick-input:disabled, .tri-state-toggle { opacity: 1 !important; filter: none !important; pointer-events: none; }
+        .tick-input:disabled { opacity: 1 !important; filter: none !important; pointer-events: none; }
         .edit-active .tick-input, .edit-active .tri-state-toggle { pointer-events: auto; }
 
         .state-paid { background-color: #ffc107 !important; border-color: #ffc107 !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important; }
@@ -113,6 +121,15 @@
         }
         .custom-fee-item:hover {
             background: #e9ecef;
+        }
+        /* تحسين تجربة المشاهد عند الوقوف على علامات الصح */
+        .edit-locked .tri-state-toggle {
+            cursor: pointer !important;
+            transition: transform 0.2s;
+        }
+        .edit-locked .tri-state-toggle:hover {
+            transform: scale(1.15); /* تكبير بسيط عند المرور بالماوس */
+            filter: brightness(0.9);
         }
     </style>
 </head>
@@ -636,17 +653,35 @@ function applySmartFee() {
 // =========================
 // Tri-State Toggle
 // =========================
+    // =========================
+// التعديل الذكي: التبديل بين الحالات (للالأدمن) وفتح الملاحظات (للمشاهد)
+// =========================
 function toggleTriState(el) {
-    if (!activePass || activePass.trim() === "") { 
-        ToastManager.warning('يجب فتح وضع التعديل أولاً!', 2000); 
-        return; 
+    // 1. فحص الحالة: هل وضع التعديل مغلق؟ (واجهة المشاهد)
+    if (!$('body').hasClass('edit-active')) { 
+        // البحث عن صف العميل الحالي
+        const row = $(el).closest('tr');
+        // البحث عن زر الملاحظات في نفس الصف
+        const noteBtn = row.find('button[onclick="showNote(this)"]');
+        
+        if (noteBtn.length > 0) {
+            // استدعاء دالة عرض الملاحظات الأصلية ليراها المشاهد
+            showNote(noteBtn[0]);
+            ToastManager.info('عرض ملاحظات وتفاصيل الحالة...', 1200);
+        }
+        return; // التوقف هنا لكي لا تتغير الحالة للمشاهد
     }
+
+    // 2. إذا كان التعديل مفتوحاً (واجهة الأدمن فقط)
     let val = $(el).attr('data-value');
     let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
-    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    
+    $(el).attr('data-value', newVal)
+         .removeClass('state-paid state-done')
+         .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    
     calculateFinances();
 }
-
 // =========================
 // Notes Management
 // =========================
