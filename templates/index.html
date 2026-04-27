@@ -193,7 +193,7 @@
             <td class="text-center">
                 {% if col in tick_columns %}
                     <div class="tri-state-toggle {{ 'state-paid' if val|string|upper == 'PAID' else ('state-done' if val|string|upper == 'TRUE' else '') }}" 
-                         data-col="{{ col }}" data-value="{{ val|string|upper }}" onclick="toggleTriState(this)">
+                         data-col="{{ col }}" data-value="{{ val|string|upper }}" onclick="toggleTriState(this, '{{ col }}')">
                     </div>
                 {% else %}
                     <span class="view-text fw-bold text-dark">{{ val }}</span>
@@ -656,31 +656,63 @@ function applySmartFee() {
     // =========================
 // التعديل الذكي: التبديل بين الحالات (للالأدمن) وفتح الملاحظات (للمشاهد)
 // =========================
-function toggleTriState(el) {
-    // 1. فحص الحالة: هل وضع التعديل مغلق؟ (واجهة المشاهد)
-    if (!$('body').hasClass('edit-active')) { 
-        // البحث عن صف العميل الحالي
+    function toggleTriState(el, colName) {
+    // 1. إذا كان التعديل مغلق (واجهة المشاهد)
+    if (!$('body').hasClass('edit-active')) {
         const row = $(el).closest('tr');
-        // البحث عن زر الملاحظات في نفس الصف
-        const noteBtn = row.find('button[onclick="showNote(this)"]');
+        const allNotes = row.find('.note-data').val() || "";
         
-        if (noteBtn.length > 0) {
-            // استدعاء دالة عرض الملاحظات الأصلية ليراها المشاهد
-            showNote(noteBtn[0]);
-            ToastManager.info('عرض ملاحظات وتفاصيل الحالة...', 1200);
+        // استخراج الملاحظة الخاصة بهذا العمود فقط باستخدام Regex
+        const regex = new RegExp(`\\[${colName}\\]:(.*?)\\[\\/${colName}\\]`, "s");
+        const match = allNotes.match(regex);
+        const specificNote = match ? match[1].trim() : "";
+
+        // عرض المودال مع العنوان المخصص والمحتوى
+        $('#noteModalLabel').text("ملاحظة " + colName); // تغيير عنوان المودال
+        $('#noteTextArea').val(specificNote);
+        
+        // جعل الزر يظهر للأدمن فقط للحفظ في هذا الجزء المخصص
+        if (activePass) {
+            $('#saveNoteBtn').attr('onclick', `saveSpecificNote('${colName}')`).removeClass('d-none');
+            $('#noteTextArea').prop('readonly', false);
+        } else {
+            $('#saveNoteBtn').addClass('d-none');
+            $('#noteTextArea').prop('readonly', true);
         }
-        return; // التوقف هنا لكي لا تتغير الحالة للمشاهد
+
+        new bootstrap.Modal(document.getElementById('noteModal')).show();
+        return;
     }
 
-    // 2. إذا كان التعديل مفتوحاً (واجهة الأدمن فقط)
+    // 2. إذا كان التعديل مفتوح (واجهة الأدمن) - تغيير الحالة كالمعتاد
     let val = $(el).attr('data-value');
     let newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
-    
-    $(el).attr('data-value', newVal)
-         .removeClass('state-paid state-done')
-         .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
-    
+    $(el).attr('data-value', newVal).removeClass('state-paid state-done').addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
     calculateFinances();
+}
+
+// دالة جديدة لحفظ الملاحظة داخل جزء مخصص
+function saveSpecificNote(colName) {
+    if (!currentNoteInput) return;
+    
+    let allNotes = currentNoteInput.val();
+    const newText = $('#noteTextArea').val().trim();
+    const tagStart = `[${colName}]`;
+    const tagEnd = `[/${colName}]`;
+    
+    const regex = new RegExp(`\\[${colName}\\](.*?)\\[\\/${colName}\\]`, "s");
+    
+    if (allNotes.match(regex)) {
+        // تحديث النص الموجود
+        allNotes = allNotes.replace(regex, `${tagStart}${newText}${tagEnd}`);
+    } else {
+        // إضافة نص جديد
+        allNotes += `\n${tagStart}${newText}${tagEnd}`;
+    }
+    
+    currentNoteInput.val(allNotes);
+    bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+    ToastManager.success(`تم حفظ ملاحظة ${colName}`);
 }
 // =========================
 // Notes Management
