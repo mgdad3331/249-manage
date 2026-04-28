@@ -143,7 +143,7 @@
                                 {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
                                     <th>
                                         {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
-                                            <span class="fee-header-link" onclick="openFeeModalReadOnly('{{ col }}')" title="اضغط لعرض تفاصيل الرسوم">{{ col }} 🔍</span>
+                                            <span class="fee-header-link" onclick="openFeeModalReadOnly('{{ col }}')" title="اضغط لعرض تفاصيل الرسوم">{{ col }} </span>
                                             <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
                                         {% else %}
                                             {{ col }}
