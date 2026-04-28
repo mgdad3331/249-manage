@@ -82,14 +82,7 @@
             left: 1px;
         }
         /* ✅ نوت إجراء: أيقونة صغيرة تدل على وجود ملاحظة */
-        .procedure-note-indicator {
-            display: inline-block;
-            width: 8px; height: 8px;
-            background: #f59e0b;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px; left: 2px;
-        }
+        
 
         .tick-input { appearance: none; }
         .edit-input { width: 95%; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5; border-radius: 5px; }
@@ -141,6 +134,16 @@
             font-weight: bold;
             font-size: 0.9rem;
         }
+        .fee-header-link {
+    cursor: pointer;
+    color: #0f172a;
+    border-bottom: 1px dashed #f59e0b;
+    padding-bottom: 1px;
+    transition: color 0.2s;
+}
+.fee-header-link:hover {
+    color: #b45309;
+}
 
         /* hover على الصح في وضع القراءة */
         .edit-locked .tri-state-toggle {
@@ -185,12 +188,16 @@
                         {% if clients %}
                             {% for col in clients[0].keys() %}
                                 {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
-                                    <th>
-                                        {{ col }}
-                                        {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
-                                            <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
-                                        {% endif %}
-                                    </th>
+                        <th>
+    {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
+        {# النص قابل للنقر للجميع - الأدمن يرى الترس أيضاً #}
+        <span class="fee-header-link" onclick="openFeeModalReadOnly('{{ col }}')" 
+              title="اضغط لعرض تفاصيل الرسوم">{{ col }} 🔍</span>
+        <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
+    {% else %}
+        {{ col }}
+    {% endif %}
+</th>
                                 {% endif %}
                             {% endfor %}
                             <th class="col-finance" style="background-color: #d1fae5 !important; color: #065f46 !important;">إجمالي دولار ($)</th>
@@ -217,14 +224,7 @@
                                          data-has-note="{{ 'true' if has_note_col else 'false' }}"
                                          onclick="toggleTriState(this, '{{ col }}')">
                                     </div>
-                                    {# مؤشر بصري صغير إذا كان لهذا العمود ملاحظات إجراء #}
-                                    {% if has_note_col %}
-                                    {% set note_key = "ملاحظات_" + col %}
-                                    {% if client.get(note_key, '') %}
-                                        <span class="procedure-note-indicator" title="يوجد ملاحظة"></span>
-                                    {% endif %}
-                                    {% endif %}
-                                {% else %}
+                                
                                     <span class="view-text fw-bold text-dark">{{ val }}</span>
                                     <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
                                            value="{{ val }}" data-col="{{ col }}">
@@ -594,13 +594,39 @@ function closeEditMode() {
 
 // =========================
 // Fee Modal
-// =========================
-function openFeeModal(col) { 
-    activeFeeCol = col; $('#currentFeeCol').text(col); $('#newFeeAmount').val(feeDatabase[col] || 0);
-    populateClientSelect(); displayCustomFees();
-    new bootstrap.Modal(document.getElementById('feeSettingsModal')).show(); 
+    function openFeeModalReadOnly(col) {
+    // نفتح نفس الـ modal لكن بوضع القراءة فقط
+    activeFeeCol = col;
+    $('#currentFeeCol').text(col);
+    $('#newFeeAmount').val(feeDatabase[col] || 0).prop('disabled', true);
+    
+    populateClientSelect();
+    $('#customClientSelect').prop('disabled', true);
+    $('#customClientAmount').prop('disabled', true);
+    
+    // إخفاء أزرار التعديل
+    $('#feeSettingsModal .btn-warning[onclick="applySmartFee()"]').hide();
+    $('#feeSettingsModal .col-md-1 button').hide(); // زر +
+    
+    displayCustomFees();
+    // إخفاء أزرار حذف الرسوم المخصصة
+    $('#customFeesList .btn-danger').hide();
+    
+    // تغيير عنوان المودال
+    $('#feeSettingsModal .modal-title').html('🔍 تفاصيل رسوم: <span id="currentFeeCol">' + col + '</span>');
+    
+    new bootstrap.Modal(document.getElementById('feeSettingsModal')).show();
+        document.getElementById('feeSettingsModal').addEventListener('hidden.bs.modal', function() {
+    // إعادة كل شيء لوضع التعديل الطبيعي
+    $('#newFeeAmount').prop('disabled', false);
+    $('#customClientSelect').prop('disabled', false);
+    $('#customClientAmount').prop('disabled', false);
+    $('#feeSettingsModal .btn-warning[onclick="applySmartFee()"]').show();
+    $('#feeSettingsModal .col-md-1 button').show();
+    $('#customFeesList .btn-danger').show();
+    $('#feeSettingsModal .modal-title').html('⚙️ إعدادات رسوم: <span id="currentFeeCol"></span>');
+});
 }
-
 function applySmartFee() { 
     feeDatabase[activeFeeCol] = parseFloat($('#newFeeAmount').val()) || 0;
     bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
