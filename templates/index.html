@@ -567,7 +567,7 @@ function openFeeModalReadOnly(col) {
     displayCustomFees();
     // إخفاء أزرار الحذف بعد العرض
     setTimeout(() => { $('.remove-fee-btn').hide(); }, 50);
-    $('#feeSettingsModal .modal-title').html('🔍 تفاصيل رسوم: <span id="currentFeeCol">' + col + '</span>');
+    $('#feeSettingsModal .modal-title').html('تفاصيل رسوم: <span id="currentFeeCol">' + col + '</span>');
     new bootstrap.Modal(document.getElementById('feeSettingsModal')).show();
 }
 
