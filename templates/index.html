@@ -25,7 +25,7 @@
             white-space: nowrap !important;
             padding-right: 15px !important;
             padding-left: 15px !important;
-            text-align: right !important;
+            text-align: center !important;
             border-left: 3px solid #e2e8f0;
         }
 
@@ -70,90 +70,41 @@
         .state-paid { background-color: #ffc107 !important; border-color: #ffc107 !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important; }
         .state-done, .tick-input:checked { background-color: #0d6efd !important; border-color: #0d6efd !important; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important; }
 
-        /* ✅ تمييز بصري للأعمدة التي بها ملاحظات إجراءات */
-        .has-procedure-note {
-            position: relative;
-        }
-        .has-procedure-note::after {
-            content: '📋';
-            font-size: 10px;
-            position: absolute;
-            top: 1px;
-            left: 1px;
-        }
-        /* ✅ نوت إجراء: أيقونة صغيرة تدل على وجود ملاحظة */
-        
+        .has-procedure-note { position: relative; }
+        .has-procedure-note::after { content: '📋'; font-size: 10px; position: absolute; top: 1px; left: 1px; }
 
         .tick-input { appearance: none; }
         .edit-input { width: 95%; border: 1px solid #f59e0b; font-weight: bold; background-color: #fffcf5; border-radius: 5px; }
         #searchInput { height: 45px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
 
-        .toast-container {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none;
-        }
-        .custom-toast {
-            min-width: 350px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            pointer-events: auto; animation: toastSlideIn 0.4s ease; padding: 1rem; margin-bottom: 0.5rem;
-        }
+        .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; }
+        .custom-toast { min-width: 350px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); pointer-events: auto; animation: toastSlideIn 0.4s ease; padding: 1rem; margin-bottom: 0.5rem; }
         @keyframes toastSlideIn { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
         .toast-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
         .toast-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
         .toast-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
         .toast-info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
 
-        .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8);
-            display: none; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(5px);
-        }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); display: none; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(5px); }
         .loading-overlay.active { display: flex; }
-        .loader {
-            width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.2);
-            border-top: 5px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite;
-        }
+        .loader { width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.2); border-top: 5px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loader-text { color: white; font-size: 1.1rem; font-weight: 600; margin-top: 1rem; }
 
-        .custom-fee-item {
-            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;
-            padding: 0.75rem; margin-bottom: 0.5rem;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .custom-fee-item { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
         .custom-fee-item:hover { background: #e9ecef; }
 
-        /* ✅ تنسيق modal الإجراءات */
-        .procedure-modal-header {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: white;
-            border-bottom: 3px solid #f59e0b;
-        }
-        .procedure-col-badge {
-            background: #f59e0b;
-            color: #1e293b;
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        .fee-header-link {
-    cursor: pointer;
-    color: #0f172a;
-    border-bottom: 1px dashed #f59e0b;
-    padding-bottom: 1px;
-    transition: color 0.2s;
-}
-.fee-header-link:hover {
-    color: #b45309;
-}
+        .procedure-modal-header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; border-bottom: 3px solid #f59e0b; }
+        .procedure-col-badge { background: #f59e0b; color: #1e293b; padding: 3px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
 
-        /* hover على الصح في وضع القراءة */
-        .edit-locked .tri-state-toggle {
-            cursor: pointer !important;
-            transition: transform 0.2s;
-        }
-        .edit-locked .tri-state-toggle:hover {
-            transform: scale(1.15);
-            filter: brightness(0.9);
-        }
+        .fee-header-link { cursor: pointer; color: #0f172a; border-bottom: 1px dashed #f59e0b; padding-bottom: 1px; transition: color 0.2s; }
+        .fee-header-link:hover { color: #b45309; }
+
+        .edit-locked .tri-state-toggle { cursor: pointer !important; transition: transform 0.2s; }
+        .edit-locked .tri-state-toggle:hover { transform: scale(1.15); filter: brightness(0.9); }
+
+        /* ترقيم العملاء */
+        .row-number { color: #94a3b8; font-weight: 700; font-size: 0.85rem; }
     </style>
 </head>
 <body class="edit-locked">
@@ -186,18 +137,18 @@
                 <thead>
                     <tr>
                         {% if clients %}
+                            <!-- ✅ إصلاح 2: عمود الترقيم في الهيدر -->
+                            <th class="text-center">#</th>
                             {% for col in clients[0].keys() %}
                                 {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
-                        <th>
-    {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
-        {# النص قابل للنقر للجميع - الأدمن يرى الترس أيضاً #}
-        <span class="fee-header-link" onclick="openFeeModalReadOnly('{{ col }}')" 
-              title="اضغط لعرض تفاصيل الرسوم">{{ col }} 🔍</span>
-        <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
-    {% else %}
-        {{ col }}
-    {% endif %}
-</th>
+                                    <th>
+                                        {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
+                                            <span class="fee-header-link" onclick="openFeeModalReadOnly('{{ col }}')" title="اضغط لعرض تفاصيل الرسوم">{{ col }} 🔍</span>
+                                            <span class="fee-config-btn" onclick="openFeeModal('{{ col }}')">⚙️</span>
+                                        {% else %}
+                                            {{ col }}
+                                        {% endif %}
+                                    </th>
                                 {% endif %}
                             {% endfor %}
                             <th class="col-finance" style="background-color: #d1fae5 !important; color: #065f46 !important;">إجمالي دولار ($)</th>
@@ -211,12 +162,14 @@
                 <tbody>
                     {% for client in clients %}
                     <tr data-row="{{ loop.index0 }}">
+                        <!-- ✅ إصلاح 2: رقم الصف -->
+                        <td class="text-center row-number">{{ loop.index }}</td>
+
                         {% for col, val in client.items() %}
-                            {# تخطي الأعمدة المخفية #}
                             {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
                             <td class="text-center" style="position:relative;">
                                 {% if col in tick_columns %}
-                                    {# ✅ الأعمدة ذات الملاحظات: data-has-note="true" #}
+                                    <!-- ✅ إصلاح 1: tick columns تأخذ toggle فقط -->
                                     {% set has_note_col = col in procedure_note_columns %}
                                     <div class="tri-state-toggle {{ 'state-paid' if val|string|upper == 'PAID' else ('state-done' if val|string|upper == 'TRUE' else '') }}" 
                                          data-col="{{ col }}"
@@ -224,7 +177,8 @@
                                          data-has-note="{{ 'true' if has_note_col else 'false' }}"
                                          onclick="toggleTriState(this, '{{ col }}')">
                                     </div>
-                                
+                                {% else %}
+                                    <!-- ✅ إصلاح 1: الأعمدة النصية تظهر بشكل صحيح خارج الـ if -->
                                     <span class="view-text fw-bold text-dark">{{ val }}</span>
                                     <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto" 
                                            value="{{ val }}" data-col="{{ col }}">
@@ -261,7 +215,7 @@
     </div>
 </main>
 
-<!-- ✅ Modal: ملاحظات الإجراءات (استلام الملف / توثيقات / معادلة) -->
+<!-- Modal: ملاحظات الإجراءات -->
 <div class="modal fade" id="procedureNoteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -275,9 +229,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <textarea id="procedureNoteTextArea" class="form-control" rows="6" 
-                          readonly 
-                          placeholder="لا توجد ملاحظات بعد... اضغط 'تعديل' لإضافة ملاحظة"></textarea>
+                <textarea id="procedureNoteTextArea" class="form-control" rows="6" readonly placeholder="لا توجد ملاحظات بعد... اضغط 'تعديل' لإضافة ملاحظة"></textarea>
                 <div class="mt-2 text-muted small" id="procedureSaveHint" style="display:none;">
                     💡 الملاحظة ستُحفظ في عمود مخصص لهذا الإجراء في قاعدة البيانات
                 </div>
@@ -398,10 +350,8 @@ var customFeesData = {};
 var allClientNames = [];
 var DOLLAR_RATE = 50;
 
-// ✅ الأعمدة التي لها ملاحظات إجراءات منفصلة (تأتي من الباك)
 var PROCEDURE_NOTE_COLUMNS = {{ procedure_note_columns | tojson | safe }};
 
-// ✅ بيانات الـ modal الحالي للإجراءات
 var currentProcedure = {
     rowIndex: null,
     colName: "",
@@ -506,7 +456,7 @@ function displayCustomFees() {
         let displayAmount, badgeClass = 'bg-primary';
         if (typeof amount === 'string' && amount.includes('$')) { displayAmount = amount; badgeClass = 'bg-success'; }
         else { displayAmount = parseFloat(amount).toLocaleString('en-US') + ' جنيه'; }
-        container.append(`<div class="custom-fee-item"><div><strong>${clientName}</strong><span class="badge ${badgeClass} ms-2">${displayAmount}</span></div><button class="btn btn-sm btn-danger" onclick="removeCustomFee('${clientName}')">❌</button></div>`);
+        container.append(`<div class="custom-fee-item"><div><strong>${clientName}</strong><span class="badge ${badgeClass} ms-2">${displayAmount}</span></div><button class="btn btn-sm btn-danger remove-fee-btn" onclick="removeCustomFee('${clientName}')">❌</button></div>`);
     }
 }
 
@@ -524,7 +474,8 @@ function removeCustomFee(clientName) {
 function calculateFinances() {
     $('#client-table tbody tr').each(function() {
         let row = $(this);
-        let clientName = row.find('td:first span.view-text').text().trim();
+        // ✅ td:nth-child(2) بسبب إضافة عمود الترقيم
+        let clientName = row.find('td:nth-child(2) span.view-text').text().trim();
         let baseFees = 28500, additionals = 0, dollarTotal = 0;
         
         row.find('.tick-input, .tri-state-toggle').each(function() {
@@ -594,39 +545,32 @@ function closeEditMode() {
 
 // =========================
 // Fee Modal
-    function openFeeModalReadOnly(col) {
-    // نفتح نفس الـ modal لكن بوضع القراءة فقط
+// =========================
+function openFeeModal(col) {
+    activeFeeCol = col;
+    $('#currentFeeCol').text(col);
+    $('#newFeeAmount').val(feeDatabase[col] || 0);
+    populateClientSelect();
+    displayCustomFees();
+    new bootstrap.Modal(document.getElementById('feeSettingsModal')).show();
+}
+
+function openFeeModalReadOnly(col) {
     activeFeeCol = col;
     $('#currentFeeCol').text(col);
     $('#newFeeAmount').val(feeDatabase[col] || 0).prop('disabled', true);
-    
     populateClientSelect();
     $('#customClientSelect').prop('disabled', true);
     $('#customClientAmount').prop('disabled', true);
-    
-    // إخفاء أزرار التعديل
     $('#feeSettingsModal .btn-warning[onclick="applySmartFee()"]').hide();
-    $('#feeSettingsModal .col-md-1 button').hide(); // زر +
-    
+    $('#feeSettingsModal .col-md-1 button').hide();
     displayCustomFees();
-    // إخفاء أزرار حذف الرسوم المخصصة
-    $('#customFeesList .btn-danger').hide();
-    
-    // تغيير عنوان المودال
+    // إخفاء أزرار الحذف بعد العرض
+    setTimeout(() => { $('.remove-fee-btn').hide(); }, 50);
     $('#feeSettingsModal .modal-title').html('🔍 تفاصيل رسوم: <span id="currentFeeCol">' + col + '</span>');
-    
     new bootstrap.Modal(document.getElementById('feeSettingsModal')).show();
-        document.getElementById('feeSettingsModal').addEventListener('hidden.bs.modal', function() {
-    // إعادة كل شيء لوضع التعديل الطبيعي
-    $('#newFeeAmount').prop('disabled', false);
-    $('#customClientSelect').prop('disabled', false);
-    $('#customClientAmount').prop('disabled', false);
-    $('#feeSettingsModal .btn-warning[onclick="applySmartFee()"]').show();
-    $('#feeSettingsModal .col-md-1 button').show();
-    $('#customFeesList .btn-danger').show();
-    $('#feeSettingsModal .modal-title').html('⚙️ إعدادات رسوم: <span id="currentFeeCol"></span>');
-});
 }
+
 function applySmartFee() { 
     feeDatabase[activeFeeCol] = parseFloat($('#newFeeAmount').val()) || 0;
     bootstrap.Modal.getInstance(document.getElementById('feeSettingsModal')).hide(); 
@@ -636,48 +580,44 @@ function applySmartFee() {
 }
 
 // =========================
-// ✅ toggleTriState: المنطق الجديد الكامل
+// ✅ إصلاح 4: toggleTriState بدون قوس زائد
 // =========================
 function toggleTriState(el, colName) {
     var col = colName ? colName.trim() : "";
     var hasNote = $(el).data('has-note') === true || $(el).attr('data-has-note') === 'true';
 
     if (!$('body').hasClass('edit-active')) {
-        // ====== وضع المشاهد ======
+        // وضع المشاهد
         if (hasNote) {
-            // هذا العمود له ملاحظات إجراء → افتح modal الإجراءات
             openProcedureNoteModal(el, col);
         }
-        // باقي الأعمدة: لا شيء يحدث عند الضغط في وضع المشاهد
         return;
     }
 
-    // ====== وضع الأدمن ======
-    // ====== وضع الأدمن ======
-// كل الأعمدة (سواء بها ملاحظات أو لا) تغير الحالة فقط
-var val = $(el).attr('data-value');
-var newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
-$(el).attr('data-value', newVal)
-     .removeClass('state-paid state-done')
-     .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
-calculateFinances();
-    }
+    // وضع الأدمن - كل الأعمدة تغير الحالة فقط
+    var val = $(el).attr('data-value');
+    var newVal = (val === "PAID") ? "TRUE" : (val === "TRUE" ? "FALSE" : "PAID");
+    $(el).attr('data-value', newVal)
+         .removeClass('state-paid state-done')
+         .addClass(newVal === "PAID" ? "state-paid" : (newVal === "TRUE" ? "state-done" : ""));
+    calculateFinances();
+}
+
 // =========================
-// ✅ Procedure Note Modal
+// Procedure Note Modal
 // =========================
 function openProcedureNoteModal(toggleEl, colName) {
     var row = $(toggleEl).closest('tr');
     var rowIndex = parseInt(row.data('row'));
-    var clientName = row.find('td:first span.view-text').text().trim();
-    if (!clientName) clientName = row.find('td:first .edit-input').val().trim();
+    // ✅ td:nth-child(2) بسبب عمود الترقيم
+    var clientName = row.find('td:nth-child(2) span.view-text').text().trim();
+    if (!clientName) clientName = row.find('td:nth-child(2) .edit-input').val().trim();
 
-    // حفظ البيانات الحالية
     currentProcedure.rowIndex = rowIndex;
     currentProcedure.colName = colName;
     currentProcedure.clientName = clientName;
     currentProcedure.passForSave = "";
 
-    // تحديث الـ modal
     $('#procedureColLabel').text(colName);
     $('#procedureClientLabel').text(clientName);
     $('#procedureNoteTextArea').val('').prop('readonly', true);
@@ -685,12 +625,10 @@ function openProcedureNoteModal(toggleEl, colName) {
     $('#unlockProcedureNoteBtn').removeClass('d-none');
     $('#procedureSaveHint').hide();
 
-    // إذا كان الأدمن مفتوح، افتح مباشرة للتعديل
     if ($('body').hasClass('edit-active')) {
         currentProcedure.passForSave = activePass;
     }
 
-    // جلب الملاحظة من الباك
     LoadingManager.show('جاري تحميل الملاحظة...');
     fetch('/get_procedure_note', {
         method: 'POST',
@@ -705,12 +643,9 @@ function openProcedureNoteModal(toggleEl, colName) {
         } else {
             ToastManager.warning('تعذر تحميل الملاحظة: ' + (res.message || ''));
         }
-
-        // إذا أدمن: افتح للتعديل مباشرة
         if ($('body').hasClass('edit-active')) {
             enableProcedureNoteEdit();
         }
-
         new bootstrap.Modal(document.getElementById('procedureNoteModal')).show();
     })
     .catch(() => {
@@ -723,7 +658,6 @@ function openProcedureNoteModal(toggleEl, colName) {
 function unlockProcedureNote() {
     var pwd = prompt("أدخل كلمة السر لتعديل ملاحظة " + currentProcedure.colName + ":");
     if (!pwd || pwd.trim() === "") return;
-
     LoadingManager.show('جاري التحقق...');
     fetch('/verify_password', {
         method: 'POST',
@@ -753,15 +687,9 @@ function enableProcedureNoteEdit() {
 
 function saveProcedureNote() {
     var noteText = $('#procedureNoteTextArea').val();
+    if (!currentProcedure.passForSave) { ToastManager.error('كلمة السر مطلوبة!'); return; }
+    if (currentProcedure.rowIndex === null) { ToastManager.error('خطأ: لم يتم تحديد الصف!'); return; }
 
-    if (!currentProcedure.passForSave) {
-        ToastManager.error('كلمة السر مطلوبة!'); return;
-    }
-    if (currentProcedure.rowIndex === null) {
-        ToastManager.error('خطأ: لم يتم تحديد الصف!'); return;
-    }
-
-    // إظهار spinner
     $('#procSaveText').text('جاري الحفظ...');
     $('#procSaveSpinner').removeClass('d-none');
     $('#saveProcedureNoteBtn').prop('disabled', true);
@@ -781,7 +709,6 @@ function saveProcedureNote() {
         $('#procSaveText').text('💾 حفظ في قاعدة البيانات');
         $('#procSaveSpinner').addClass('d-none');
         $('#saveProcedureNoteBtn').prop('disabled', false);
-
         if (res.status === 'success') {
             ToastManager.success(`✅ تم حفظ ملاحظة "${currentProcedure.colName}" للعميل ${currentProcedure.clientName}`);
             bootstrap.Modal.getInstance(document.getElementById('procedureNoteModal')).hide();
@@ -798,7 +725,7 @@ function saveProcedureNote() {
 }
 
 // =========================
-// General Note (زر الملاحظة العادي)
+// General Note
 // =========================
 function showGeneralNote(btn) {
     currentNoteInput = $(btn).closest('tr').find('.note-data');
@@ -862,7 +789,8 @@ function executeAdd() {
 function deleteClient(btn) {
     const row = $(btn).closest('tr');
     const rowIndex = row.data('row');
-    const clientName = row.find('td:first span.view-text').text().trim();
+    // ✅ td:nth-child(2) بسبب عمود الترقيم
+    const clientName = row.find('td:nth-child(2) span.view-text').text().trim();
     if (confirm(`هل أنت متأكد من حذف العميل: ${clientName}؟`)) {
         const password = prompt("يرجى إدخال كلمة السر للتأكيد:");
         if (!password) return;
@@ -927,6 +855,18 @@ $(document).ready(function() {
     ToastManager.init(); LoadingManager.init();
     loadClientNames(); loadCustomFees(); calculateFinances();
     $(document).on('change input', '.received-amount-input, .tick-input', calculateFinances);
+
+    // ✅ إصلاح 3: listener خارج الدالة - يُنفَّذ مرة واحدة فقط
+    document.getElementById('feeSettingsModal').addEventListener('hidden.bs.modal', function() {
+        $('#newFeeAmount').prop('disabled', false);
+        $('#customClientSelect').prop('disabled', false);
+        $('#customClientAmount').prop('disabled', false);
+        $('#feeSettingsModal .btn-warning[onclick="applySmartFee()"]').show();
+        $('#feeSettingsModal .col-md-1 button').show();
+        $('.remove-fee-btn').show();
+        $('#feeSettingsModal .modal-title').html('⚙️ إعدادات رسوم: <span id="currentFeeCol"></span>');
+    });
+
     console.log('✅ النظام جاهز | أعمدة الملاحظات:', PROCEDURE_NOTE_COLUMNS);
 });
 </script>
