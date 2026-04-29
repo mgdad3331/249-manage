@@ -460,8 +460,8 @@ def save():
                 fees_data.append([s, a])
             settings_sheet.update('A1', fees_data)
             clear_fees_cache()
+            try:
                 try:
-                    try:
                     cf_sheet = spreadsheet.worksheet("CustomFees")
                 except gspread.exceptions.WorksheetNotFound:
                     cf_sheet = spreadsheet.add_worksheet(title="CustomFees", rows="100", cols="3")
@@ -473,6 +473,7 @@ def save():
                 cf_sheet.update('A1', custom_data)
             except Exception as e:
                 logger.error(f"CustomFees save error: {e}")
+                    
         return jsonify({"status": "success"})
     except Exception as e:
         logger.error(f"Save error: {str(e)}")
