@@ -460,8 +460,6 @@ def save():
                 fees_data.append([s, a])
             settings_sheet.update('A1', fees_data)
             clear_fees_cache()
-
-        if custom_fees:
             try:
             try:
                 cf_sheet = spreadsheet.worksheet("CustomFees")
@@ -476,7 +474,6 @@ def save():
             cf_sheet.update('A1', custom_data)
         except Exception as e:
             logger.error(f"CustomFees save error: {e}")
-
         return jsonify({"status": "success"})
     except Exception as e:
         logger.error(f"Save error: {str(e)}")
