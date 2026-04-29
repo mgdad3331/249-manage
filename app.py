@@ -460,20 +460,19 @@ def save():
                 fees_data.append([s, a])
             settings_sheet.update('A1', fees_data)
             clear_fees_cache()
-            try:
-            try:
-                cf_sheet = spreadsheet.worksheet("CustomFees")
-            except gspread.exceptions.WorksheetNotFound:
-                cf_sheet = spreadsheet.add_worksheet(title="CustomFees", rows="100", cols="3")
-            custom_data = [["الخدمة", "العميل", "المبلغ"]]
-            for s, clients in custom_fees.items():
-                for c_name, amt in clients.items():
-                    if amt is not None and str(amt).strip() != "":
+                try:
+                    try:
+                    cf_sheet = spreadsheet.worksheet("CustomFees")
+                except gspread.exceptions.WorksheetNotFound:
+                    cf_sheet = spreadsheet.add_worksheet(title="CustomFees", rows="100", cols="3")
+                custom_data = [["الخدمة", "العميل", "المبلغ"]]
+                for s, clients in custom_fees.items():
+                    for c_name, amt in clients.items():
                         custom_data.append([s, c_name, amt])
-            cf_sheet.clear()
-            cf_sheet.update('A1', custom_data)
-        except Exception as e:
-            logger.error(f"CustomFees save error: {e}")
+                cf_sheet.clear()
+                cf_sheet.update('A1', custom_data)
+            except Exception as e:
+                logger.error(f"CustomFees save error: {e}")
         return jsonify({"status": "success"})
     except Exception as e:
         logger.error(f"Save error: {str(e)}")
