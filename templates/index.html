@@ -166,7 +166,7 @@
                         <td class="text-center row-number">{{ loop.index }}</td>
 
                         {% for col, val in client.items() %}
-                            {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
+                            {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") and col != "رابط الفاتورة" %}
                             <td class="text-center" style="position:relative;">
                                 {% if col in tick_columns %}
                                     <!-- ✅ إصلاح 1: tick columns تأخذ toggle فقط -->
