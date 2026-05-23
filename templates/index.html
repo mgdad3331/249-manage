@@ -140,7 +140,7 @@
                             <!-- ✅ إصلاح 2: عمود الترقيم في الهيدر -->
                             <th class="text-center">#</th>
                             {% for col in clients[0].keys() %}
-                                {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") %}
+                                {% if col != "الملاحظات" and col != "جملة المستلم" and col != "إجمالي دولار ($)" and col != "جملة المطلوب" and col != "جملة المتبقي" and not col.startswith("ملاحظات_") and col != "رابط الفاتورة" %}
                                     <th>
                                         {% if col in ["رقم وطني", "توثيقات", "معادلة", "توكيل", "قبول مبدئي", "تسليم الملف", "رسوم الوافدين"] %}
                                             <span class="fee-header-link" onclick="openFeeModalReadOnly('{{ col }}')" title="اضغط لعرض تفاصيل الرسوم">{{ col }} </span>
@@ -204,6 +204,17 @@
                         </td>
                         <td class="text-center">
                             <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
+                            {% set invoice_url = client.get('رابط الفاتورة', '') %}
+    
+    <!-- زر التحميل: يظهر للجميع إذا يوجد رابط -->
+    <a href="{{ invoice_url if invoice_url else '#' }}" 
+       class="btn btn-sm p-1 px-2 fw-bold {{ 'btn-outline-success' if invoice_url else 'btn-outline-secondary disabled' }}"
+       title="{{ 'تحميل الفاتورة' if invoice_url else 'لا يوجد رابط بعد' }}"
+       {{ 'download target="_blank"' if invoice_url else '' }}>🖨️</a>
+    
+    <!-- حقل الرابط يظهر فقط في وضع التعديل -->
+    <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto mt-1"
+           value="{{ invoice_url }}" data-col="رابط الفاتورة" placeholder="🔗 رابط التحميل المباشر...">
                             <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showGeneralNote(this)">👁️ ملاحظة</button>
                             <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
                         </td>
