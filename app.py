@@ -9,6 +9,7 @@ import logging
 import hashlib
 import secrets
 import re
+import io 
 
 # =========================
 # Flask App Configuration
@@ -554,8 +555,144 @@ def not_found(e):
 def internal_error(e):
     logger.error(f"❌ Internal server error: {str(e)}")
     return jsonify({"status": "error", "message": "حدث خطأ في الخادم"}), 500
+    # =========================
+# ✅ جديد: توليد الفاتورة المبدئية
+# أضف هذا الكود في app.py في أي مكان قبل if __name__ == '__main__'
+# =========================
+
+# أضف هذا الـ import مع باقي imports في أعلى الملف:
+# import io
+# from copy import copy
+# from openpyxl import load_workbook
+
+INVOICE_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'فاتورة_مبدئية.xlsx')
+
+# تعيين أسماء الأعمدة في الجدول لكل خلية في الفاتورة
+INVOICE_CELL_MAP = {
+    'E14': 'توكيل',          # رسوم التوكيل - جنيه
+    'E15': 'رقم وطني',       # رسوم الرقم الوطني - جنيه
+    'E16': 'توثيقات',        # رسوم التوثيقات - جنيه
+    'F17': 'قبول مبدئي',     # رسوم القبول المبدئي - دولار
+    'F18': 'رسوم الوافدين',  # رسوم الوافدين - دولار
+    'E20': 'تسليم الملف',    # رسوم تسليم الملف - جنيه
+}
 
 
+@app.route('/generate_invoice', methods=['POST'])
+def generate_invoice():
+    """
+    توليد فاتورة Excel مبدئية للعميل بناءً على بياناته وحالة الخدمات
+    Input: { row_index: 0 }
+    Output: ملف Excel للتحميل
+    """
+    try:
+        import io
+        from openpyxl import load_workbook
+
+        data = request.get_json()
+        row_index = int(data.get('row_index', 0))
+
+        # جلب بيانات الشيت
+        all_data = sheet.get_all_values()
+        headers = all_data[0]
+
+        if row_index + 1 >= len(all_data):
+            return jsonify({"status": "error", "message": "العميل غير موجود"}), 404
+
+        row_data = all_data[row_index + 1]
+        row_dict = dict(zip(headers, row_data))
+
+        client_name = row_dict.get('الاسم', 'عميل')
+
+        # جلب الرسوم المخصصة من CustomFees sheet
+        custom_fees_for_client = {}
+        try:
+            cf_sheet = spreadsheet.worksheet("CustomFees")
+            cf_records = cf_sheet.get_all_records()
+            for rec in cf_records:
+                service = rec.get('الخدمة', '')
+                client = rec.get('العميل', '')
+                amount = rec.get('المبلغ', 0)
+                if client == client_name and service:
+                    custom_fees_for_client[service] = amount
+        except Exception:
+            pass
+
+        # جلب الرسوم الافتراضية
+        default_fees = get_fees_from_db_cached()
+
+        # حساب رسوم كل خدمة بناءً على التك الأصفر فقط (PAID)
+        def get_fee_for_service(service_col):
+            status = str(row_dict.get(service_col, '')).upper()
+            if status != 'PAID':
+                return 0
+            # الأولوية: مخصص للعميل > افتراضي
+            if service_col in custom_fees_for_client:
+                val = custom_fees_for_client[service_col]
+            else:
+                val = default_fees.get(service_col, 0)
+            # إذا كانت القيمة بالدولار نحذف علامة $
+            if isinstance(val, str) and '$' in val:
+                return float(val.replace('$', '').strip() or 0)
+            return float(val or 0)
+
+        # تحميل النموذج
+        if not os.path.exists(INVOICE_TEMPLATE_PATH):
+            return jsonify({"status": "error", "message": "ملف النموذج غير موجود على السيرفر"}), 500
+
+        wb = load_workbook(INVOICE_TEMPLATE_PATH)
+        ws = wb.active
+
+        # G7: اسم العميل
+        ws['G7'] = client_name
+
+        # E14: رسوم التوكيل
+        ws['E14'] = get_fee_for_service('توكيل')
+
+        # E15: رسوم الرقم الوطني
+        ws['E15'] = get_fee_for_service('رقم وطني')
+
+        # E16: رسوم التوثيقات
+        ws['E16'] = get_fee_for_service('توثيقات')
+
+        # F17: رسوم القبول المبدئي (دولار)
+        ws['F17'] = get_fee_for_service('قبول مبدئي')
+
+        # F18: رسوم الوافدين (دولار)
+        ws['F18'] = get_fee_for_service('رسوم الوافدين')
+
+        # E19: رسوم المكتب (ثابتة دائماً)
+        ws['E19'] = 28500
+
+        # E20: رسوم تسليم الملف
+        ws['E20'] = get_fee_for_service('تسليم الملف')
+
+        # G20: إصلاح formula تسليم الملف (كانت hardcoded 0)
+        ws['G20'] = '=D20*E20'
+
+        # H21: إجمالي الدولار = F17 + F18
+        ws['H21'] = '=F17+F18'
+
+        # حفظ في الذاكرة وإرساله
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        from flask import send_file
+        filename = f"فاتورة_{client_name}.xlsx"
+
+        logger.info(f"✅ تم توليد فاتورة للعميل: {client_name}")
+
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+
+    except Exception as e:
+        logger.error(f"❌ Invoice generation error: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"🚀 Starting server on port {port}...")
