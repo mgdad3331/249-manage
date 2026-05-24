@@ -203,20 +203,13 @@
                             {{ client.get('جملة المتبقي', '0') }}
                         </td>
                         <td class="text-center">
-                            <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
-                            {% set invoice_url = client.get('رابط الفاتورة', '') %}
-    
-    <!-- زر التحميل: يظهر للجميع إذا يوجد رابط -->
-    <a href="{{ invoice_url if invoice_url else '#' }}" 
-       class="btn btn-sm p-1 px-2 fw-bold {{ 'btn-outline-success' if invoice_url else 'btn-outline-secondary disabled' }}"
-       title="{{ 'تحميل الفاتورة' if invoice_url else 'لا يوجد رابط بعد' }}"
-       {{ 'download target="_blank"' if invoice_url else '' }}>🖨️</a>
-    
-    <!-- حقل الرابط يظهر فقط في وضع التعديل -->
-    <input type="text" class="form-control form-control-sm edit-input d-none text-center shadow-none mx-auto mt-1"
-           value="{{ invoice_url }}" data-col="رابط الفاتورة" placeholder="🔗 رابط التحميل المباشر...">
-                            <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showGeneralNote(this)">👁️ ملاحظة</button>
-                            <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
+    <input type="hidden" class="note-data edit-input" data-col="الملاحظات" value="{{ client.get('الملاحظات', '') }}">
+    <!-- ✅ زر الفاتورة -->
+    <button type="button" class="btn btn-sm btn-outline-success p-1 px-2 fw-bold invoice-btn" 
+            onclick="downloadInvoice(this)" title="تحميل الفاتورة المبدئية">🖨️</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary p-1 px-2 fw-bold" onclick="showGeneralNote(this)">👁️ ملاحظة</button>
+    <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fw-bold" onclick="deleteClient(this)">🗑️</button>
+</td>
                         </td>
                     </tr>
                     {% endfor %}
@@ -849,6 +842,50 @@ function saveAll() {
         else { ToastManager.error("فشل: " + res.message); $('#save-text').text('💾 حفظ التغييرات'); $('#save-spinner').addClass('d-none'); $('#save-all-btn').prop('disabled', false); }
     })
     .catch(() => { LoadingManager.hide(); ToastManager.error('فشل الاتصال!'); $('#save-text').text('💾 حفظ التغييرات'); $('#save-spinner').addClass('d-none'); $('#save-all-btn').prop('disabled', false); });
+}
+
+    // =========================
+// ✅ Invoice Download
+// =========================
+function downloadInvoice(btn) {
+    var row = $(btn).closest('tr');
+    var rowIndex = row.data('row');
+    var clientName = row.find('td:nth-child(2) span.view-text').text().trim();
+    if (!clientName) clientName = row.find('td:nth-child(2) .edit-input').val().trim();
+ 
+    // تغيير شكل الزر أثناء التحميل
+    $(btn).prop('disabled', true).text('⏳');
+ 
+    fetch('/generate_invoice', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ row_index: rowIndex })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || 'فشل التوليد'); });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        // تحميل الملف مباشرة
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = `فاتورة_${clientName}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+ 
+        ToastManager.success(`✅ تم تحميل فاتورة ${clientName}`);
+    })
+    .catch(err => {
+        ToastManager.error('فشل توليد الفاتورة: ' + err.message);
+    })
+    .finally(() => {
+        $(btn).prop('disabled', false).text('🖨️');
+    });
 }
 
 // =========================
